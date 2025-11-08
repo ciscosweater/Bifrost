@@ -1,97 +1,128 @@
 # ACCELA - Steam Depot Downloader GUI
 
-Interface gráfica para download de depots Steam com recursos avançados de gerenciamento.
+Graphical interface for downloading Steam depots with advanced management features.
 
-## 🚀 Instalação Rápida
+## 🚀 Quick Installation
 
-### Linux
+### Linux (Recommended)
 ```bash
-# Execute o script de instalação
+# Run the installation script
 chmod +x install_and_setup.sh
 ./install_and_setup.sh
 ```
 
-### Manual (Todas as plataformas)
+### Manual (Linux)
 ```bash
-# 1. Crie ambiente virtual
+# 1. Create virtual environment
 python3 -m venv .venv
-source .venv/bin/activate  # Linux/Mac
-# ou .venv\Scripts\activate  # Windows
+source .venv/bin/activate
 
-# 2. Instale dependências
+# 2. Install dependencies
 pip install -r requirements.txt
 
-# 3. Execute o aplicativo
+# 3. Run the application
 python main.py
 ```
 
-## 📋 Requisitos
+## 📋 Requirements
 
+- **Linux operating system** (Ubuntu, Arch, Fedora, etc.)
 - Python 3.8+
 - PyQt6
-- Conexão com internet
-- Conta Steam (para downloads autenticados)
+- Internet connection
+- 32-bit compatibility libraries (for SLSsteam integration)
 
-## 🎮 Como Usar
+## 🎮 How to Use
 
-1. **Execute o ACCELA** através do instalador ou manualmente
-2. **Configure suas credenciais Steam** (opcional, para downloads privados)
-3. **Selecione o jogo** desejado na lista
-4. **Escolha os depots/manifestos** para download
-5. **Configure o diretório** de destino
-6. **Inicie o download** e acompanhe o progresso
+1. **Configure your Steam credentials on SLScheevo** (optional, for generating achievements)
+2. **Run ACCELA** through installer or manually
+3. **Select the desired game** selecting a .zip file containing manifests and .lua
+4. **Choose depots/manifests** to download
+5. **Set the destination** directory
+6. **Start the download** and monitor progress
 
-## 🔧 Funcionalidades
+## 🔧 Features
 
-- ✅ Interface intuitiva baseada em PyQt6
-- ✅ Download de múltiplos depots simultâneos
-- ✅ Suporte a arquivos ZIP para processamento
-- ✅ Monitoramento de velocidade de download
-- ✅ Gerenciamento de jogos instalados
-- ✅ Tema escuro moderno
-- ✅ Suporte a SLSSteam para variantes especiais
+- ✅ Intuitive PyQt6-based interface
+- ✅ ZIP file support for processing
+- ✅ Download speed monitoring
+- ✅ Installed games management
+- ✅ Modern dark theme
 
-## 📁 Estrutura de Arquivos
+## 📁 File Structure
 
 ```
 ACCELA Python/
-├── main.py              # Ponto de entrada principal
-├── requirements.txt     # Dependências Python
-├── install_and_setup.sh # Script de instalação Linux
-├── core/               # Lógica principal da aplicação
-├── ui/                 # Componentes da interface
-├── utils/              # Utilitários e helpers
-├── config/             # Arquivos de configuração
-├── external/           # Ferramentas externas
-├── Steamless/          # Ferramenta Steamless
-└── SLSsteam-Any/       # SLSSteam para variantes
+├── main.py              # Main entry point
+├── requirements.txt     # Python dependencies
+├── install_and_setup.sh # Linux installation script
+├── core/               # Core application logic
+├── ui/                 # Interface components
+├── utils/              # Utilities and helpers
+├── config/             # Configuration files
+├── external/           # External tools
+├── Steamless/          # Steamless tool
+└── SLSsteam-Any/       # SLSSteam for variants
 ```
 
-## ⚠️ Aviso Importante
+## ⚠️ Important Notice
 
-Este software é destinado para uso educacional e pessoal. Os usuários são responsáveis por:
-- Respeitar os Termos de Serviço da Steam
-- Apenas baixar conteúdo que possuem legalmente
-- Não distribuir conteúdo protegido por direitos autorais
+This software is intended for educational and personal use. Users are responsible for:
+- Respecting Steam Terms of Service
+- Only downloading content they legally own
+- Not distributing copyrighted content
+- **Linux-only application** - Will not work on Windows or macOS due to SLSsteam dependencies
 
-## 🔐 Segurança
+## 🔐 Security
 
-- Credenciais Steam são armazenadas localmente
-- Nenhuma informação é enviada para servidores externos
-- Use sempre a versão mais recente do aplicativo
+- Steam credentials are stored locally
+- No information is sent to external servers
+- Always use the latest application version
 
-## 🐛 Problemas Comuns
+## 🐛 Common Issues
 
-**Aplicativo não inicia**: Verifique se Python 3.8+ está instalado
-**Erro de dependências**: Execute `pip install -r requirements.txt`
-**Falha no download**: Verifique conexão e credenciais Steam
+**Application doesn't start**: Check if Python 3.8+ is installed
+**Dependency errors**: Run `pip install -r requirements.txt`
+**Download failure**: Check connection and Steam credentials
 
-## 📞 Suporte
+## 📞 Support
 
-Para problemas e sugestões, verifique a documentação ou contate o desenvolvedor.
+For issues and suggestions, check the documentation or contact the developer.
+
+## 🙏 Credits and Acknowledgments
+
+**Original ACCELA**: The original ACCELA project was created by an unknown developer. This repository is a modified and enhanced version that improves the user experience and adds new functionality while maintaining the core purpose.
+
+**Current Maintainer**: This modified version is maintained with improvements to the interface, additional features, and better usability.
+
+This project incorporates open-source third-party tools:
+
+### 📦 Included External Tools
+
+- **[DepotDownloader](https://github.com/SteamAutoCracks/DepotDownloaderMod)**
+  - Main tool for downloading Steam depots
+
+- **[Steamless](https://github.com/atom0s/Steamless)**
+  - Steam DRM executable unpacker
+  - Author: atom0s
+
+- **[SLSsteam](https://github.com/AceSLS/SLSsteam)** - Steamclient modification for Linux
+  - Author: AceSLS
+  - Description: Steamclient modification for enabling special Steam features
+
+- **[SLScheevo](https://github.com/xamionex/SLScheevo)** - Achievement generator for SLSsteam
+  - Author: xamionex
+  - Description: Achievement generator meant to be used with SLSsteam
+
+### 🛠️ Technologies Used
+
+- **Python 3.8+** - Main language
+- **PyQt6** - GUI framework
+- **Steam Web API** - Steam services integration
 
 ---
 
-**Versão**: 1.0  
-**Desenvolvido com**: Python, PyQt6, Steam API  
-**Plataformas**: Linux, Windows, macOS
+**Version**: 1.0
+**Developed with**: Python, PyQt6, Steam API
+**Platform**: Linux only
+**License**: See LICENSE file for details
