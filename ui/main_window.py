@@ -745,13 +745,24 @@ class MainWindow(QMainWindow):
     def _start_speed_monitor(self):
         self.speed_monitor_task = SpeedMonitorTask()
         self.speed_monitor_task.speed_update.connect(self.minimal_download_widget.update_speed)
-        runner = TaskRunner()
-        runner.run(self.speed_monitor_task.run)
+        self.speed_monitor_runner = TaskRunner()
+        self.speed_monitor_runner.run(self.speed_monitor_task.run)
 
     def _stop_speed_monitor(self):
         if self.speed_monitor_task:
             self.speed_monitor_task.stop()
             self.speed_monitor_task = None
+        
+        # Clean up speed monitor task runner and thread
+        if hasattr(self, 'speed_monitor_runner') and self.speed_monitor_runner:
+            try:
+                if hasattr(self.speed_monitor_runner, 'thread') and self.speed_monitor_runner.thread:
+                    if self.speed_monitor_runner.thread.isRunning():
+                        self.speed_monitor_runner.thread.quit()
+                        self.speed_monitor_runner.thread.wait(1000)
+            except Exception as e:
+                logger.warning(f"Error cleaning up speed monitor thread: {e}")
+            self.speed_monitor_runner = None
 
     def _prompt_for_steam_restart(self):
         # Avoid multiple requests
