@@ -330,11 +330,18 @@ class GameManager:
                 if not line or line.startswith('//'):
                     continue
                 
-                # Parse de chave-valor no formato do Steam
-                if '\t' in line and '"' in line:
+                # Parse de chave-valor no formato do Steam (aceita tabs ou espaços)
+                if ('"' in line and 
+                    (('\t' in line and line.count('\t') >= 2) or  # Formato com tabs
+                     ('  ' in line and line.count('"') >= 4))):   # Formato com espaços
                     try:
-                        # Remove tabs e split por quotes
-                        parts = line.replace('\t', '').split('"')
+                        # Remove tabs e espaços extras, depois split por quotes
+                        cleaned_line = line.replace('\t', ' ').strip()
+                        # Normalizar múltiplos espaços para um único espaço
+                        while '  ' in cleaned_line:
+                            cleaned_line = cleaned_line.replace('  ', ' ')
+                        
+                        parts = cleaned_line.split('"')
                         if len(parts) >= 3:
                             key = parts[1].strip()
                             value = parts[3] if len(parts) > 3 else ''
