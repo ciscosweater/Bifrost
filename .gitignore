@@ -46,6 +46,18 @@ slscheevo_build/data/saved_logins.encrypted
 # Temporary files
 tmp/
 temp/
+*.tmp
+*.temp
+~*.*
+
+# API Cache and session data
+api_cache/
+data/sessions/download_sessions.json
+
+# Steam game files and downloads
+*.acf
+*.manifest
+*.depot
 
 # Development documentation
 CLAUDE.md
