@@ -21,7 +21,7 @@ from ui.interactions import HoverButton, ModernFrame, AnimatedLabel
 from ui.shortcuts import KeyboardShortcuts
 from ui.notification_system import NotificationManager
 from ui.asset_optimizer import AssetManager
-from ui.slssteam_status import SlssteamStatusWidget
+
 from ui.game_deletion_dialog import GameDeletionDialog
 from ui.download_controls import DownloadControls
 from utils.image_cache import ImageCacheManager
@@ -91,7 +91,6 @@ class MainWindow(QMainWindow):
         self.game_header_image = None
         self.keyboard_shortcuts = KeyboardShortcuts(self)
         self.asset_manager = AssetManager(self)
-        self.slssteam_status = None
         
         # Download Manager para pause/cancel/retomada
         self.download_manager = DownloadManager()
@@ -117,19 +116,22 @@ class MainWindow(QMainWindow):
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.setSpacing(0)
 
+        # Add title bar at the top of the window
+        self.title_bar = CustomTitleBar(self)
+        self.layout.addWidget(self.title_bar)
+
         main_content_frame = QFrame()
         main_content_frame.setStyleSheet("""
             QFrame {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                    stop:0 #0A0A0A, stop:1 #1A1A1A);
-                border: 1px solid #2A2A2A;
+                background: #000000;
+                border: none;
                 border-radius: 8px;
             }
         """)
         self.layout.addWidget(main_content_frame)
         
         main_layout = QVBoxLayout(main_content_frame)
-        main_layout.setContentsMargins(16,8,16,16)  # Margens adequadas para visual moderno
+        main_layout.setContentsMargins(16,8,16,4)  # Reduzir margem inferior para eliminar espaço extra
         main_layout.setSpacing(12)  # Spacing adequado entre elementos
         
         drop_zone_container = QWidget()
@@ -271,22 +273,13 @@ class MainWindow(QMainWindow):
             # Fallback if logging handler is not available
             pass
 
-        self.title_bar = CustomTitleBar(self)
-        self.layout.addWidget(self.title_bar)
 
-        # Add SLSsteam status widget to main layout
-        self.slssteam_status = SlssteamStatusWidget(self)
-        self.slssteam_status.setup_requested.connect(self._on_slssteam_setup_requested)
-        self.slssteam_status.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        main_layout.addWidget(self.slssteam_status)
-        
-        # Add spacing after SLSsteam status
-        main_layout.addSpacing(5)  # Reduced spacing
 
         self.status_bar = QStatusBar()
         self.setStatusBar(self.status_bar)
         self.status_bar.setSizeGripEnabled(True)
-        self.status_bar.setStyleSheet("QStatusBar { border: 0px; background: #000000; }")
+        self.status_bar.setStyleSheet("QStatusBar { border: 0px; background: #000000; height: 8px; }")
+        self.status_bar.setMaximumHeight(8)  # Status bar mínimo apenas para size grip
 
         self.setAcceptDrops(True)
 
@@ -822,14 +815,14 @@ class MainWindow(QMainWindow):
     
     def _check_slssteam_prerequisite(self) -> bool:
         """Check if SLSsteam is ready for operations, show dialog if not"""
-        if not self.slssteam_status:
+        if not hasattr(self.title_bar, 'slssteam_status') or not self.title_bar.slssteam_status:
             QMessageBox.critical(self, "SLSsteam Error", 
                                 "SLSsteam status widget not available. Please restart ACCELA.")
             return False
         
-        if not self.slssteam_status.can_start_operations():
+        if not self.title_bar.slssteam_status.can_start_operations():
             # Show blocking dialog with setup option
-            blocking_msg = self.slssteam_status.get_blocking_message()
+            blocking_msg = self.title_bar.slssteam_status.get_blocking_message()
             reply = QMessageBox.critical(self, "SLSsteam Required", 
                                         f"SLSsteam is required for ACCELA to function.\n\n{blocking_msg}\n\n"
                                         "Would you like to configure SLSsteam now?",
@@ -837,7 +830,7 @@ class MainWindow(QMainWindow):
             
             if reply == QMessageBox.StandardButton.Yes:
                 # Trigger setup dialog
-                self.slssteam_status._on_action_clicked()
+                self.title_bar.slssteam_status._on_action_clicked()
             
             return False
         
@@ -845,7 +838,9 @@ class MainWindow(QMainWindow):
     
     def _on_slssteam_setup_requested(self):
         """Handle SLSsteam setup completion"""
-        if self.slssteam_status and self.slssteam_status.is_slssteam_ready():
+        if (hasattr(self.title_bar, 'slssteam_status') and 
+            self.title_bar.slssteam_status and 
+            self.title_bar.slssteam_status.is_slssteam_ready()):
             self.show_notification("SLSsteam is ready for use!", "success")
             # Auto-enable slssteam_mode when SLSsteam becomes ready
             self.settings.setValue("slssteam_mode", True)
