@@ -101,7 +101,7 @@ class MainWindow(QMainWindow):
         self.minimal_download_widget = MinimalDownloadWidget()
         self.minimal_download_widget.setVisible(False)
         
-        # Controle para evitar múltiplas solicitações de reinicialização
+        # Control to avoid multiple restart requests
         self._steam_restart_prompted = False
         
         # Image cache manager
@@ -136,7 +136,7 @@ class MainWindow(QMainWindow):
         self.layout.addWidget(main_content_frame)
         
         main_layout = QVBoxLayout(main_content_frame)
-        main_layout.setContentsMargins(16,8,16,4)  # Reduzir margem inferior para eliminar espaço extra
+        main_layout.setContentsMargins(16,8,16,4)  # Reduce bottom margin to eliminate extra space
         main_layout.setSpacing(12)  # Spacing adequado entre elementos
         
         drop_zone_container = QWidget()
@@ -186,7 +186,7 @@ class MainWindow(QMainWindow):
         self.game_header_label.setMinimumSize(100, 30)  # Reduced minimum size
         self.game_header_label.setMaximumSize(150, 56)  # Reduced maximum size (scale down 20%)
         self.game_header_label.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
-        self.game_header_label.setScaledContents(False)  # Deixa scaled() controlar a proporção
+        self.game_header_label.setScaledContents(False)  # Let scaled() control the aspect ratio
         self.game_header_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.game_header_label.setStyleSheet("""
             QLabel {
@@ -224,10 +224,10 @@ class MainWindow(QMainWindow):
         game_info_layout.addStretch()
         game_image_layout.addLayout(game_info_layout)
         
-        # game_image_container agora está integrado no widget minimalista
+        # game_image_container is now integrated in the minimal widget
         # main_layout.addWidget(self.game_image_container, 0, Qt.AlignmentFlag.AlignCenter)
         
-        # Esconder container antigo para evitar duplicação
+        # Hide old container to avoid duplication
         self.game_image_container.hide()
 
         # Widget minimalista de download (novo componente unificado)
@@ -292,7 +292,7 @@ class MainWindow(QMainWindow):
         self.setStatusBar(self.status_bar)
         self.status_bar.setSizeGripEnabled(True)
         self.status_bar.setStyleSheet("QStatusBar { border: 0px; background: #000000; height: 8px; }")
-        self.status_bar.setMaximumHeight(8)  # Status bar mínimo apenas para size grip
+        self.status_bar.setMaximumHeight(8)  # Minimum status bar just for size grip
 
         self.setAcceptDrops(True)
 
@@ -313,7 +313,7 @@ class MainWindow(QMainWindow):
         self._start_zip_processing(zip_path)
 
     def _setup_download_connections(self):
-        """Configura conexões do DownloadManager e UI controls"""
+        """Configure DownloadManager and UI controls connections"""
         # Conectar signals do DownloadManager
         self.download_manager.download_progress.connect(self._on_download_progress)
         self.download_manager.download_paused.connect(self._on_download_paused)
@@ -389,34 +389,47 @@ class MainWindow(QMainWindow):
         """Handle download cancellation"""
         self._stop_speed_monitor()
         self.minimal_download_widget.set_error_state("Cancelled")
-        self.log_output.append("✕ Download cancelado pelo usuário")
-        # Limpar sessão atual para evitar comportamento indesejado
+        self.log_output.append("✕ Download cancelled by user")
+        # Clear current session to avoid unwanted behavior
         self.current_session = None
         self._reset_ui_state()
         
     def _on_download_completed(self, session_id):
         """Handle download completion"""
-        self._stop_speed_monitor()
-        # self.progress_bar.setValue(100)  # Legado - comentado
-        # self.progress_bar.set_download_state("completed")  # Legado - comentado
-        # self.download_controls.set_completed_state()  # Legado - comentado
-        self.minimal_download_widget.set_completed_state()
-        self.log_output.append("✓ Download concluído com sucesso!")
+        try:
+            logger.info("Download completion handler started")
+            self._stop_speed_monitor()
+            # self.progress_bar.setValue(100)  # Legado - comentado
+            # self.progress_bar.set_download_state("completed")  # Legado - comentado
+            # self.download_controls.set_completed_state()  # Legado - comentado
+            self.minimal_download_widget.set_completed_state()
+            self.log_output.append("✓ Download completed successfully!")
+            
+            # Create ACF file and handle completion
+            logger.info("Creating ACF file...")
+            self._create_acf_file()
+            logger.info("ACF file created")
+            
+            # Generate Steam achievements if enabled
+            logger.info("Handling Steam schema generation...")
+            self._handle_steam_schema_generation()
+            logger.info("Steam schema generation handled")
+            
+            self.notification_manager.show_notification(f"Successfully downloaded {self.game_data.get('game_name', 'Game')}!", "success")
+            
+            if self.slssteam_mode_was_active:
+                logger.info("Prompting for Steam restart...")
+                self._prompt_for_steam_restart()
+            else:
+                from PyQt6.QtWidgets import QMessageBox
+                QMessageBox.information(self, "Success", "All files have been downloaded successfully!")
+            
+            logger.info("Download completion handler finished")
+        except Exception as e:
+            logger.error(f"Error in download completion handler: {e}", exc_info=True)
+            self.log_output.append(f"❌ Error during completion: {e}")
         
-        # Create ACF file and handle completion
-        self._create_acf_file()
-        
-        # Generate Steam achievements if enabled
-        self._handle_steam_schema_generation()
-        
-        self.notification_manager.show_notification(f"Successfully downloaded {self.game_data.get('game_name', 'Game')}!", "success")
-        
-        if self.slssteam_mode_was_active:
-            self._prompt_for_steam_restart()
-        else:
-            QMessageBox.information(self, "Success", "All files have been downloaded successfully!")
-        
-        # Esconder controles após um tempo
+        # Hide controls after a while
         QTimer.singleShot(3000, self._hide_download_controls)
         
         # Reset UI state after completion
@@ -425,7 +438,7 @@ class MainWindow(QMainWindow):
     def _on_download_error(self, error_message):
         """Handle download errors"""
         self.log_output.append(f"❌ Erro no download: {error_message}")
-        self.download_controls.set_idle_state()
+        self.minimal_download_widget.set_idle_state()
         
     def _on_download_state_changed(self, state):
         """Handle download state changes"""
@@ -433,14 +446,14 @@ class MainWindow(QMainWindow):
         
     def _on_depot_completed(self, depot_id):
         """Handle individual depot completion"""
-        self.log_output.append(f"✓ Depot {depot_id} concluído")
+        self.log_output.append(f"✓ Depot {depot_id} completed")
         
     def _confirm_cancel_download(self):
         """Show confirmation dialog before cancelling"""
         reply = QMessageBox.question(
             self, 
             "Cancelar Download",
-            "Tem certeza que deseja cancelar o download? Os arquivos parciais serão removidos.",
+            "Are you sure you want to cancel the download? Partial files will be removed.",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No
         )
@@ -450,7 +463,7 @@ class MainWindow(QMainWindow):
             
     def _hide_download_controls(self):
         """Hide download controls after completion"""
-        self.download_controls.setVisible(False)
+        self.minimal_download_widget.setVisible(False)
         
     def _on_zip_processed(self, game_data):
         # self.progress_bar.setRange(0, 100)  # Legado - comentado
@@ -544,7 +557,7 @@ class MainWindow(QMainWindow):
         self.minimal_download_widget.set_downloading_state(game_name, game_image)
         self.minimal_download_widget.setVisible(True)
         
-        # Esconder container antigo para evitar duplicação
+        # Hide old container to avoid duplication
         self.game_image_container.hide()
         
         # Conectar signals do widget minimalista ao download manager
@@ -664,7 +677,7 @@ class MainWindow(QMainWindow):
             self.speed_monitor_task = None
 
     def _prompt_for_steam_restart(self):
-        # Evitar múltiplas solicitações
+        # Avoid multiple requests
         if self._steam_restart_prompted:
             logger.debug("Steam restart already prompted, skipping")
             return
@@ -778,7 +791,7 @@ class MainWindow(QMainWindow):
             pixmap.loadFromData(image_data)
             self.game_header_image = pixmap
             
-            # Calcula tamanho mantendo proporção máxima de 184x69
+            # Calculate size maintaining maximum aspect ratio of 184x69
             scaled_pixmap = pixmap.scaled(
                 184, 69, 
                 Qt.AspectRatioMode.KeepAspectRatio, 
@@ -790,7 +803,7 @@ class MainWindow(QMainWindow):
             self.game_header_label.setPixmap(scaled_pixmap)
         else:
             self.game_header_label.setText("📷\nNo Image")
-            self.game_header_label.setFixedSize(184, 69)  # Restaura tamanho padrão
+            self.game_header_label.setFixedSize(184, 69)  # Restore default size
 
     def _handle_steam_schema_generation(self):
         """Handle Steam Schema generation with proper error handling"""

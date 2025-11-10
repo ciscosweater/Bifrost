@@ -19,6 +19,9 @@ class MergeFilesTask(QObject):
         if not install_folder_name:
             install_folder_name = f"App_{game_data['appid']}"
         
+        # Sanitize directory name to remove filesystem-invalid characters
+        install_folder_name = re.sub(r'[<>:"/\\|?*]', '_', str(install_folder_name))
+        
         merge_root = os.path.join(dest_path, 'steamapps', 'common', install_folder_name)
         
         os.makedirs(merge_root, exist_ok=True)

@@ -45,40 +45,40 @@ class DownloadManager(QObject):
         self.task_runner: Optional[TaskRunner] = None
         self.download_state = DownloadState.IDLE
         
-        # Controle de finalização de task
+        # Task completion control
         self._task_finishing = False
         
-        # Utilitários
+        # Utilities
         self.cleanup_manager = FileCleanupManager()
         self.enhanced_cleanup_manager = EnhancedFileCleanupManager()
         
-        # Timer para verificações periódicas
+        # Timer for periodic checks
         self.monitor_timer = QTimer()
         self.monitor_timer.timeout.connect(self._monitor_download)
         self.monitor_timer.setInterval(2000)  # Reduzido para 2s para melhor responsividade
         
-        # Controle de threads ativas para memory leak prevention
+        # Active threads control for memory leak prevention
         self._active_threads: Set[QThread] = set()
         
         logger.info("DownloadManager initialized")
     
     def start_download(self, game_data: Dict[str, Any], selected_depots: list, dest_path: str) -> str:
         """
-        Inicia novo download com gerenciamento de estado completo.
+        Start new download with complete state management.
         
         Args:
-            game_data: Dicionário com dados do jogo (appid, name, depots, manifests)
-            selected_depots: Lista de IDs de depots para baixar
-            dest_path: Diretório de destino para instalação
+            game_data: Dictionary with game data (appid, name, depots, manifests)
+            selected_depots: List of depot IDs to download
+            dest_path: Destination directory for installation
             
         Returns:
-            str: ID único da sessão de download ou string vazia em caso de erro
+            str: Unique download session ID or empty string in case of error
             
         Raises:
-            ValueError: Se parâmetros obrigatórios forem inválidos
+            ValueError: If required parameters are invalid
         """
         try:
-            # Validações de segurança
+            # Security validations
             if not game_data or not isinstance(game_data, dict):
                 raise ValueError("Invalid game_data: must be a non-empty dictionary")
                 
@@ -91,10 +91,10 @@ class DownloadManager(QObject):
             if not os.path.exists(dest_path):
                 raise ValueError(f"Destination path does not exist: {dest_path}")
                 
-            # Gerar ID único para sessão
+            # Generate unique ID for session
             session_id = str(uuid.uuid4())
             
-            # Criar sessão de download
+            # Create download session
             self.current_session = DownloadSession(
                 session_id=session_id,
                 game_data=game_data,
@@ -109,7 +109,7 @@ class DownloadManager(QObject):
             # Salvar estado inicial
             self.current_session.save()
             
-            # Resetar controle de finalização
+            # Reset completion control
             self._task_finishing = False
             
             # Configurar task de download
@@ -188,28 +188,28 @@ class DownloadManager(QObject):
     
     def cancel_download(self):
         """
-        Cancela download e limpa recursos de forma segura.
+        Cancel download and clean up resources safely.
         
-        Este método garante que:
-        - Processos sejam terminados gracefulmente
-        - Arquivos parciais sejam removidos com segurança
-        - Steam libraries nunca sejam afetadas
-        - Sessão seja marcada como cancelada
+        This method ensures that:
+        - Processes are terminated gracefully
+        - Partial files are removed safely
+        - Steam libraries are never affected
+        - Session is marked as cancelled
         """
         try:
             logger.info("Cancelling download...")
             
-            # Mudar estado para cancelling
+            # Change state to cancelling
             self._set_state(DownloadState.CANCELLING)
             
-            # Parar timer de monitoramento
+            # Stop monitoring timer
             self.monitor_timer.stop()
             
-            # Solicitar cancelamento da task
+            # Request task cancellation
             if self.download_task:
                 self.download_task.request_cancellation()
             
-            # Terminar processo
+            # Terminate process
             if self.current_process:
                 self._terminate_process()
             
@@ -457,10 +457,13 @@ class DownloadManager(QObject):
     def _check_process_termination(self):
         """Verifica se a terminação do processo foi inesperada após um delay"""
         try:
+            # Se a task está finalizando ou não está mais em DOWNLOADING, ignorar
+            if self._task_finishing or self.download_state != DownloadState.DOWNLOADING:
+                return
+                
             # Se o estado ainda está em DOWNLOADING após 2 segundos, é inesperado
-            if self.download_state == DownloadState.DOWNLOADING:
-                logger.warning("Process terminated unexpectedly")
-                self._handle_unexpected_termination()
+            logger.warning("Process terminated unexpectedly")
+            self._handle_unexpected_termination()
         except Exception as e:
             logger.error(f"Error checking process termination: {e}")
     
@@ -504,13 +507,15 @@ class DownloadManager(QObject):
         logger.info(f"Depot completed: {depot_id}")
     
     def _on_task_finished(self):
-        """Handle task completion"""
-        self.monitor_timer.stop()
+        """Handle task completion - novo método simplificado"""
+        # Parar monitoramento imediatamente
+        if hasattr(self, 'monitor_timer') and self.monitor_timer:
+            self.monitor_timer.stop()
         
-        # Marcar que a task está finalizando para evitar falso positivo de terminação inesperada
+        # Marcar que a task está finalizando
         self._task_finishing = True
         
-        # Limpar referência ao processo
+        # Limpar referência do processo
         self.current_process = None
         
         # Se já foi cancelado, não fazer nada

@@ -44,7 +44,7 @@ class DownloadDepotsTask(QObject):
     depot_completed = pyqtSignal(str)     # depot_id
     cancellation_requested = pyqtSignal()
     finished = pyqtSignal()
-    cancelled = pyqtSignal()  # Novo signal específico para cancelamento
+    cancelled = pyqtSignal()  # New specific signal for cancellation
     error = pyqtSignal(str)
 
     def __init__(self):
@@ -79,7 +79,7 @@ class DownloadDepotsTask(QObject):
             for i, command in enumerate(commands):
                 # Verificar cancelamento antes de cada depot
                 if self._should_stop:
-                    self.progress.emit("Download cancelado pelo usuário")
+                    self.progress.emit("Download cancelled by user")
                     self.cancelled.emit()
                     return
                     
@@ -109,19 +109,19 @@ class DownloadDepotsTask(QObject):
                     
                     reader_thread.start()
                     
-                    # Monitorar processo com verificação de cancelamento
+                    # Monitor process with cancellation check
                     process_terminated_cleanly = False
                     while self._current_process.poll() is None:
                         if self._should_stop:
                             self.progress.emit("Cancelando download atual...")
                             try:
                                 self._current_process.terminate()
-                                # Aguardar até 5 segundos para terminação graceful
+                                # Wait up to 5 seconds for graceful termination
                                 try:
                                     self._current_process.wait(timeout=5)
                                     process_terminated_cleanly = True
                                 except subprocess.TimeoutExpired:
-                                    self.progress.emit("Forçando finalização do processo...")
+                                    self.progress.emit("Forcing process termination...")
                                     self._current_process.kill()
                                     self._current_process.wait(timeout=2)
                                     process_terminated_cleanly = True
@@ -129,9 +129,9 @@ class DownloadDepotsTask(QObject):
                                 logger.debug(f"Process already terminated: {e}")
                                 process_terminated_cleanly = True
                             break
-                        QThread.msleep(100)  # Pequena pausa para não sobrecarregar CPU
+                        QThread.msleep(100)  # Small pause to avoid CPU overload
                     
-                    # Aguardar finalização do processo se não foi cancelado
+                    # Wait for process completion if not cancelled
                     if not self._should_stop:
                         self._current_process.wait()
                     
@@ -142,10 +142,22 @@ class DownloadDepotsTask(QObject):
                         if not reader_thread.wait(3000):  # Timeout de 3 segundos
                             logger.warning("Reader thread did not finish cleanly")
                             reader_thread.terminate()
-                            reader_thread.wait(1000)  # Aguardar finalização forçada
+                            reader_thread.wait(1000)  # Wait for forced completion
                     except Exception as e:
                         logger.error(f"Error cleaning up reader thread: {e}")
                     
+                    # Check process result BEFORE cleanup
+                    process_returncode = self._current_process.returncode if self._current_process else None
+                    
+                    # Verificar se foi cancelado durante o processo
+                    if self._should_stop:
+                        if process_terminated_cleanly:
+                            self.progress.emit("Download cancelado com sucesso")
+                        else:
+                            self.progress.emit("Download cancelado (pode haver processos residuais)")
+                        self.cancelled.emit()
+                        return
+
                     # Garantir cleanup do processo
                     try:
                         if self._current_process and self._current_process.poll() is None:
@@ -159,25 +171,15 @@ class DownloadDepotsTask(QObject):
                         logger.error(f"Error cleaning up process: {e}")
                     
                     self._current_process = None
-
-                    # Verificar se foi cancelado durante o processo
-                    if self._should_stop:
-                        if process_terminated_cleanly:
-                            self.progress.emit("Download cancelado com sucesso")
-                        else:
-                            self.progress.emit("Download cancelado (pode haver processos residuais)")
-                        self.cancelled.emit()
-                        return
-
-                    # Verificar resultado do processo com segurança
-                    process_returncode = self._current_process.returncode if self._current_process else None
                     
                     if process_returncode == 0:
                         self.depot_completed.emit(depot_id)
                     elif process_returncode is not None:
                         self.progress.emit(f"Warning: DepotDownloaderMod exited with code {process_returncode} for depot {depot_id}.")
                     else:
-                        self.progress.emit(f"Warning: Process reference lost for depot {depot_id}.")
+                        # Process reference lost is not necessarily an error - can happen after successful completion
+                        logger.debug(f"Process reference lost for depot {depot_id} after completion.")
+                        self.depot_completed.emit(depot_id)
 
                 except FileNotFoundError:
                     self.progress.emit("ERROR: ./external/DepotDownloaderMod not found. Make sure it's in the external/ directory.")
@@ -185,13 +187,13 @@ class DownloadDepotsTask(QObject):
                     self.error.emit("DepotDownloaderMod not found")
                     raise
                 except Exception as e:
-                    if not self._should_stop:  # Só emitir erro se não foi cancelado
+                    if not self._should_stop:  # Only emit error if not cancelled
                         self.progress.emit(f"An unexpected error occurred during download: {e}")
                         logger.error(f"Download subprocess failed: {e}", exc_info=True)
                         self.error.emit(f"Download error: {e}")
                     raise
             
-            # Verificar cancelamento antes do pós-processamento
+            # Check cancellation before post-processing
             if self._should_stop:
                 self.cancelled.emit()
                 return
@@ -223,9 +225,9 @@ class DownloadDepotsTask(QObject):
                 except OSError as e:
                     self.progress.emit(f"Error removing '{filename}': {e}")
         
-        # Verificar cancelamento antes do pós-processamento
+        # Check cancellation before post-processing
         if self._should_stop:
-            self.progress.emit("Download cancelado - pulando pós-processamento")
+            self.progress.emit("Download cancelled - skipping post-processing")
             self.cancelled.emit()
             return
         
@@ -245,21 +247,8 @@ class DownloadDepotsTask(QObject):
         # This avoids duplicate execution
         self.progress.emit("--- Download completed ---")
         
-        # Emitir signal de conclusão
+        # Emit completion signal
         self.finished.emit()
-
-    def _handle_downloader_output(self, line):
-        """Processes a line of output from the downloader."""
-        line = line.strip()
-        self.progress.emit(line)
-        match = self.percentage_regex.search(line)
-        if match:
-            percentage = float(match.group(1))
-            int_percentage = int(percentage)
-            
-            if int_percentage != self.last_percentage:
-                self.progress_percentage.emit(int_percentage)
-                self.last_percentage = int_percentage
 
     def _prepare_downloads(self, game_data, selected_depots, dest_path):
         """Prepares keys.vdf and command list."""
@@ -274,10 +263,17 @@ class DownloadDepotsTask(QObject):
         install_folder_name = game_data.get('installdir', safe_game_name_fallback)
         if not install_folder_name:
             install_folder_name = f"App_{game_data['appid']}"
+        
+        # Sanitize directory name to remove filesystem-invalid characters
+        install_folder_name = re.sub(r'[<>:"/\\|?*]', '_', str(install_folder_name))
 
         download_dir = os.path.join(dest_path, 'steamapps', 'common', install_folder_name)
         os.makedirs(download_dir, exist_ok=True)
         self.progress.emit(f"Download destination set to: {download_dir}")
+
+        # Create manifest directory if it doesn't exist
+        manifest_dir = os.path.join(os.getcwd(), 'manifest')
+        os.makedirs(manifest_dir, exist_ok=True)
 
         commands = []
         skipped_depots = []
@@ -291,12 +287,25 @@ class DownloadDepotsTask(QObject):
             commands.append([
                 "./external/DepotDownloaderMod", "-app", str(game_data['appid']), "-depot", str(depot_id),
                 "-manifest", str(manifest_id),
-                "-manifestfile", shlex.quote(os.path.join('manifest', f"{depot_id}_{manifest_id}.manifest")),
-                "-depotkeys", shlex.quote(keys_path), "-max-downloads", "25",
-                "-dir", shlex.quote(download_dir)
+                "-manifestfile", os.path.join('manifest', f"{depot_id}_{manifest_id}.manifest"),
+                "-depotkeys", keys_path, "-max-downloads", "25",
+                "-dir", download_dir
             ])
 
         return commands, skipped_depots
+
+    def _handle_downloader_output(self, line):
+        """Processes a line of output from the downloader."""
+        line = line.strip()
+        self.progress.emit(line)
+        match = self.percentage_regex.search(line)
+        if match:
+            percentage = float(match.group(1))
+            int_percentage = int(percentage)
+            
+            if int_percentage != self.last_percentage:
+                self.progress_percentage.emit(int_percentage)
+                self.last_percentage = int_percentage
 
     def _is_steamless_enabled(self):
         """Check if Steamless DRM removal is enabled in settings"""
@@ -306,11 +315,11 @@ class DownloadDepotsTask(QObject):
             return settings.value("steamless_enabled", True, type=bool)
         except Exception:
             return True  # Default to enabled
-    
+
     def _run_steamless_processing(self, download_dir):
         """Run Steamless processing on downloaded game."""
         try:
-            # Import direto para evitar execução dinâmica
+            # Direct import to avoid dynamic execution
             from core.steamless_integration import SteamlessIntegration
             
             self.progress.emit("--- Starting Steamless DRM removal ---")
@@ -356,4 +365,4 @@ class DownloadDepotsTask(QObject):
         self.cancellation_requested.emit()
         logger.info("Download cancellation requested")
     
-    
+

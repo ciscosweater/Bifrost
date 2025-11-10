@@ -1,5 +1,5 @@
 """
-Minimal Download Widget - Componente unificado e elegante para controle de downloads
+Minimal Download Widget - Unified and elegant component for download control
 """
 
 import logging
@@ -35,7 +35,7 @@ class MinimalDownloadWidget(QWidget):
         self._set_idle_state()
 
     def _setup_ui(self):
-        """Configura interface minimalista com layout otimizado"""
+        """Configure minimalist interface with optimized layout"""
         layout = QVBoxLayout(self)
         layout.setContentsMargins(16, 12, 16, 12)
         layout.setSpacing(8)
@@ -112,7 +112,7 @@ class MinimalDownloadWidget(QWidget):
             }}
         """)
 
-        # Animação suave da barra de progresso
+        # Smooth progress bar animation
         self.progress_animation = QPropertyAnimation(self.progress_bar, b"geometry")
         self.progress_animation.setDuration(300)
         self.progress_animation.setEasingCurve(QEasingCurve.Type.OutCubic)
@@ -144,12 +144,12 @@ class MinimalDownloadWidget(QWidget):
         """)
         self.speed_label.hide()
 
-        # Botões minimalistas com ícones
+        # Minimalist buttons with icons
         self.pause_btn = self._create_control_button("⏸", "pause")
         self.resume_btn = self._create_control_button("▶", "resume")
         self.cancel_btn = self._create_control_button("✕", "cancel")
 
-        # Esconder botões inicialmente
+        # Hide buttons initially
         self.pause_btn.hide()
         self.resume_btn.hide()
         self.cancel_btn.hide()
@@ -172,7 +172,7 @@ class MinimalDownloadWidget(QWidget):
         self.cancel_btn.clicked.connect(self.cancel_clicked.emit)
 
     def _create_control_button(self, icon, button_type):
-        """Cria botão de controle minimalista"""
+        """Create minimalist control button"""
         btn = QPushButton(icon)
         btn.setFixedSize(24, 24)
         btn.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -203,7 +203,7 @@ class MinimalDownloadWidget(QWidget):
             }}
         """
 
-        # Cores específicas por tipo
+        # Specific colors by type
         if button_type == "pause":
             colors = (theme.colors.WARNING, theme.colors.WARNING, 
                      theme.colors.WARNING_DARK, theme.colors.WARNING_DARK)
@@ -218,7 +218,7 @@ class MinimalDownloadWidget(QWidget):
         return btn
 
     def _update_progress_bar(self, value):
-        """Atualiza barra de progresso com animação suave"""
+        """Update progress bar with smooth animation"""
         if value < 0:
             value = 0
         elif value > 100:
@@ -227,7 +227,7 @@ class MinimalDownloadWidget(QWidget):
         container_width = self.progress_container.width()
         new_width = int((container_width * value) / 100)
 
-        # Animação suave
+        # Smooth animation
         current_geometry = self.progress_bar.geometry()
         new_geometry = current_geometry
         new_geometry.setWidth(new_width)
@@ -238,7 +238,7 @@ class MinimalDownloadWidget(QWidget):
         self.progress_animation.start()
 
     def set_downloading_state(self, game_name=None, game_image=None):
-        """Configura estado de downloading"""
+        """Configure downloading state"""
         self.current_state = "downloading"
         
         # Mostrar imagem do jogo se fornecida
@@ -281,7 +281,7 @@ class MinimalDownloadWidget(QWidget):
         self.cancel_btn.setEnabled(True)
 
     def set_paused_state(self):
-        """Configura estado de paused"""
+        """Configure paused state"""
         self.current_state = "paused"
         self.status_label.setText("Paused")
         self.status_label.setStyleSheet(f"""
@@ -305,7 +305,7 @@ class MinimalDownloadWidget(QWidget):
         self.cancel_btn.setEnabled(True)
 
     def set_completed_state(self):
-        """Configura estado de completed"""
+        """Configure completed state"""
         self.current_state = "completed"
         self.status_label.setText("Completed")
         self.status_label.setStyleSheet(f"""
@@ -330,7 +330,7 @@ class MinimalDownloadWidget(QWidget):
         self.cancel_btn.hide()
 
     def set_error_state(self, message="Error"):
-        """Configura estado de erro"""
+        """Configure error state"""
         self.current_state = "error"
         self.game_image_label.hide()
         self.status_label.setText(message)
@@ -356,7 +356,11 @@ class MinimalDownloadWidget(QWidget):
         self.cancel_btn.show()
 
     def _set_idle_state(self):
-        """Configura estado idle"""
+        """Configure idle state"""
+    
+    def set_idle_state(self):
+        """Public method to set idle state"""
+        self._set_idle_state()
         self.current_state = "idle"
         self.game_image_label.hide()
         self.game_name_label.hide()
@@ -383,17 +387,17 @@ class MinimalDownloadWidget(QWidget):
         self.cancel_btn.hide()
 
     def update_progress(self, value):
-        """Atualiza progresso"""
+        """Update progress"""
         self.progress = value
         self._update_progress_bar(value)
 
     def update_speed(self, speed_text):
-        """Atualiza velocidade de download"""
+        """Update download speed"""
         self.current_speed = speed_text
         self.speed_label.setText(speed_text)
 
     def update_status(self, message):
-        """Atualiza mensagem de status detalhado"""
+        """Update detailed status message"""
         if self.current_state == "downloading":
             self.detail_status_label.setText(message)
         elif self.current_state == "paused":
@@ -402,7 +406,7 @@ class MinimalDownloadWidget(QWidget):
             self.detail_status_label.setText(message)
 
     def reset(self):
-        """Reseta widget para estado inicial"""
+        """Reset widget to initial state"""
         self._set_idle_state()
         self._update_progress_bar(0)
         self.speed_label.setText("")
