@@ -942,7 +942,7 @@ class MainWindow(QMainWindow):
     def _handle_steam_schema_generation(self):
         """Handle Steam Schema generation with proper error handling"""
         try:
-            from utils.steam_schema import is_steam_schema_enabled
+            from utils.settings import is_steam_schema_enabled
             if not is_steam_schema_enabled():
                 logger.debug("Steam schema is disabled")
                 return

@@ -16,8 +16,6 @@ from utils.settings import (
     set_steam_schema_setting,
     is_steam_schema_enabled,
     should_auto_setup_credentials,
-    get_slssteam_setting,
-    set_slssteam_setting,
     get_logging_setting,
     set_logging_setting
 )
@@ -162,48 +160,10 @@ class SettingsDialog(ModernDialog):
         sls_title.setStyleSheet(f"font-size: 14px; font-weight: bold; color: {theme.colors.TEXT_ACCENT};")
         sls_layout.addWidget(sls_title)
         
-        self.sls_auto_check_checkbox = CustomCheckBox("Auto-check SLSsteam Status")
-        self.sls_auto_check_checkbox.setChecked(bool(get_slssteam_setting("auto_check")))
-        self.sls_auto_check_checkbox.setToolTip("Automatically verify SLSsteam installation and configuration on startup.")
-        sls_layout.addWidget(self.sls_auto_check_checkbox)
-        
-        self.sls_show_warnings_checkbox = CustomCheckBox("Show SLSsteam Warnings")
-        self.sls_show_warnings_checkbox.setChecked(bool(get_slssteam_setting("show_warnings")))
-        self.sls_show_warnings_checkbox.setToolTip("Display warning notifications when SLSsteam is not properly configured.")
-        sls_layout.addWidget(self.sls_show_warnings_checkbox)
-        
-        self.sls_auto_fix_checkbox = CustomCheckBox("Auto-fix Configuration")
-        self.sls_auto_fix_checkbox.setChecked(bool(get_slssteam_setting("auto_fix_config")))
-        self.sls_auto_fix_checkbox.setToolTip("Automatically fix PlayNotOwnedGames setting without user confirmation.")
-        sls_layout.addWidget(self.sls_auto_fix_checkbox)
-        
         self.slssteam_mode_checkbox = CustomCheckBox("SLSsteam Mode")
         self.slssteam_mode_checkbox.setChecked(self.settings.value("slssteam_mode", True, type=bool))
         self.slssteam_mode_checkbox.setToolTip("Enable SLSsteam mode to automatically select Steam library folders as destination.")
         sls_layout.addWidget(self.slssteam_mode_checkbox)
-        
-        # Refresh interval setting
-        interval_layout = QHBoxLayout()
-        interval_label = QLabel("Status Refresh Interval:")
-        from .theme import theme
-        interval_label.setStyleSheet(f"color: {theme.colors.TEXT_SECONDARY}; font-size: 11px;")
-        interval_layout.addWidget(interval_label)
-        
-        self.sls_refresh_combo = QComboBox()
-        self.sls_refresh_combo.addItems(["Disabled", "30 seconds", "60 seconds", "5 minutes"])
-        current_interval = get_slssteam_setting("refresh_interval")
-        if current_interval == 0:
-            self.sls_refresh_combo.setCurrentIndex(0)
-        elif current_interval == 30:
-            self.sls_refresh_combo.setCurrentIndex(1)
-        elif current_interval == 60:
-            self.sls_refresh_combo.setCurrentIndex(2)
-        elif current_interval == 300:
-            self.sls_refresh_combo.setCurrentIndex(3)
-        self.sls_refresh_combo.setToolTip("How often to refresh SLSsteam status (0 = disabled).")
-        interval_layout.addWidget(self.sls_refresh_combo)
-        
-        sls_layout.addLayout(interval_layout)
         
         scroll_layout.addWidget(sls_frame)
         
@@ -390,6 +350,7 @@ class SettingsDialog(ModernDialog):
  🎮 SLSsteam Integration
  • Enables compatibility with SLSsteam wrapper
  • Required for Linux Steam integration
+ • SLSsteam mode auto-selects Steam library folders
 
  🏆 Steam Schema Generator  
  • Auto-generates achievement schemas
@@ -413,19 +374,9 @@ class SettingsDialog(ModernDialog):
 
     def accept(self):
         """Save settings with enhanced feedback."""
-        # Save SLSsteam settings
-        set_slssteam_setting("auto_check", self.sls_auto_check_checkbox.isChecked())
-        set_slssteam_setting("show_warnings", self.sls_show_warnings_checkbox.isChecked())
-        set_slssteam_setting("auto_fix_config", self.sls_auto_fix_checkbox.isChecked())
-        
         # Save SLSsteam mode setting
         self.settings.setValue("slssteam_mode", self.slssteam_mode_checkbox.isChecked())
         logger.info(f"SLSsteam mode changed to: {self.slssteam_mode_checkbox.isChecked()}")
-        
-        # Save refresh interval
-        refresh_index = self.sls_refresh_combo.currentIndex()
-        refresh_values = [0, 30, 60, 300]  # Disabled, 30s, 60s, 5min
-        set_slssteam_setting("refresh_interval", refresh_values[refresh_index])
         
         logger.info("SLSsteam integration settings updated successfully.")
         
