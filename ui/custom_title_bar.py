@@ -60,6 +60,7 @@ class CustomTitleBar(QFrame):
                 font-size: 12px;
                 font-weight: 600;
                 background: transparent;
+                border: none;
                 padding: 0px;
                 margin: 0px;
             }}
