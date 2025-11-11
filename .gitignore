@@ -40,7 +40,6 @@ Thumbs.db
 *.log
 
 # Config files with sensitive data
-config/depots.ini
 slscheevo_build/data/saved_logins.encrypted
 
 # Temporary files
