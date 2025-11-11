@@ -163,7 +163,7 @@ class MainWindow(QMainWindow):
         normal_drop_zone_container.setStyleSheet(f"""
             QWidget {{
                 background: transparent;
-                border: 2px dashed {theme.colors.PRIMARY};
+                border: 1px solid {theme.colors.PRIMARY};
                 {BorderRadius.get_border_radius(BorderRadius.LARGE)};
             }}
         """)

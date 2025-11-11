@@ -32,19 +32,19 @@ class CustomTitleBar(QFrame):
         super().__init__(parent)
         self.parent = parent
         self.drag_pos = None
-        self.setFixedHeight(35)  # Increased to avoid cutting and better proportion
+        # self.setFixedHeight(35)  # Increased to avoid cutting and better proportion
         from .theme import theme
 
         self.setStyleSheet(f"""
             QFrame {{
                 background: {theme.colors.BACKGROUND};
-                border-top: 1px solid {theme.colors.BORDER};
+                border: none;
             }}
         """)
         logger.debug("CustomTitleBar initialized.")
 
         layout = QHBoxLayout()
-        layout.setContentsMargins(Spacing.SM, Spacing.XS, Spacing.SM, Spacing.XS)  # Melhores margens para altura maior
+        layout.setContentsMargins(Spacing.MD, 12, Spacing.MD, Spacing.XS)  # Melhores margens para altura maior
         layout.setSpacing(Spacing.SM)  # Better spacing
 
         # Create containers for left and right elements to properly balance them.

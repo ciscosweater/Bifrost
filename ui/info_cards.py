@@ -60,7 +60,7 @@ class InfoCard(QFrame):
         self.title_label = QLabel(self.title)
         self.title_label.setStyleSheet(f"""
             QLabel {{
-                color: {Colors.TEXT_SECONDARY};
+                color: {Colors.TEXT_ACCENT};
                 background: transparent;
                 border: none;
                 font-family: {Typography.get_font_family()};
@@ -95,7 +95,7 @@ class InfoCard(QFrame):
         self.setStyleSheet(f"""
             QFrame {{
                 background: {Colors.BACKGROUND};
-                border: 2px dashed {Colors.PRIMARY};
+                border: 1px solid {Colors.BORDER_LIGHT};
                 {BorderRadius.get_border_radius(BorderRadius.MEDIUM)};
             }}
             QFrame:hover {{
