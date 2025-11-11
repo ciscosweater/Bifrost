@@ -264,18 +264,44 @@ class GameDeletionDialog(QDialog):
     def _create_header(self) -> QFrame:
         """Cria o header do dialog."""
         frame = ModernFrame()
-        frame.setMaximumHeight(60)  # Altura adequada para header
+        frame.setMinimumHeight(60)  # Altura mínima para garantir visibilidade
+        frame.setMaximumHeight(60)  # Altura fixa para header
+        
+        # Forçar estilo explícito para garantir visibilidade
+        frame.setStyleSheet(f"""
+            QFrame {{
+                background: {theme.colors.SURFACE};
+                border: 2px solid {theme.colors.PRIMARY};
+                {BorderRadius.get_border_radius(BorderRadius.MEDIUM)};
+            }}
+        """)
+        
         layout = QVBoxLayout(frame)
         layout.setContentsMargins(Spacing.MD, Spacing.SM, Spacing.MD, Spacing.SM)
         layout.setSpacing(Spacing.XS)
         
-        title = QLabel("ACCELA Game Manager")
-        title.setFont(QFont(Typography.get_font_family(), Typography.H2_SIZE, QFont.Weight.Bold))
-        title.setStyleSheet(f"color: {theme.colors.TEXT_ACCENT}; margin: 0; border: none; background: transparent;")
+        title = QLabel("Uninstall ACCELA Games")
+        title.setFont(QFont(Typography.get_font_family(), Typography.H1_SIZE, QFont.Weight.Bold))
+        title.setStyleSheet(f"""
+            color: {theme.colors.TEXT_ACCENT};
+            font-size: {Typography.H1_SIZE}px;
+            font-weight: bold;
+            margin: 0;
+            border: none;
+            background: transparent;
+            padding: 2px;
+        """)
         layout.addWidget(title)
         
         subtitle = QLabel("Select and delete games downloaded by ACCELA")
-        subtitle.setStyleSheet(f"color: {theme.colors.TEXT_SECONDARY}; {Typography.get_font_style(Typography.H3_SIZE)}; margin: 0; border: none; background: transparent;")
+        subtitle.setStyleSheet(f"""
+            color: {theme.colors.TEXT_SECONDARY};
+            font-size: {Typography.H3_SIZE}px;
+            margin: 0;
+            border: none;
+            background: transparent;
+            padding: 2px;
+        """)
         layout.addWidget(subtitle)
         
         return frame
@@ -319,7 +345,7 @@ class GameDeletionDialog(QDialog):
         header = self.games_table.horizontalHeader()
         if header:
             header.setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed)  # Select
-            self.games_table.setColumnWidth(0, 60)  # Largura fixa para checkbox (aumentada)
+            self.games_table.setColumnWidth(0, 80)  # Largura para checkbox com container maior
             header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)  # Game Name
             header.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)  # Size
             header.setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)  # Location
@@ -550,18 +576,18 @@ class GameDeletionDialog(QDialog):
         self.games_table.setRowCount(len(self.games_list))
         
         for row, game in enumerate(self.games_list):
-            # Standard simple checkbox
+            # Checkbox simples usando cores do tema
             checkbox = QCheckBox()
             checkbox.setChecked(False)
             checkbox.stateChanged.connect(self._on_selection_changed)
+            checkbox.setFixedSize(20, 20)  # Forçar tamanho fixo
             
-            # Container simples para centralizar
+            # Container com tamanho fixo para garantir visibilidade
             checkbox_container = QWidget()
-            checkbox_container.setFixedSize(20, 20)
+            checkbox_container.setFixedSize(40, 40)  # Tamanho fixo para o container
             container_layout = QHBoxLayout(checkbox_container)
-            container_layout.setContentsMargins(0, 0, 0, 0)
+            container_layout.setContentsMargins(20, 3, 15, 15)  # Centralizar
             container_layout.setSpacing(0)
-            checkbox.setFixedSize(20, 20)
             container_layout.addWidget(checkbox)
             container_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
             
