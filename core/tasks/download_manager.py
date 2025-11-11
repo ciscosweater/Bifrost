@@ -30,7 +30,7 @@ class DownloadManager(QObject):
     download_paused = pyqtSignal()
     download_resumed = pyqtSignal()
     download_cancelled = pyqtSignal()
-    download_completed = pyqtSignal(str)  # session_id
+    download_completed = pyqtSignal(str, str)  # session_id, install_path
     download_error = pyqtSignal(str)
     
     # State signals
@@ -536,7 +536,14 @@ class DownloadManager(QObject):
         if self.current_session:
             self.current_session.download_state = DownloadState.COMPLETED
             self.current_session.save()
-            self.download_completed.emit(self.current_session.session_id)
+            
+            # Calcular caminho de instalação para Online-Fixes
+            install_path = self._get_game_install_directory(
+                self.current_session.dest_path,
+                self.current_session.game_data
+            )
+            
+            self.download_completed.emit(self.current_session.session_id, install_path)
         
         logger.debug("Download task finished successfully")
     
@@ -610,9 +617,9 @@ class DownloadManager(QObject):
             
             # Limpar threads ativas
             if hasattr(self, '_active_threads'):
-                for thread in self._active_threads.copy():
+                for thread in list(self._active_threads):
                     try:
-                        if thread.isRunning():
+                        if thread and hasattr(thread, 'isRunning') and thread.isRunning():
                             thread.quit()
                             if not thread.wait(2000):
                                 thread.terminate()
@@ -626,11 +633,16 @@ class DownloadManager(QObject):
             if self.task_runner:
                 try:
                     if hasattr(self.task_runner, 'thread') and self.task_runner.thread:
-                        if self.task_runner.thread.isRunning():
-                            self.task_runner.thread.quit()
-                            self.task_runner.thread.wait(3000)
+                        thread = self.task_runner.thread
+                        if thread.isRunning():
+                            thread.quit()
+                            thread.wait(3000)
+                        # Limpar referência antes de deletar
+                        self.task_runner.thread = None
                 except Exception as e:
-                    logger.warning(f"Error cleaning up task runner: {e}")
+                    # Silenciar warning de deleção de C/C++ object - é normal no PyQt6
+                    if "wrapped C/C++ object" not in str(e):
+                        logger.warning(f"Error cleaning up task runner thread: {e}")
                 finally:
                     self.task_runner = None
             

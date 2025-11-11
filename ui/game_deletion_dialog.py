@@ -554,13 +554,6 @@ class GameDeletionDialog(QDialog):
         self.progress_bar.setMaximumHeight(24)  # Altura aumentada
         layout.addWidget(self.progress_bar)
         
-        # Cancel button
-        self.cancel_btn = HoverButton("Cancel")
-        self.cancel_btn.clicked.connect(self._cancel_deletion)
-        self.cancel_btn.setFixedHeight(32)  # Increased height for consistency
-        self.cancel_btn.setFont(QFont(Typography.get_font_family(), Typography.H3_SIZE, QFont.Weight.Bold))
-        layout.addWidget(self.cancel_btn)
-        
         return frame
     
     def _load_games(self):
@@ -810,21 +803,12 @@ class GameDeletionDialog(QDialog):
         self.progress_frame.setVisible(False)
         self.progress_bar.setValue(0)
     
-    def _cancel_deletion(self):
-        """Cancel deletion process."""
-        if self.deletion_worker:
-            self.deletion_worker.stop()
-            self.deletion_worker.wait()
-            self.deletion_worker = None
-        
-        # Resetar UI
-        self.games_table.setEnabled(True)
-        self.refresh_btn.setEnabled(True)
-        self.progress_frame.setVisible(False)
-        self.progress_bar.setValue(0)
+
     
     def closeEvent(self, a0):
         """Trata o evento de fechar o dialog."""
         if self.deletion_worker:
-            self._cancel_deletion()
+            self.deletion_worker.stop()
+            self.deletion_worker.wait()
+            self.deletion_worker = None
         super().closeEvent(a0)
