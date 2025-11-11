@@ -629,6 +629,15 @@ class DownloadManager(QObject):
                     finally:
                         self._active_threads.discard(thread)
             
+            # Clean up download task properly
+            if self.download_task:
+                try:
+                    self.download_task.cleanup()
+                except Exception as e:
+                    logger.warning(f"Error cleaning up download task: {e}")
+                finally:
+                    self.download_task = None
+            
             # Limpar task runner
             if self.task_runner:
                 try:
@@ -648,7 +657,6 @@ class DownloadManager(QObject):
             
             # Limpar referências
             self.current_process = None
-            self.download_task = None
             self.current_session = None
             
             logger.info("DownloadManager cleanup completed")

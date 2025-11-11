@@ -96,6 +96,7 @@ class MainWindow(QMainWindow):
         self.current_dest_path = None
         self.slssteam_mode_was_active = False
         self.game_header_image = None
+        self._fix_available = False  # Track if fixes are available for current game
         self.keyboard_shortcuts = KeyboardShortcuts(self)
         self.asset_manager = AssetManager(self)
         
@@ -490,10 +491,19 @@ class MainWindow(QMainWindow):
         if not self._check_slssteam_prerequisite():
             return
 
-        # 🐛 FIX: Clean up any previous ZIP task to prevent conflicts
-        if hasattr(self, 'zip_task'):
-            self.zip_task = None
-            logger.debug("Cleaned up previous ZIP task reference")
+        # 🐛 FIX: Clean up any previous ZIP task and task runner to prevent conflicts
+        self._cleanup_zip_processing()
+        
+        # Reset completion message control for new processing
+        self._completion_message_shown = False
+        if hasattr(self, '_fix_applied_recently'):
+            delattr(self, '_fix_applied_recently')
+        
+        # Reset Steam restart control for new processing
+        self._steam_restart_prompted = False
+        
+        # Reset UI state for new processing
+        self._reset_ui_state_for_new_processing()
 
         self.log_output.append(f"Processing ZIP file: {zip_path}")
 
@@ -507,6 +517,65 @@ class MainWindow(QMainWindow):
         worker = self.task_runner.run(self.zip_task.run, zip_path)
         worker.finished.connect(self._on_zip_processed)
         worker.error.connect(self._handle_task_error)
+    
+    def _cleanup_zip_processing(self):
+        """Clean up ZIP processing resources to prevent crashes"""
+        try:
+            # Clean up previous ZIP task
+            if hasattr(self, 'zip_task') and self.zip_task:
+                self.zip_task = None
+                logger.debug("Cleaned up previous ZIP task reference")
+            
+            # Clean up previous task runner
+            if hasattr(self, 'task_runner') and self.task_runner:
+                if hasattr(self.task_runner, 'thread') and self.task_runner.thread:
+                    thread = self.task_runner.thread
+                    if thread.isRunning():
+                        logger.warning("Previous task runner thread still running, attempting to stop...")
+                        thread.quit()
+                        if not thread.wait(2000):
+                            logger.warning("Thread did not quit gracefully, terminating...")
+                            thread.terminate()
+                            thread.wait(1000)
+                    self.task_runner.thread = None
+                
+                self.task_runner = None
+                logger.debug("Cleaned up previous task runner")
+            
+        except Exception as e:
+            logger.warning(f"Error during ZIP processing cleanup: {e}")
+            # Silently continue to avoid crashes
+    
+    def _reset_ui_state_for_new_processing(self):
+        """Reset UI state for new ZIP processing"""
+        try:
+            # Reset drop zone
+            self.drop_text_label.setText("Drop game files here or click to browse")
+            self.drop_text_label.setVisible(True)
+            
+            # Reset title bar button
+            self.title_bar.select_file_button.setVisible(True)
+            
+            # Reset minimal download widget
+            if hasattr(self, 'minimal_download_widget'):
+                self.minimal_download_widget.set_idle_state()
+                self.minimal_download_widget.setVisible(False)
+            
+            # Reset game title
+            if hasattr(self, 'game_title_label'):
+                self.game_title_label.setText("ACCELA")
+            
+            # Reset current data - preserve dest_path only if fix might be needed
+            self.game_data = None
+            # Only clear dest_path if it's from a completed download that won't need fixes
+            if not hasattr(self, '_fix_available') or not self._fix_available:
+                self.current_dest_path = None
+            self.current_session = None
+            
+            logger.debug("UI state reset for new processing")
+            
+        except Exception as e:
+            logger.warning(f"Error resetting UI state: {e}")
 
     def _on_download_progress(self, percentage, message):
         """Handle download progress updates"""
@@ -576,8 +645,8 @@ class MainWindow(QMainWindow):
         # Hide controls after a while
         QTimer.singleShot(3000, self._hide_download_controls)
         
-        # Reset UI state after completion
-        QTimer.singleShot(3500, self._reset_ui_state)
+        # Reset UI state after completion - delay longer to allow fix installation
+        QTimer.singleShot(15000, self._safe_reset_ui_state)  # 15 seconds instead of 3.5
         
     def _on_download_error(self, error_message):
         """Handle download errors"""
@@ -653,6 +722,9 @@ class MainWindow(QMainWindow):
             online_fix = result.get('onlineFix', {})
             
             logger.info(f"Online-Fixes check completed for {appid}: Generic={generic_fix.get('available')}, Online={online_fix.get('available')}")
+            
+            # Set flag for fix availability
+            self._fix_available = bool(generic_fix.get('available') or online_fix.get('available'))
             
             fixes_available = []
             
@@ -855,78 +927,107 @@ class MainWindow(QMainWindow):
                 
                 # Após cancelar, mostrar mensagem de conclusão do download
                 self._show_download_completion_message()
+                # Fix was declined, clear the flag
+                self._fix_available = False
                     
         except Exception as e:
             logger.error(f"Error showing fixes available dialog: {e}")
             self.log_output.append(f"Error showing fixes dialog: {e}")
     
+    def _on_fix_download_progress(self, message: str):
+        """Handle Online-Fixes download progress"""
+        self.log_output.append(f"Fix download: {message}")
+    
+    def _on_fix_applied(self, appid: int, fix_type: str):
+        """Handle successful Online-Fixes application"""
+        self.log_output.append(f"✓ {fix_type.title()} Fix successfully applied!")
+        self.notification_manager.show_notification(f"{fix_type.title()} Fix applied successfully!", "success")
+        # Fix was applied, clear the flag
+        self._fix_available = False
+        # Mark that a fix was recently applied to allow Steam restart prompt
+        self._fix_applied_recently = True
+        # Reset steam restart prompt flag to allow new prompt after fix
+        self._steam_restart_prompted = False
+        # Trigger Steam restart prompt
+        self._prompt_for_steam_restart()
+    
+    def _on_fix_error(self, error_message: str):
+        """Handle Online-Fixes errors"""
+        self.log_output.append(f"Fix error: {error_message}")
+        self.notification_manager.show_notification(f"Fix installation failed: {error_message}", "error")
+    
+    def _confirm_cancel_download(self):
+        """Confirm download cancellation with user"""
+        reply = QMessageBox.question(
+            self,
+            "Cancel Download",
+            "Are you sure you want to cancel the current download?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
+        )
+        
+        if reply == QMessageBox.StandardButton.Yes:
+            self.download_manager.cancel_download()
+    
+    def _show_download_completion_message(self):
+        """Show download completion message"""
+        if hasattr(self, '_completion_message_shown') and self._completion_message_shown:
+            return
+            
+        self._completion_message_shown = True
+        
+        if self.game_data:
+            game_name = self.game_data.get('game_name', 'Game')
+            self.notification_manager.show_notification(f"{game_name} download completed!", "success")
+        
+        # Show completion dialog
+        completion_msg = QMessageBox(self)
+        completion_msg.setIcon(QMessageBox.Icon.Information)
+        completion_msg.setWindowTitle("Download Complete")
+        completion_msg.setText("Game download completed successfully!")
+        completion_msg.setInformativeText("You can now play the game or install Online-Fixes if available.")
+        completion_msg.setStandardButtons(QMessageBox.StandardButton.Ok)
+        completion_msg.exec()
+    
     def _apply_fix_from_dialog(self, dialog: QDialog, appid: int, fix_url: str, 
                               fix_type: str, fix_name: str, game_name: str):
-        """Aplica fix selecionado a partir do diálogo"""
+        """Aplica Online-Fix a partir de um diálogo"""
         try:
-            # Fechar diálogo
-            dialog.accept()
+            # Mark that fix dialog is open to prevent premature UI reset
+            self._fix_dialog_open = True
             
-            # Obter caminho de instalação
+            # Obter caminho de instalação do jogo
             install_path = self._get_current_install_path()
             if not install_path:
-                logger.error("Install path is empty or None")
-                self.log_output.append("Could not determine install path")
-                QMessageBox.warning(
-                    self,
-                    "Installation Error",
-                    "Could not determine the game installation path.\n\n"
-                    "Please make sure the game is installed and try again."
-                )
+                self.log_output.append("Error: Could not determine game installation path")
+                QMessageBox.warning(self, "Path Error", 
+                                   "Could not determine the game installation path. "
+                                   "The download session may have been cleared.")
+                self._fix_dialog_open = False
                 return
             
-            logger.info(f"Install path determined: {install_path}")
-            
-            # Validar caminho antes de prosseguir
-            if not os.path.exists(install_path):
-                logger.error(f"Install path does not exist: {install_path}")
-                self.log_output.append(f"Install path does not exist: {install_path}")
-                QMessageBox.warning(
-                    self,
-                    "Installation Error",
-                    f"Game installation path not found:\n{install_path}\n\n"
-                    "Please verify the game is properly installed."
-                )
-                return
-            
-            if not os.path.isdir(install_path):
-                logger.error(f"Install path is not a directory: {install_path}")
-                self.log_output.append(f"Install path is not a directory: {install_path}")
-                QMessageBox.warning(
-                    self,
-                    "Installation Error",
-                    f"Invalid installation path:\n{install_path}\n\n"
-                    "The path is not a valid directory."
-                )
-                return
+            self.log_output.append(f"Installing {fix_name}...")
             
             # Confirmar instalação
-            confirm_msg = QMessageBox(self)
-            confirm_msg.setIcon(QMessageBox.Icon.Question)
-            confirm_msg.setWindowTitle("Confirm Fix Installation")
-            confirm_msg.setText(
-                f"Install <b>{fix_name}</b> for <b>{game_name}</b>?\n\n"
-                f"Installation path: {install_path}\n\n"
-                "This will modify game files to enable offline functionality."
-            )
-            confirm_msg.setStandardButtons(
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+            reply = QMessageBox.question(
+                self,
+                f"Install {fix_name}",
+                f"Install {fix_name} for {game_name}?\n\n"
+                f"Path: {install_path}",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.Yes
             )
             
-            if confirm_msg.exec() == QMessageBox.StandardButton.Yes:
-                self.log_output.append(f"Installing {fix_name} for {game_name}...")
-                self.log_output.append(f"Install path: {install_path}")
-                
+            if reply == QMessageBox.StandardButton.Yes:
                 # Adicionar tratamento de exceções ao redor da aplicação do fix
                 try:
                     success = self.online_fixes_manager.apply_fix(appid, fix_url, install_path, fix_type, game_name)
                     if not success:
                         raise Exception("Failed to start fix installation")
+                    
+                    # Fix installation started successfully - close the fixes dialog
+                    dialog.accept()
+                    
                 except Exception as fix_error:
                     logger.error(f"Error starting fix installation: {fix_error}")
                     self.log_output.append(f"Error starting installation: {fix_error}")
@@ -946,7 +1047,10 @@ class MainWindow(QMainWindow):
                 "Installation Error",
                 f"An unexpected error occurred:\n{str(e)}"
             )
-    
+        finally:
+            # Always reset the flag when done
+            self._fix_dialog_open = False
+
     def _get_current_install_path(self) -> str:
         """Obtém caminho de instalação do jogo atual"""
         try:
@@ -957,7 +1061,17 @@ class MainWindow(QMainWindow):
             if not appid:
                 return ""
             
-            # Tentar obter da sessão atual do download manager primeiro
+            # Priority 1: Use current_dest_path if available
+            if self.current_dest_path:
+                install_path = self.download_manager._get_game_install_directory(
+                    self.current_dest_path, 
+                    self.game_data
+                )
+                if install_path and os.path.exists(install_path):
+                    logger.info(f"Using install path from current_dest_path: {install_path}")
+                    return install_path
+            
+            # Priority 2: Tentar obter da sessão atual do download manager
             if hasattr(self.download_manager, 'current_session') and self.download_manager.current_session:
                 dest_path = self.download_manager.current_session.dest_path
                 install_path = self.download_manager._get_game_install_directory(
@@ -968,148 +1082,27 @@ class MainWindow(QMainWindow):
                     logger.info(f"Using install path from current session: {install_path}")
                     return install_path
             
-            # Se não houver sessão ativa, tentar obter da biblioteca Steam
+            # Priority 3: Se não houver sessão ativa, tentar obter da biblioteca Steam
             from core import steam_helpers
             steam_libraries = steam_helpers.get_steam_libraries()
             
-            for library_path in steam_libraries:
-                game_path = os.path.join(library_path, 'steamapps', 'common')
-                if os.path.exists(game_path):
-                    # Procurar pelo diretório do jogo
-                    installdir = self.game_data.get('installdir', '')
-                    if installdir:
-                        potential_path = os.path.join(game_path, installdir)
-                        if os.path.exists(potential_path) and os.path.isdir(potential_path):
-                            logger.info(f"Found install path from Steam library: {potential_path}")
-                            return potential_path
+            for library in steam_libraries:
+                acf_path = os.path.join(library, 'steamapps', f"appmanifest_{appid}.acf")
+                if os.path.exists(acf_path):
+                    install_dir = steam_helpers.parse_acf_file(acf_path).get('installdir')
+                    if install_dir:
+                        install_path = os.path.join(library, 'steamapps', 'common', install_dir)
+                        if os.path.exists(install_path):
+                            logger.info(f"Using install path from Steam library: {install_path}")
+                            return install_path
             
-            logger.warning(f"Could not find install path for AppID {appid}")
+            logger.warning(f"Could not find install path for appid {appid}")
             return ""
             
         except Exception as e:
             logger.error(f"Error getting install path: {e}")
             return ""
-    
-    def _on_fix_download_progress(self, percentage: int, message: str):
-        """Handle Online-Fixes download progress"""
-        self.log_output.append(f"{message} ({percentage}%)")
-    
-    def _show_download_completion_message(self):
-        """Mostra mensagem de conclusão do download e modal de Steam se necessário"""
-        try:
-            # Evitar mostrar mensagem múltiplas vezes
-            if self._completion_message_shown:
-                return
-                
-            self._completion_message_shown = True
-            
-            if self.slssteam_mode_was_active:
-                logger.info("Prompting for Steam restart...")
-                self._prompt_for_steam_restart()
-            else:
-                from PyQt6.QtWidgets import QMessageBox
-                QMessageBox.information(self, "Success", "All files have been downloaded successfully!")
-        except Exception as e:
-            logger.error(f"Error showing download completion message: {e}")
-    
-    def _on_fix_applied(self, appid: int, fix_type: str):
-        """Handle successful Online-Fixes application"""
-        # Debug para verificar game_data
-        logger.debug(f"game_data in _on_fix_applied: {self.game_data}")
-        logger.debug(f"_current_game_data in _on_fix_applied: {self._current_game_data}")
-        
-        # Tentar obter nome do jogo de múltiplas fontes
-        game_name = None
-        
-        # Primeiro tentar dos dados atuais
-        if self.game_data:
-            game_name = self.game_data.get('game_name')
-            logger.debug(f"game_name from game_data: {game_name}")
-        
-        # Se não encontrar, tentar dos dados armazenados
-        if not game_name and self._current_game_data:
-            game_name = self._current_game_data.get('game_name')
-            logger.debug(f"game_name from _current_game_data: {game_name}")
-        
-        # Se ainda não encontrar, tentar da Steam API
-        if not game_name:
-            try:
-                game_name = self._get_game_name_from_steam(appid)
-                logger.debug(f"game_name from Steam API: {game_name}")
-            except Exception as e:
-                logger.warning(f"Failed to get game name from Steam API: {e}")
-        
-        if not game_name:
-            game_name = f'App_{appid}'
-            logger.warning(f"Could not determine game name for AppID {appid}, using fallback")
-        
-        logger.info(f"Using game name: {game_name} for AppID {appid}")
-        
-        self.log_output.append(f"{fix_type.title()} fix successfully applied to {game_name}!")
-        self.notification_manager.show_notification(f"{fix_type.title()} fix applied to {game_name}!", "success")
-        
-        # Mostrar diálogo de sucesso
-        from PyQt6.QtWidgets import QMessageBox
-        QMessageBox.information(
-            self,
-            "Fix Applied Successfully",
-            f"{fix_type.title()} fix has been successfully applied to {game_name}!\n\n"
-            f"The game should now work without online requirements."
-        )
-        
-        # Após aplicar o fix, mostrar mensagem de conclusão do download
-        self._show_download_completion_message()
-    
-    def _get_game_name_from_steam(self, appid: int) -> str:
-        """Obtém nome do jogo da Steam Store API"""
-        try:
-            import requests
-            url = f"https://store.steampowered.com/api/appdetails"
-            params = {'appids': appid}
-            
-            response = requests.get(url, params=params, timeout=10)
-            response.raise_for_status()
-            
-            data = response.json()
-            if str(appid) in data and data[str(appid)]['success']:
-                return data[str(appid)]['data']['name']
-            
-            return f"App_{appid}"
-            
-        except Exception as e:
-            logger.warning(f"Failed to get game name for {appid}: {e}")
-            return f"App_{appid}"
-    
-    def _on_fix_error(self, error_message: str):
-        """Handle Online-Fixes errors"""
-        self.log_output.append(f"Online-Fixes error: {error_message}")
-        self.notification_manager.show_notification("Online-Fixes error occurred", "error")
-        
-        # Mostrar diálogo de erro
-        from PyQt6.QtWidgets import QMessageBox
-        QMessageBox.warning(
-            self,
-            "Online-Fixes Error",
-            f"An error occurred while applying Online-Fixes:\n\n{error_message}"
-        )
-        
-        # Clean up the thread reference
-        if hasattr(self, 'fix_check_thread'):
-            self.fix_check_thread = None
-    
-    def _confirm_cancel_download(self):
-        """Show confirmation dialog before cancelling"""
-        reply = QMessageBox.question(
-            self, 
-            "Cancel Download",
-            "Are you sure you want to cancel the download? Partial files will be removed.",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.No
-        )
-        
-        if reply == QMessageBox.StandardButton.Yes:
-            self.download_manager.cancel_download()
-            
+
     def _hide_download_controls(self):
         """Hide download controls after completion"""
         self.minimal_download_widget.setVisible(False)
@@ -1117,7 +1110,15 @@ class MainWindow(QMainWindow):
     def _on_zip_processed(self, game_data):
         # self.progress_bar.setRange(0, 100)  # Legacy - commented
         # self.progress_bar.setValue(100)  # Legacy - commented
+        
+        # Don't clear current_dest_path - preserve it for potential fix installation
         self.game_data = game_data
+        # Reset fix availability for new game
+        self._fix_available = False
+        
+        # Reset UI elements after ZIP processing
+        self.drop_text_label.setVisible(False)
+        self.title_bar.select_file_button.setVisible(False)
         
         if self.game_data and self.game_data.get('depots'):
             self.notification_manager.show_notification(f"Loaded {self.game_data.get('game_name', 'Game')} with {len(self.game_data.get('depots', []))} depots", "success")
@@ -1180,11 +1181,17 @@ class MainWindow(QMainWindow):
         if not self._check_slssteam_prerequisite():
             return
         
+        # Clear any previous dest_path and set new one
         self.current_dest_path = dest_path
         self.slssteam_mode_was_active = slssteam_mode
         
         # Reset completion message control for new download
         self._completion_message_shown = False
+        if hasattr(self, '_fix_applied_recently'):
+            delattr(self, '_fix_applied_recently')
+        
+        # Reset Steam restart control for new download
+        self._steam_restart_prompted = False
         
         # Store current game data for Online-Fixes
         self._current_game_data = self.game_data.copy() if self.game_data else None
@@ -1216,6 +1223,9 @@ class MainWindow(QMainWindow):
         game_image = self._get_game_image_for_download()
         
         self.minimal_download_widget.set_downloading_state(game_name, game_image)
+        
+        # Ensure the download widget is visible
+        self.minimal_download_widget.show()
         
         # Switch to download page (GIF + download widget vertically)
         self.main_stacked_widget.setCurrentIndex(1)
@@ -1403,9 +1413,10 @@ class MainWindow(QMainWindow):
         # Switch back to normal page (GIF + info cards side by side)
         self.main_stacked_widget.setCurrentIndex(0)
 
-        # 🐛 FIX: Clean up all state variables to prevent conflicts on next ZIP
+        # 🐛 FIX: Clean up state variables but preserve critical data for fix operations
         self.game_data = None
-        self.current_dest_path = None
+        # Don't clear current_dest_path immediately - it might be needed for fix installation
+        # It will be cleared when a new ZIP is processed
         self.slssteam_mode_was_active = False
         self._steam_restart_prompted = False  # Reset flag for next download
         self.zip_task = None  # Ensure ZIP task is cleaned up
@@ -1414,14 +1425,31 @@ class MainWindow(QMainWindow):
         if self.task_runner:
             try:
                 if hasattr(self.task_runner, 'thread') and self.task_runner.thread:
-                    if self.task_runner.thread.isRunning():
-                        self.task_runner.thread.quit()
-                        self.task_runner.thread.wait(1000)  # Wait up to 1 second
+                    thread = self.task_runner.thread
+                    if thread.isRunning():
+                        thread.quit()
+                        if not thread.wait(3000):  # Increased timeout
+                            logger.warning("Task runner thread did not finish cleanly")
+                            thread.terminate()
+                            thread.wait(1000)
+                    # Clear reference before deletion
+                    self.task_runner.thread = None
             except Exception as e:
-                logger.warning(f"Error cleaning up task runner thread: {e}")
-        self.task_runner = None  # Clean up task runner reference
+                # Silenciar warning de deleção de C/C++ object - é normal no PyQt6
+                if "wrapped C/C++ object" not in str(e):
+                    logger.warning(f"Error cleaning up task runner thread: {e}")
+            finally:
+                self.task_runner = None  # Clean up task runner reference
 
         logger.debug("UI state fully reset, ready for next operation")
+
+    def _safe_reset_ui_state(self):
+        """Safe reset that preserves critical data if fix might be applied"""
+        # Only reset if we're not in the middle of fix operations
+        if not hasattr(self, '_fix_dialog_open') or not self._fix_dialog_open:
+            self._reset_ui_state()
+        else:
+            logger.debug("Skipping UI reset - fix dialog might be open")
 
     def _start_speed_monitor(self):
         self.speed_monitor_task = SpeedMonitorTask()
@@ -1446,12 +1474,16 @@ class MainWindow(QMainWindow):
             self.speed_monitor_runner = None
 
     def _prompt_for_steam_restart(self):
-        # Avoid multiple requests
-        if self._steam_restart_prompted:
-            logger.debug("Steam restart already prompted, skipping")
+        """Prompt user to restart Steam after SLSsteam setup"""
+        # Allow multiple prompts if they come from different operations (like after fixes)
+        # But avoid spamming in the same operation
+        if self._steam_restart_prompted and not hasattr(self, '_fix_applied_recently'):
+            logger.debug("Steam restart already prompted for this operation, skipping")
             return
             
         self._steam_restart_prompted = True
+        logger.debug(f"Steam restart prompt - _steam_restart_prompted: {self._steam_restart_prompted}")
+        logger.debug(f"Steam restart prompt - _fix_applied_recently: {hasattr(self, '_fix_applied_recently')}")
         
         reply = QMessageBox.question(self, 'SLSsteam Integration', 
                                      "SLSsteam files have been created. Would you like to restart Steam now to apply the changes?",

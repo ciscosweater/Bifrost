@@ -58,6 +58,38 @@ class DownloadDepotsTask(QObject):
         # Controle de cancelamento
         self._should_stop = False
         self._current_process = None
+        self._current_reader_thread = None
+        self._current_stream_reader = None
+
+    def _cleanup_reader_thread(self):
+        """Clean up reader thread and stream reader safely"""
+        if not self._current_reader_thread:
+            return
+            
+        try:
+            # Stop stream reader first
+            if self._current_stream_reader:
+                self._current_stream_reader.stop()
+                
+            # Quit thread and wait for completion
+            if self._current_reader_thread.isRunning():
+                self._current_reader_thread.quit()
+                if not self._current_reader_thread.wait(5000):
+                    logger.warning("Reader thread did not finish cleanly, terminating")
+                    self._current_reader_thread.terminate()
+                    self._current_reader_thread.wait(2000)
+                    
+            # Schedule deletion
+            self._current_reader_thread.deleteLater()
+            if self._current_stream_reader:
+                self._current_stream_reader.deleteLater()
+                
+        except Exception as e:
+            logger.error(f"Error cleaning up reader thread: {e}")
+        finally:
+            # Clear references
+            self._current_reader_thread = None
+            self._current_stream_reader = None
 
     def run(self, game_data, selected_depots, dest_path):
         """
@@ -108,6 +140,10 @@ class DownloadDepotsTask(QObject):
                     stream_reader.new_line.connect(self._handle_downloader_output)
                     reader_thread.started.connect(stream_reader.run)
                     
+                    # Store thread reference for proper cleanup
+                    self._current_reader_thread = reader_thread
+                    self._current_stream_reader = stream_reader
+                    
                     reader_thread.start()
                     
                     # Monitor process with cancellation check
@@ -137,35 +173,7 @@ class DownloadDepotsTask(QObject):
                         self._current_process.wait()
                     
                     # Limpar recursos da thread e processo com sincronização
-                    cleanup_event = threading.Event()
-                    
-                    def cleanup_reader():
-                        """Synchronized cleanup of reader thread"""
-                        try:
-                            stream_reader.stop()
-                            if reader_thread.isRunning():
-                                reader_thread.quit()
-                                if not reader_thread.wait(5000):  # Increased timeout
-                                    logger.warning("Reader thread did not finish cleanly, terminating")
-                                    reader_thread.terminate()
-                                    reader_thread.wait(2000)  # Wait for forced completion
-                        except Exception as e:
-                            logger.error(f"Error cleaning up reader thread: {e}")
-                        finally:
-                            cleanup_event.set()
-                    
-                    # Execute cleanup directly to ensure it completes
-                    cleanup_reader()
-                    
-                    # Wait for cleanup completion with timeout
-                    if not cleanup_event.wait(timeout=10):  # 10 second timeout
-                        logger.error("Reader thread cleanup timed out")
-                    
-                    # Additional safety check
-                    if reader_thread.isRunning():
-                        logger.warning("Force terminating reader thread after timeout")
-                        reader_thread.terminate()
-                        reader_thread.wait(1000)
+                    self._cleanup_reader_thread()
                     
                     # Check process result BEFORE cleanup
                     process_returncode = self._current_process.returncode if self._current_process else None
@@ -385,5 +393,28 @@ class DownloadDepotsTask(QObject):
         self._should_stop = True
         self.cancellation_requested.emit()
         logger.info("Download cancellation requested")
+    
+    def cleanup(self):
+        """Clean up all resources properly"""
+        try:
+            # Stop reader thread
+            self._cleanup_reader_thread()
+            
+            # Terminate any running process
+            if self._current_process and self._current_process.poll() is None:
+                try:
+                    self._current_process.terminate()
+                    self._current_process.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    self._current_process.kill()
+                    self._current_process.wait(timeout=2)
+                except Exception as e:
+                    logger.warning(f"Error terminating process during cleanup: {e}")
+            
+            # Clear references
+            self._current_process = None
+            
+        except Exception as e:
+            logger.error(f"Error during DownloadDepotsTask cleanup: {e}")
     
 
