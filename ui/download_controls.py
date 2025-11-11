@@ -173,8 +173,7 @@ class DownloadControls(QWidget):
                 color: {theme.colors.TEXT_ON_PRIMARY};
                 {Typography.get_font_style(Typography.BODY_SIZE)};
                 font-weight: 600;
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 {theme.colors.PRIMARY}, stop:1 {theme.colors.PRIMARY_DARK});
+                background: {theme.colors.PRIMARY};
                 border: 1px solid {theme.colors.PRIMARY_DARK};
                 border-radius: {BorderRadius.SMALL}px;
                 padding: {Spacing.XS}px {Spacing.SM}px;
@@ -196,8 +195,7 @@ class DownloadControls(QWidget):
                 color: {theme.colors.TEXT_ON_PRIMARY};
                 {Typography.get_font_style(Typography.BODY_SIZE)};
                 font-weight: 600;
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 {theme.colors.WARNING}, stop:1 {theme.colors.WARNING_DARK});
+                background: {theme.colors.WARNING};
                 border: 1px solid {theme.colors.WARNING_DARK};
                 border-radius: {BorderRadius.SMALL}px;
                 padding: {Spacing.XS}px {Spacing.SM}px;
@@ -219,8 +217,7 @@ class DownloadControls(QWidget):
                 color: {theme.colors.TEXT_ON_PRIMARY};
                 {Typography.get_font_style(Typography.BODY_SIZE)};
                 font-weight: 600;
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 {theme.colors.SUCCESS}, stop:1 {theme.colors.SUCCESS_DARK});
+                background: {theme.colors.SUCCESS};
                 border: 1px solid {theme.colors.SUCCESS_DARK};
                 border-radius: {BorderRadius.SMALL}px;
                 padding: {Spacing.XS}px {Spacing.SM}px;
@@ -243,8 +240,7 @@ class DownloadControls(QWidget):
                 color: {theme.colors.TEXT_ON_PRIMARY};
                 {Typography.get_font_style(Typography.BODY_SIZE)};
                 font-weight: 600;
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 {theme.colors.ERROR}, stop:1 {theme.colors.ERROR_DARK});
+                background: {theme.colors.ERROR};
                 border: 1px solid {theme.colors.ERROR_DARK};
                 border-radius: {BorderRadius.SMALL}px;
                 padding: {Spacing.XS}px {Spacing.SM}px;

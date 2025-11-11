@@ -131,8 +131,7 @@ class NotificationWidget(QFrame):
         
         self.setStyleSheet(f"""
             NotificationWidget {{
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
-                                          stop:0 {primary}, stop:1 {secondary});
+                background: {primary};
                 border: 1px solid {primary};
                 color: {theme.colors.BACKGROUND};
             }}

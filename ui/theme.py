@@ -181,15 +181,13 @@ class ComponentStyles:
     # Modern card style
     CARD = f"""
         QFrame {{
-            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                stop:0 {Colors.GLASS_SURFACE}, stop:1 {Colors.SURFACE});
+            background: {Colors.SURFACE};
             border: 1px solid {Colors.GLASS_BORDER};
             {BorderRadius.get_border_radius(BorderRadius.LARGE)};
             {Spacing.get_padding(Spacing.MD)};
         }}
         QFrame:hover {{
-            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                stop:0 {Colors.SURFACE_LIGHT}, stop:1 {Colors.SURFACE});
+            background: {Colors.SURFACE_LIGHT};
             border: 1px solid {Colors.BORDER_LIGHT};
             {Shadows.get_shadow(Shadows.SUBTLE)};
         }}
@@ -198,8 +196,7 @@ class ComponentStyles:
     # Primary button style
     PRIMARY_BUTTON = f"""
         QPushButton {{
-            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                stop:0 {Colors.PRIMARY}, stop:1 {Colors.PRIMARY_DARK});
+            background: {Colors.PRIMARY};
             border: 1px solid {Colors.PRIMARY_DARK};
             color: {Colors.TEXT_ON_PRIMARY};
             {Typography.get_font_style(Typography.BODY_SIZE, Typography.WEIGHT_BOLD)};
@@ -208,14 +205,12 @@ class ComponentStyles:
             {Shadows.get_shadow(Shadows.SUBTLE)};
         }}
         QPushButton:hover {{
-            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                stop:0 {Colors.PRIMARY_LIGHT}, stop:1 {Colors.PRIMARY});
+            background: {Colors.PRIMARY_LIGHT};
             border: 1px solid {Colors.PRIMARY};
             {Shadows.get_shadow(Shadows.MEDIUM)};
         }}
         QPushButton:pressed {{
-            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                stop:0 {Colors.PRIMARY_DARK}, stop:1 {Colors.PRIMARY_DARK});
+            background: {Colors.PRIMARY_DARK};
             border: 1px solid {Colors.PRIMARY_DARK};
             {Shadows.get_shadow(Shadows.NONE)};
         }}
@@ -254,15 +249,13 @@ class ComponentStyles:
             text-align: center; 
             color: {Colors.TEXT_PRIMARY}; 
             {Typography.get_font_style(Typography.CAPTION_SIZE, Typography.WEIGHT_BOLD)};
-            background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
-                stop:0 {Colors.SURFACE}, stop:1 {Colors.BACKGROUND});
+            background: {Colors.SURFACE};
             {BorderRadius.get_border_radius(BorderRadius.SMALL)};
             {Spacing.get_padding(1)};
             {Shadows.get_shadow(Shadows.SUBTLE)};
         }}
         QProgressBar::chunk {{ 
-            background: qlineargradient(x1:0, y1:0, x2:1, y2:0, 
-                stop:0 {Colors.PRIMARY}, stop:0.5 {Colors.PRIMARY_LIGHT}, stop:1 {Colors.PRIMARY}); 
+            background: {Colors.PRIMARY}; 
             {BorderRadius.get_border_radius(BorderRadius.SMALL)};
             {Animations.get_transition("width", Animations.DURATION_SLOW)};
         }}

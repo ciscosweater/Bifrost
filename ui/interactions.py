@@ -63,15 +63,13 @@ class ModernFrame(QFrame):
         from ui.theme import theme
         self.setStyleSheet(f"""
             QFrame {{
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 {theme.colors.GLASS_SURFACE}, stop:1 {theme.colors.SURFACE});
+                background: {theme.colors.SURFACE};
                 border: 1px solid {theme.colors.GLASS_BORDER};
                 {theme.border_radius.get_border_radius(theme.border_radius.LARGE)};
                 {theme.shadows.get_shadow(theme.shadows.SUBTLE)};
             }}
             QFrame:hover {{
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 {theme.colors.SURFACE_LIGHT}, stop:1 {theme.colors.SURFACE});
+                background: {theme.colors.SURFACE_LIGHT};
                 border: 1px solid {theme.colors.BORDER_LIGHT};
                 {theme.shadows.get_shadow(theme.shadows.MEDIUM)};
             }}
@@ -145,8 +143,7 @@ class NotificationWidget(QFrame):
         
         self.setStyleSheet(f"""
             QFrame {{
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
-                                          stop:0 {primary}, stop:1 {secondary});
+                background: {primary};
                 border: 1px solid {primary};
                 color: #1E1E1E;
                 font-weight: bold;

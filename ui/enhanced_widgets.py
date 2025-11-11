@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 class EnhancedProgressBar(QProgressBar):
     """
-    Enhanced progress bar with gradient styling, time estimation, and smooth animations.
+    Enhanced progress bar with solid color styling, time estimation, and smooth animations.
     """
     
     def __init__(self, parent=None):
@@ -25,7 +25,7 @@ class EnhancedProgressBar(QProgressBar):
         self._setup_style()
         
     def _setup_style(self):
-        """Apply enhanced styling with gradient and modern appearance."""
+        """Apply enhanced styling with solid colors and modern appearance."""
         self.setStyleSheet(theme.components.PROGRESS_BAR)
         
     def set_download_state(self, state):
@@ -59,7 +59,7 @@ class EnhancedProgressBar(QProgressBar):
             glow_color = "transparent"
             self.setFormat("%p%")
         
-        # Apply dynamic style with gradients and shadows
+        # Apply dynamic style with solid colors and shadows
         style = f"""
             QProgressBar {{
                 border: 1px solid {border_color};
@@ -68,14 +68,12 @@ class EnhancedProgressBar(QProgressBar):
                 font-weight: bold;
                 {Typography.get_font_style(Typography.CAPTION_SIZE)};
                 color: {theme.colors.TEXT_PRIMARY};
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 {theme.colors.SURFACE}, stop:1 {theme.colors.BACKGROUND});
+                background: {theme.colors.SURFACE};
                 height: 20px;
                 {theme.shadows.get_shadow(theme.shadows.SUBTLE)};
             }}
             QProgressBar::chunk {{
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 {chunk_color}, stop:0.5 {chunk_color}CC, stop:1 {chunk_color});
+                background: {chunk_color};
                 border-radius: {BorderRadius.SMALL - 1}px;
                 {theme.animations.get_transition("width", theme.animations.DURATION_SLOW)};
             }}
@@ -183,7 +181,7 @@ class ModernCard(QFrame):
 
 class PrimaryButton(QLabel):
     """
-    Modern primary button with gradient background and hover effects
+    Modern primary button with solid color background and hover effects
     """
     
     clicked = pyqtSignal()

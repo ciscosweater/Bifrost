@@ -139,8 +139,7 @@ class GameDeletionDialog(QDialog):
         # Apply modern simplified theme to avoid conflicts
         self.setStyleSheet(f"""
             QDialog {{
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
-                    stop:0 {theme.colors.BACKGROUND}, stop:1 {theme.colors.SURFACE});
+                background: {theme.colors.BACKGROUND};
                 border: 2px solid {theme.colors.PRIMARY};
                 color: {theme.colors.TEXT_PRIMARY};
                 border-radius: 8px;

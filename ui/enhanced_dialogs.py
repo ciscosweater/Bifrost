@@ -56,8 +56,7 @@ class ModernDialog(QDialog):
         from .theme import theme
         self.setStyleSheet(f"""
             QDialog {{
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
-                    stop:0 {theme.colors.BACKGROUND}, stop:1 {theme.colors.SURFACE});
+                background: {theme.colors.BACKGROUND};
                 border: 2px solid {theme.colors.PRIMARY};
                 color: {theme.colors.TEXT_PRIMARY};
                 border-radius: {BorderRadius.LARGE}px;
@@ -82,8 +81,7 @@ class ModernDialog(QDialog):
                 border-radius: {BorderRadius.SMALL}px;
             }}
             QListWidget::item:selected {{
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, 
-                    stop:0 {theme.colors.PRIMARY}, stop:1 {theme.colors.PRIMARY_LIGHT});
+                background: {theme.colors.PRIMARY};
                 color: {theme.colors.TEXT_ON_PRIMARY};
                 border: 1px solid {theme.colors.PRIMARY};
             }}
@@ -878,8 +876,7 @@ class DlcSelectionDialog(ModernDialog):
                 border: 1px solid {theme.colors.PRIMARY};
             }}
             QListWidget::item:selected {{
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, 
-                    stop:0 {theme.colors.PRIMARY}, stop:1 {theme.colors.PRIMARY_LIGHT});
+                background: {theme.colors.PRIMARY};
                 color: {theme.colors.TEXT_ON_PRIMARY};
                 border: 1px solid {theme.colors.PRIMARY};
             }}
