@@ -76,7 +76,7 @@ class TaskRunner:
 
         # Start the thread
         self.thread.start()
-        logger.info(f"Task for function '{target_func.__name__}' has been started in a new thread.")
+        logger.debug(f"Task for function '{target_func.__name__}' has been started in a new thread.")
 
         # --- MODIFICATION START ---
         # Add this instance to the class-level list to prevent it from

@@ -13,6 +13,10 @@ logger = logging.getLogger(__name__)
 # (after Steam is killed).
 _slssteam_so_path_cache = None
 
+# Cache for Steam libraries to avoid repeated scans
+_STEAM_LIBRARIES_CACHE = {}
+_STEAM_LIBRARIES_CACHE_TTL = 60  # 1 minute cache for Steam libraries
+
 def find_steam_install():
     """
     Attempts to find the Steam installation path based on the operating system.
@@ -32,10 +36,10 @@ def _find_steam_windows():
         key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Valve\Steam")
         steam_path, _ = winreg.QueryValueEx(key, "SteamPath")
         winreg.CloseKey(key)
-        logger.info(f"Found Steam installation at: {steam_path}")
+        logger.debug(f"Found Steam installation at: {steam_path}")
         return os.path.normpath(steam_path)
     except Exception:
-        logger.error("Failed to read Steam path from registry.")
+        logger.debug("Failed to read Steam path from registry.")
         return None
 
 def _find_steam_linux():
@@ -46,15 +50,15 @@ def _find_steam_linux():
         os.path.join(home_dir, ".local", "share", "Steam"),
         os.path.join(home_dir, ".var", "app", "com.valvesoftware.Steam", "data", "Steam"),
         os.path.join(home_dir, "snap", "steam", "common", ".steam", "steam")
-    ]
+]
     
     for path in potential_paths:
         if os.path.isdir(os.path.join(path, "steamapps")):
             real_path = os.path.realpath(path)
-            logger.info(f"Found Steam installation at: {real_path} (from {path})")
+            logger.debug(f"Found Steam installation at: {real_path} (from {path})")
             return real_path
             
-    logger.error("Could not find Steam installation in common Linux directories.")
+    logger.debug("Could not find Steam installation in common Linux directories.")
     return None
 
 def parse_library_folders(vdf_path):
@@ -74,10 +78,24 @@ def parse_library_folders(vdf_path):
         logger.error(f"Failed to parse libraryfolders.vdf: {e}")
     return library_paths
 
-def get_steam_libraries():
+def get_steam_libraries(force_refresh: bool = False):
     """
     Finds all Steam library folders, resolving symbolic links to prevent duplicates.
+    
+    Args:
+        force_refresh: If True, bypasses cache and forces a fresh scan
     """
+    import time
+    current_time = time.time()
+    cache_key = "steam_libraries"
+    
+    # Check cache first (unless force_refresh)
+    if not force_refresh and cache_key in _STEAM_LIBRARIES_CACHE:
+        cached_libraries, cached_time = _STEAM_LIBRARIES_CACHE[cache_key]
+        if current_time - cached_time < _STEAM_LIBRARIES_CACHE_TTL:
+            logger.debug(f"Using cached Steam libraries: {len(cached_libraries)} libraries")
+            return cached_libraries
+    
     steam_path = find_steam_install()
     if not steam_path:
         return []
@@ -90,7 +108,12 @@ def get_steam_libraries():
         for lib_path in additional_libraries:
             all_libraries.add(os.path.realpath(lib_path))
 
-    return list(all_libraries)
+    libraries_list = list(all_libraries)
+    
+    # Cache the result
+    _STEAM_LIBRARIES_CACHE[cache_key] = (libraries_list, current_time)
+    
+    return libraries_list
 
 def kill_steam_process():
     """
@@ -235,6 +258,12 @@ def start_steam_with_path(path):
     except Exception as e:
         logger.error(f"Failed to execute steam with provided path '{path}': {e}", exc_info=True)
         return False
+
+def clear_steam_libraries_cache():
+    """Clear the Steam libraries cache."""
+    global _STEAM_LIBRARIES_CACHE
+    _STEAM_LIBRARIES_CACHE.clear()
+    logger.debug("Steam libraries cache cleared")
 
 def run_dll_injector(steam_path):
     """

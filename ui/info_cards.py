@@ -113,7 +113,7 @@ class AccelaInfoCard(InfoCard):
     def __init__(self):
         super().__init__(
             title="ACCELA",
-            value="v2.0.0",
+            value="v1.1.0",
             icon_text="🚀",
             color=Colors.PRIMARY
         )
@@ -129,8 +129,8 @@ class AccelaInfoCard(InfoCard):
         
         self.info_index = 0
         self.info_items = [
-            ("v2.0.0", "🚀"),
-            ("Steam Tools", "⚙️"),
+            ("v1.1.0", "🚀"),
+            ("SLSsteam", "⚙️"),
             ("Fast Downloads", "⚡"),
             ("Game Manager", "🎮")
         ]

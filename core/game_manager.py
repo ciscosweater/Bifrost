@@ -15,6 +15,10 @@ _DIRECTORY_SIZE_CACHE = {}
 _CACHE_TTL_SECONDS = 900  # 15 minutes
 _MAX_CACHE_SIZE = 200  # Increased cache size
 
+# Games scan cache to avoid duplicate calls
+_GAMES_SCAN_CACHE = {}
+_GAMES_SCAN_CACHE_TTL = 30  # 30 seconds cache for games scan
+
 class DirectorySizeWorker(QThread):
     """Worker thread to calculate directory sizes without blocking UI."""
     size_calculated = pyqtSignal(int)
@@ -161,16 +165,27 @@ class GameManager:
     """
     
     @staticmethod
-    def scan_accela_games(async_size_calculation: bool = True) -> List[Dict]:
+    def scan_accela_games(async_size_calculation: bool = True, force_refresh: bool = False) -> List[Dict]:
         """
         Scans all Steam libraries for ACCELA games.
 
         Args:
             async_size_calculation: If True, calculates sizes asynchronously for better performance
+            force_refresh: If True, bypasses cache and forces a fresh scan
 
         Returns:
             List of dictionaries with information about found games
         """
+        current_time = time.time()
+        cache_key = f"games_scan_{async_size_calculation}"
+        
+        # Check cache first (unless force_refresh)
+        if not force_refresh and cache_key in _GAMES_SCAN_CACHE:
+            cached_games, cached_time = _GAMES_SCAN_CACHE[cache_key]
+            if current_time - cached_time < _GAMES_SCAN_CACHE_TTL:
+                logger.debug(f"Using cached games scan result: {len(cached_games)} games")
+                return cached_games
+        
         games = []
         libraries = steam_helpers.get_steam_libraries()
         
@@ -237,6 +252,10 @@ class GameManager:
                     continue
 
         logger.info(f"Found {len(games)} ACCELA games")
+        
+        # Cache the result
+        _GAMES_SCAN_CACHE[cache_key] = (games, current_time)
+        
         return games
     
     @staticmethod
@@ -614,3 +633,10 @@ class GameManager:
             i += 1
         
         return f"{size_float:.1f} {size_names[i]}"
+    
+    @staticmethod
+    def clear_games_cache():
+        """Clear the games scan cache."""
+        global _GAMES_SCAN_CACHE
+        _GAMES_SCAN_CACHE.clear()
+        logger.debug("Games scan cache cleared")
