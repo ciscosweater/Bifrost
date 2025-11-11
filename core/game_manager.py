@@ -189,7 +189,7 @@ class GameManager:
         games = []
         libraries = steam_helpers.get_steam_libraries()
         
-        logger.info(f"Scanning {len(libraries)} Steam libraries for ACCELA games")
+        logger.debug(f"Scanning {len(libraries)} Steam libraries for ACCELA games")
 
         for library_path in libraries:
             steamapps_path = os.path.join(library_path, 'steamapps')
@@ -251,7 +251,7 @@ class GameManager:
                     logger.error(f"Error processing ACF file {acf_file}: {e}")
                     continue
 
-        logger.info(f"Found {len(games)} ACCELA games")
+        logger.debug(f"Found {len(games)} ACCELA games")
         
         # Cache the result
         _GAMES_SCAN_CACHE[cache_key] = (games, current_time)

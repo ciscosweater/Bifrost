@@ -63,7 +63,7 @@ class DownloadDepotsTask(QObject):
         TASK: Prepares and executes the DepotDownloaderMod commands to download
         files directly into the final destination directory.
         """
-        logger.info(f"Download task starting for {len(selected_depots)} depots.")
+        logger.debug(f"Download task starting for {len(selected_depots)} depots.")
         self.game_data = game_data  # Store game_data for later use
         self._should_stop = False  # Reset cancel flag
         

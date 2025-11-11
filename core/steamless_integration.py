@@ -140,9 +140,12 @@ class SteamlessIntegration(QObject):
         # Sort by priority (higher first)
         exe_files.sort(key=lambda x: x['priority'], reverse=True)
         
-        logger.info(f"Found {len(exe_files)} executable(s) in {game_directory}")
-        for exe in exe_files[:5]:  # Log top 5 candidates
-            logger.info(f"  - {exe['name']} ({exe['size']} bytes, priority: {exe['priority']})")
+        if len(exe_files) == 0:
+            logger.warning(f"No executables found in {game_directory}")
+        else:
+            logger.debug(f"Found {len(exe_files)} executable(s) in {game_directory}")
+            for exe in exe_files[:3]:  # Log top 3 candidates only in debug
+                logger.debug(f"  - {exe['name']} ({exe['size']} bytes, priority: {exe['priority']})")
         
         return exe_files  # Return full dictionaries with path, name, size, priority
     

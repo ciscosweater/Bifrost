@@ -490,7 +490,7 @@ class MainWindow(QMainWindow):
     def _on_download_completed(self, session_id):
         """Handle download completion"""
         try:
-            logger.info("Download completion handler started")
+            logger.debug("Download completion handler started")
             self._stop_speed_monitor()
             # self.progress_bar.setValue(100)  # Legacy - commented
             # self.progress_bar.set_download_state("completed")  # Legacy - commented
@@ -518,7 +518,7 @@ class MainWindow(QMainWindow):
                 from PyQt6.QtWidgets import QMessageBox
                 QMessageBox.information(self, "Success", "All files have been downloaded successfully!")
             
-            logger.info("Download completion handler finished")
+            logger.debug("Download completion handler finished")
         except Exception as e:
             logger.error(f"Error in download completion handler: {e}", exc_info=True)
             self.log_output.append(f"Error during completion: {e}")

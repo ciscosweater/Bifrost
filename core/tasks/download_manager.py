@@ -530,7 +530,7 @@ class DownloadManager(QObject):
             self.current_session.save()
             self.download_completed.emit(self.current_session.session_id)
         
-        logger.info("Download task finished successfully")
+        logger.debug("Download task finished successfully")
     
     def _on_task_cancelled(self):
         """Handle task cancellation - novo método"""

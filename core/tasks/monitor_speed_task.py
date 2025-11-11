@@ -22,7 +22,7 @@ class SpeedMonitorTask(QObject):
         TASK: Periodically checks network I/O to calculate and report download speed.
         Runs in a loop until stopped.
         """
-        logger.info("Speed monitor task starting.")
+        logger.debug("Speed monitor task starting.")
         try:
             last_bytes = psutil.net_io_counters().bytes_recv
         except Exception as e:
@@ -42,7 +42,7 @@ class SpeedMonitorTask(QObject):
                 logger.warning(f"Error during speed update loop: {e}")
                 self.stop()
 
-        logger.info("Speed monitor task finished.")
+        logger.debug("Speed monitor task finished.")
 
     def _format_speed(self, speed_bps):
         """Formats bytes per second into a human-readable string."""
