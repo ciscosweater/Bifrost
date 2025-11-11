@@ -533,7 +533,7 @@ class OnlineFixesManager(QObject):
                           download_url: str, game_name: str, extracted_files: List[str]):
         """Cria log de instalação do fix"""
         try:
-            log_file_path = os.path.join(install_path, f'luatools-fix-log-{appid}.log')
+            log_file_path = os.path.join(install_path, f'accela-fix-log-{appid}.log')
             
             with open(log_file_path, 'w', encoding='utf-8') as f:
                 f.write(f"Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
