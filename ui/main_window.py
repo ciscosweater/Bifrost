@@ -158,11 +158,11 @@ class MainWindow(QMainWindow):
         normal_layout.setContentsMargins(0, 0, 0, 0)
         normal_layout.setSpacing(Spacing.SM)
         
-        # Drop zone container (left side)
-        drop_zone_container = QWidget()
-        drop_zone_layout = QVBoxLayout(drop_zone_container)
-        drop_zone_layout.setContentsMargins(Spacing.SM, Spacing.SM, Spacing.SM, Spacing.SM)  # Adequate margins for drop zone
-        drop_zone_layout.setSpacing(Spacing.SM)  # Adequate spacing
+        # Drop zone container for normal mode (left side)
+        normal_drop_zone_container = QWidget()
+        normal_drop_zone_layout = QVBoxLayout(normal_drop_zone_container)
+        normal_drop_zone_layout.setContentsMargins(Spacing.SM, Spacing.SM, Spacing.SM, Spacing.SM)  # Adequate margins for drop zone
+        normal_drop_zone_layout.setSpacing(Spacing.SM)  # Adequate spacing
 
         self.drop_label = ScaledLabel()
         self.drop_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -174,7 +174,7 @@ class MainWindow(QMainWindow):
         else:
             self.drop_label.setText("Drag and Drop ZIP File Here")
 
-        drop_zone_layout.addWidget(self.drop_label, 10)
+        normal_drop_zone_layout.addWidget(self.drop_label, 10)
 
         self.drop_text_label = ScaledFontLabel("Drag and Drop Zip here")
         self.drop_text_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -187,10 +187,10 @@ class MainWindow(QMainWindow):
                 {Typography.get_font_style(Typography.H2_SIZE, Typography.WEIGHT_BOLD)};
             }}
         """)
-        drop_zone_layout.addWidget(self.drop_text_label, 1)
+        normal_drop_zone_layout.addWidget(self.drop_text_label, 1)
 
         # Add drop zone to left side of normal layout
-        normal_layout.addWidget(drop_zone_container, 3)  # Takes 3/4 of horizontal space
+        normal_layout.addWidget(normal_drop_zone_container, 3)  # Takes 3/4 of horizontal space
         
         # Add info cards to right side of normal layout
         self.info_cards_frame = QFrame()
@@ -215,8 +215,36 @@ class MainWindow(QMainWindow):
         download_page_layout.setContentsMargins(0, 0, 0, 0)
         download_page_layout.setSpacing(Spacing.SM)
         
-        # Add the same drop zone (GIF) to download page
-        download_page_layout.addWidget(drop_zone_container, 2)  # GIF takes 2/3 of vertical space
+        # Drop zone container for download mode (top)
+        download_drop_zone_container = QWidget()
+        download_drop_zone_layout = QVBoxLayout(download_drop_zone_container)
+        download_drop_zone_layout.setContentsMargins(Spacing.SM, Spacing.SM, Spacing.SM, Spacing.SM)
+        download_drop_zone_layout.setSpacing(Spacing.SM)
+        
+        # Create separate drop label for download mode
+        self.download_drop_label = ScaledLabel()
+        self.download_drop_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        
+        if self.main_movie.isValid():
+            self.download_drop_label.setMovie(self.main_movie)
+            # Don't start movie here, it's already running from normal mode
+        
+        download_drop_zone_layout.addWidget(self.download_drop_label, 10)
+
+        self.download_drop_text_label = ScaledFontLabel("Downloading...")
+        self.download_drop_text_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.download_drop_text_label.setStyleSheet(f"""
+            QLabel {{
+                color: {theme.colors.TEXT_SECONDARY};
+                background-color: transparent;
+                font-family: {Typography.get_font_family()};
+                {Typography.get_font_style(Typography.H2_SIZE, Typography.WEIGHT_BOLD)};
+            }}
+        """)
+        download_drop_zone_layout.addWidget(self.download_drop_text_label, 1)
+        
+        # Add download drop zone to top of download page
+        download_page_layout.addWidget(download_drop_zone_container, 2)  # GIF takes 2/3 of vertical space
         
         # Add download widget below GIF
         download_widget_container = QFrame()
