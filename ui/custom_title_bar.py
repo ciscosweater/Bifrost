@@ -16,6 +16,7 @@ from PyQt6.QtWidgets import (
 )
 
 from .assets import GEAR_SVG, POWER_SVG
+from .theme import theme, Typography, Spacing, BorderRadius
 
 logger = logging.getLogger(__name__)
 
@@ -44,8 +45,8 @@ class CustomTitleBar(QFrame):
         logger.debug("CustomTitleBar initialized.")
 
         layout = QHBoxLayout()
-        layout.setContentsMargins(8, 6, 8, 6)  # Melhores margens para altura maior
-        layout.setSpacing(8)  # Better spacing
+        layout.setContentsMargins(Spacing.SM, Spacing.XS, Spacing.SM, Spacing.XS)  # Melhores margens para altura maior
+        layout.setSpacing(Spacing.SM)  # Better spacing
 
         # Create containers for left and right elements to properly balance them.
         left_widget = QWidget()
@@ -58,7 +59,7 @@ class CustomTitleBar(QFrame):
         self.navi_label.setStyleSheet(f"""
             QLabel {{
                 color: {theme.colors.TEXT_ACCENT};
-                font-size: 12px;
+                {Typography.get_font_style(Typography.BODY_SIZE)};
                 font-weight: bold;
                 border: none;
                 background: transparent;
@@ -71,7 +72,7 @@ class CustomTitleBar(QFrame):
         right_widget = QWidget()
         right_layout = QHBoxLayout(right_widget)
         right_layout.setContentsMargins(0, 0, 0, 0)
-        right_layout.setSpacing(6)  # Better spacing between buttons
+        right_layout.setSpacing(Spacing.SM)  # Better spacing between buttons
 
         # Add SLSsteam status indicator (compact) - before ZIP button
         from .slssteam_status import SlssteamStatusWidget
@@ -115,7 +116,7 @@ class CustomTitleBar(QFrame):
         self.title_label.setStyleSheet(f"""
             QLabel {{
                 color: {theme.colors.TEXT_ACCENT};
-                font-size: 16px;
+                {Typography.get_font_style(Typography.H1_SIZE)};
                 font-weight: bold;
                 letter-spacing: 1px;
                 padding: 4px 12px;
@@ -250,9 +251,9 @@ class CustomTitleBar(QFrame):
             button.setStyleSheet(f"""
                 QPushButton {{
                     border: 1px solid {theme.colors.BORDER};
-                    border-radius: 4px;
+                    border-radius: {BorderRadius.SMALL}px;
                     color: {theme.colors.TEXT_ACCENT};
-                    font-size: 11px;
+                    {Typography.get_font_style(Typography.CAPTION_SIZE)};
                     font-weight: bold;
                     background: {theme.colors.SURFACE};
                 }}

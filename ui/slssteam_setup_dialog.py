@@ -12,6 +12,7 @@ from core.slssteam_checker import SlssteamChecker, SlssteamStatus
 from ui.interactions import ModernFrame, HoverButton
 from ui.enhanced_widgets import EnhancedProgressBar
 from ui.enhanced_dialogs import ModernDialog
+from .theme import theme, Typography, BorderRadius, Spacing
 
 logger = logging.getLogger(__name__)
 
@@ -107,30 +108,28 @@ class SlssteamSetupDialog(ModernDialog):
         
         # Title
         self.title_label = QLabel("SLSsteam Setup")
-        self.title_label.setStyleSheet("""
-            QLabel {
-                color: #C06C84;
+        self.title_label.setStyleSheet(f"""
+            QLabel {{
+                color: {theme.colors.PRIMARY};
                 font-weight: bold;
-                font-size: 18px;
-                margin-bottom: 10px;
-            }
+                {Typography.get_font_style(Typography.H2_SIZE)};
+                {Spacing.get_margin(Spacing.SM)};
+            }}
         """)
-        from utils.settings import get_font_setting
-        title_font = get_font_setting("selected_font", "TrixieCyrG-Plain Regular") or "TrixieCyrG-Plain Regular"
-        self.title_label.setFont(QFont(title_font, 16))
+        self.title_label.setFont(QFont(Typography.get_font_family(), Typography.H2_SIZE - 2))
         self.title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.title_label)
         
         # Description
         self.description_label = QLabel("")
-        self.description_label.setStyleSheet("""
-            QLabel {
-                color: #808080;
-                font-size: 12px;
-                margin-bottom: 15px;
-            }
+        self.description_label.setStyleSheet(f"""
+            QLabel {{
+                color: {theme.colors.TEXT_SECONDARY};
+                {Typography.get_font_style(Typography.BODY_SIZE)};
+                {Spacing.get_margin(Spacing.MD)};
+            }}
         """)
-        self.description_label.setFont(QFont(title_font, 11))
+        self.description_label.setFont(QFont(Typography.get_font_family(), Typography.BODY_SIZE - 1))
         self.description_label.setWordWrap(True)
         self.description_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.description_label)
@@ -138,21 +137,21 @@ class SlssteamSetupDialog(ModernDialog):
         # Separator
         separator = QFrame()
         separator.setFrameShape(QFrame.Shape.HLine)
-        separator.setStyleSheet("background-color: #404040; height: 1px;")
+        separator.setStyleSheet(f"background-color: {theme.colors.SURFACE_DARK}; height: 1px;")
         layout.addWidget(separator)
         
         # Status area
         status_layout = QVBoxLayout()
         
         self.status_label = QLabel("Ready to setup SLSsteam")
-        self.status_label.setStyleSheet("""
-            QLabel {
-                color: #C06C84;
+        self.status_label.setStyleSheet(f"""
+            QLabel {{
+                color: {theme.colors.PRIMARY};
                 font-weight: bold;
-                font-size: 14px;
-            }
+                {Typography.get_font_style(Typography.H3_SIZE)};
+            }}
         """)
-        self.status_label.setFont(QFont(title_font, 12))
+        self.status_label.setFont(QFont(Typography.get_font_family(), Typography.H3_SIZE))
         self.status_label.setWordWrap(True)
         status_layout.addWidget(self.status_label)
         
@@ -166,15 +165,15 @@ class SlssteamSetupDialog(ModernDialog):
         
         # Output area
         self.output_text = QTextEdit()
-        self.output_text.setStyleSheet("""
-            QTextEdit {
-                background-color: #282828;
-                color: #C06C84;
-                border: 1px solid #404040;
-                border-radius: 4px;
+        self.output_text.setStyleSheet(f"""
+            QTextEdit {{
+                background-color: {theme.colors.SURFACE_DARK};
+                color: {theme.colors.PRIMARY};
+                border: 1px solid {theme.colors.SURFACE_DARK};
+                {BorderRadius.get_border_radius(BorderRadius.SMALL)};
                 font-family: {Typography.get_font_family()};
-                font-size: 10px;
-            }
+                {Typography.get_font_style(Typography.CAPTION_SIZE)};
+            }}
         """)
         self.output_text.setReadOnly(True)
         self.output_text.setMaximumHeight(200)

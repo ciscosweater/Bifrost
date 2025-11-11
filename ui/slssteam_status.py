@@ -9,6 +9,7 @@ from PyQt6.QtGui import QFont, QPixmap, QPainter, QColor, QPen, QMouseEvent
 from core.slssteam_checker import SlssteamChecker, SlssteamStatus
 from ui.interactions import HoverButton, ModernFrame
 from ui.slssteam_setup_dialog import SlssteamSetupDialog
+from .theme import theme, BorderRadius, Typography
 
 logger = logging.getLogger(__name__)
 
@@ -19,25 +20,25 @@ class StatusIndicator(QLabel):
         super().__init__(parent)
         self.setFixedSize(16, 16)
         self.status = SlssteamStatus.ERROR
-        self.setStyleSheet("border-radius: 8px;")
+        self.setStyleSheet("border-radius: {BorderRadius.LARGE}px;")
     
     def set_status(self, status: SlssteamStatus):
         """Update indicator color based on status"""
         self.status = status
         
         colors = {
-            SlssteamStatus.INSTALLED_GOOD_CONFIG: "#4CAF50",  # Green
-            SlssteamStatus.INSTALLED_BAD_CONFIG: "#FF9800",  # Orange  
-            SlssteamStatus.NOT_INSTALLED: "#F44336",         # Red
-            SlssteamStatus.ERROR: "#9E9E9E"                  # Gray
+            SlssteamStatus.INSTALLED_GOOD_CONFIG: theme.colors.SUCCESS,  # Green
+            SlssteamStatus.INSTALLED_BAD_CONFIG: theme.colors.WARNING,  # Orange  
+            SlssteamStatus.NOT_INSTALLED: theme.colors.ERROR,         # Red
+            SlssteamStatus.ERROR: theme.colors.TEXT_DISABLED           # Gray
         }
         
-        color = colors.get(status, "#9E9E9E")
+        color = colors.get(status, theme.colors.TEXT_DISABLED)
         self.setStyleSheet(f"""
             QLabel {{
                 background-color: {color};
-                border-radius: 8px;
-                border: 2px solid #1E1E1E;
+                {BorderRadius.get_border_radius(BorderRadius.LARGE)};
+                border: 2px solid {theme.colors.SURFACE};
             }}
         """)
         
@@ -60,17 +61,17 @@ class StatusIndicator(QLabel):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         
         # Draw circle
-        pen = QPen(QColor("#1E1E1E"), 2)
+        pen = QPen(QColor(theme.colors.SURFACE), 2)
         painter.setPen(pen)
         
         colors = {
-            SlssteamStatus.INSTALLED_GOOD_CONFIG: QColor("#4CAF50"),
-            SlssteamStatus.INSTALLED_BAD_CONFIG: QColor("#FF9800"),
-            SlssteamStatus.NOT_INSTALLED: QColor("#F44336"),
-            SlssteamStatus.ERROR: QColor("#9E9E9E")
+            SlssteamStatus.INSTALLED_GOOD_CONFIG: QColor(theme.colors.SUCCESS),
+            SlssteamStatus.INSTALLED_BAD_CONFIG: QColor(theme.colors.WARNING),
+            SlssteamStatus.NOT_INSTALLED: QColor(theme.colors.ERROR),
+            SlssteamStatus.ERROR: QColor(theme.colors.TEXT_DISABLED)
         }
         
-        color = colors.get(self.status, QColor("#9E9E9E"))
+        color = colors.get(self.status, QColor(theme.colors.TEXT_DISABLED))
         painter.setBrush(color)
         
         painter.drawEllipse(2, 2, 12, 12)
@@ -150,13 +151,13 @@ class SlssteamStatusWidget(ModernFrame):
     def _setup_full_ui(self):
         """Setup full UI for standalone use"""
         self.setFixedHeight(40)
-        self.setStyleSheet("""
-            ModernFrame {
-                background-color: #1E1E1E;
+        self.setStyleSheet(f"""
+            ModernFrame {{
+                background-color: {theme.colors.SURFACE};
                 border: none;
-                border-radius: 0px;
+                {BorderRadius.get_border_radius(BorderRadius.NONE)};
                 margin: 0px;
-            }
+            }}
         """)
         
         layout = QHBoxLayout(self)
@@ -169,24 +170,22 @@ class SlssteamStatusWidget(ModernFrame):
         
         # Status text - single line for cleaner look
         self.status_label = QLabel("Checking SLSsteam...")
-        self.status_label.setStyleSheet("""
-            QLabel {
-                color: #C06C84;
+        self.status_label.setStyleSheet(f"""
+            QLabel {{
+                color: {theme.colors.PRIMARY};
                 font-weight: bold;
-                font-size: 12px;
+                {Typography.get_font_style(Typography.BODY_SIZE)};
                 background-color: transparent;
-            }
+            }}
         """)
-        from utils.settings import get_font_setting
-        status_font = get_font_setting("selected_font", "TrixieCyrG-Plain Regular") or "TrixieCyrG-Plain Regular"
-        self.status_label.setFont(QFont(status_font, 11))
+        self.status_label.setFont(QFont(Typography.get_font_family(), Typography.BODY_SIZE - 1))
         self.status_label.setWordWrap(False)
         layout.addWidget(self.status_label, 1)  # Takes available space
         
         # Action button
         self.action_button = HoverButton("Configure")
         self.action_button.setFixedSize(75, 28)
-        self.action_button.setFont(QFont(status_font, 9))
+        self.action_button.setFont(QFont(Typography.get_font_family(), Typography.CAPTION_SIZE - 1))
         self.action_button.clicked.connect(self._on_action_clicked)
         self.action_button.hide()  # Hide initially
         

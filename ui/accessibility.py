@@ -6,7 +6,7 @@ Provides visual accessibility enhancements and keyboard navigation
 from PyQt6.QtWidgets import QWidget, QLabel, QApplication
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QEvent
 from PyQt6.QtGui import QKeyEvent, QFocusEvent, QPainter, QColor, QPen
-from .theme import theme
+from .theme import theme, BorderRadius, Typography
 
 
 class AccessibleWidget(QWidget):
@@ -133,7 +133,7 @@ class HighContrastTheme:
             
             QLabel {{
                 color: {colors['text_primary']};
-                font-size: 12px;
+                {Typography.get_font_style(Typography.BODY_SIZE)};
                 font-weight: bold;
             }}
             
@@ -143,7 +143,7 @@ class HighContrastTheme:
                 color: {colors['text_primary']};
                 font-weight: bold;
                 padding: 8px 16px;
-                border-radius: 4px;
+                border-radius: {BorderRadius.SMALL}px;
             }}
             
             QPushButton:hover {{
@@ -161,7 +161,7 @@ class HighContrastTheme:
                 color: {colors['text_primary']};
                 font-weight: bold;
                 padding: 8px;
-                border-radius: 4px;
+                border-radius: {BorderRadius.SMALL}px;
             }}
             
             QLineEdit:focus, QTextEdit:focus {{
@@ -174,13 +174,13 @@ class HighContrastTheme:
                 color: {colors['text_primary']};
                 font-weight: bold;
                 background: {colors['surface']};
-                border-radius: 4px;
+                border-radius: {BorderRadius.SMALL}px;
                 padding: 2px;
             }}
             
             QProgressBar::chunk {{
                 background: {colors['primary']};
-                border-radius: 2px;
+                border-radius: {BorderRadius.SMALL}px;
             }}
         """
         
@@ -207,7 +207,7 @@ class AccessibleButton(AccessibleWidget):
                 border: 1px solid {theme.colors.PRIMARY};
                 color: {theme.colors.TEXT_PRIMARY};
                 padding: 8px 16px;
-                border-radius: 4px;
+                border-radius: {BorderRadius.SMALL}px;
             }}
             AccessibleButton:hover {{
                 background: {theme.colors.PRIMARY};
@@ -271,8 +271,8 @@ class KeyboardNavigationHelper:
                 background: {theme.colors.SURFACE};
                 border: 1px solid {theme.colors.BORDER};
                 padding: 16px;
-                border-radius: 8px;
-                font-size: 12px;
+                border-radius: {BorderRadius.LARGE}px;
+                {Typography.get_font_style(Typography.BODY_SIZE)};
             }}
         """)
         

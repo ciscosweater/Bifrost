@@ -12,7 +12,7 @@ from PyQt6.QtGui import QFont
 
 from ui.enhanced_widgets import EnhancedProgressBar
 from ui.interactions import HoverButton, ModernFrame
-from ui.theme import theme, Typography
+from ui.theme import theme, Typography, Spacing, BorderRadius
 from ui.custom_checkbox import CustomCheckBox
 from utils.settings import get_font_setting
 from core.game_manager import GameManager
@@ -159,7 +159,7 @@ class GameDeletionDialog(QDialog):
                 gridline-color: {theme.colors.BORDER};
                 selection-background-color: {theme.colors.PRIMARY};
                 alternate-background-color: {theme.colors.SURFACE};
-                font-size: 11px;
+                {Typography.get_font_style(Typography.BODY_SIZE)};
                 outline: none;
             }}
             QTableWidget::item {{
@@ -179,7 +179,7 @@ class GameDeletionDialog(QDialog):
                 padding: 6px 4px;
                 border: 1px solid {theme.colors.BORDER};
                 font-weight: bold;
-                font-size: 10px;
+                {Typography.get_font_style(Typography.CAPTION_SIZE)};
             }}
             QGroupBox {{
                 color: {theme.colors.TEXT_PRIMARY};
@@ -202,7 +202,7 @@ class GameDeletionDialog(QDialog):
                 border: 1px solid {theme.colors.BORDER};
                 padding: 8px;
                 font-family: {Typography.get_font_family()};
-                font-size: 10px;
+                {Typography.get_font_style(Typography.CAPTION_SIZE)};
             }}
             QPushButton {{
                 background-color: {theme.colors.SURFACE};
@@ -211,7 +211,7 @@ class GameDeletionDialog(QDialog):
                 border-radius: 4px;
                 padding: 6px 12px;
                 font-weight: bold;
-                font-size: 10px;
+                {Typography.get_font_style(Typography.CAPTION_SIZE)};
             }}
             QPushButton:hover {{
                 background-color: {theme.colors.PRIMARY};
@@ -234,8 +234,8 @@ class GameDeletionDialog(QDialog):
     def _setup_ui(self):
         """Configura a interface do dialog."""
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(12, 12, 12, 12)  # Margens adequadas para visual moderno
-        layout.setSpacing(8)  # Spacing adequado entre elementos
+        layout.setContentsMargins(Spacing.MD, Spacing.MD, Spacing.MD, Spacing.MD)
+        layout.setSpacing(Spacing.SM)
         
         # Header
         header_frame = self._create_header()
@@ -269,17 +269,17 @@ class GameDeletionDialog(QDialog):
         frame = ModernFrame()
         frame.setMaximumHeight(60)  # Altura adequada para header
         layout = QVBoxLayout(frame)
-        layout.setContentsMargins(12, 8, 12, 8)  # Margens adequadas
-        layout.setSpacing(4)  # Spacing adequado
+        layout.setContentsMargins(Spacing.MD, Spacing.SM, Spacing.MD, Spacing.SM)
+        layout.setSpacing(Spacing.XS)
         
         title = QLabel("ACCELA Game Manager")
         selected_font = get_font_setting("selected_font", "TrixieCyrG-Plain Regular") or "TrixieCyrG-Plain Regular"
-        title.setFont(QFont(selected_font, 14, QFont.Weight.Bold))
+        title.setFont(QFont(selected_font, Typography.H3_SIZE, QFont.Weight.Bold))
         title.setStyleSheet(f"color: {theme.colors.TEXT_ACCENT}; margin: 0; border: none; background: transparent;")
         layout.addWidget(title)
         
         subtitle = QLabel("Select and delete games downloaded by ACCELA")
-        subtitle.setStyleSheet(f"color: {theme.colors.TEXT_SECONDARY}; font-size: 11px; margin: 0; border: none; background: transparent;")
+        subtitle.setStyleSheet(f"color: {theme.colors.TEXT_SECONDARY}; {Typography.get_font_style(Typography.BODY_SIZE)}; margin: 0; border: none; background: transparent;")
         layout.addWidget(subtitle)
         
         return frame
@@ -288,13 +288,13 @@ class GameDeletionDialog(QDialog):
         """Cria a tabela de jogos."""
         frame = ModernFrame()
         layout = QVBoxLayout(frame)
-        layout.setContentsMargins(8, 6, 8, 6)  # Margens adequadas
-        layout.setSpacing(4)  # Spacing adequado
+        layout.setContentsMargins(Spacing.SM, Spacing.XS, Spacing.SM, Spacing.XS)  # Margens adequadas
+        layout.setSpacing(Spacing.XS)  # Spacing adequado
         
         # Table header
         header_label = QLabel("Installed Games")
         header_font = get_font_setting("selected_font", "TrixieCyrG-Plain Regular") or "TrixieCyrG-Plain Regular"
-        header_label.setFont(QFont(header_font, 12, QFont.Weight.Bold))
+        header_label.setFont(QFont(header_font, Typography.BODY_SIZE, QFont.Weight.Bold))
         header_label.setStyleSheet(f"color: {theme.colors.TEXT_ACCENT}; margin: 0; margin-bottom: 6px; border: none; background: transparent;")
         layout.addWidget(header_label)
         
@@ -345,7 +345,7 @@ class GameDeletionDialog(QDialog):
                 gridline-color: {theme.colors.BORDER};
                 selection-background-color: {theme.colors.PRIMARY};
                 alternate-background-color: {theme.colors.SURFACE};
-                font-size: 11px;
+                {Typography.get_font_style(Typography.BODY_SIZE)};
                 outline: none;
             }}
             QTableWidget::item {{
@@ -395,7 +395,7 @@ class GameDeletionDialog(QDialog):
                 padding: 10px 8px;
                 border: 1px solid {theme.colors.BORDER};
                 font-weight: bold;
-                font-size: 11px;
+                {Typography.get_font_style(Typography.BODY_SIZE)};
                 text-align: center;
             }}
             QHeaderView::section:first {{
@@ -411,8 +411,8 @@ class GameDeletionDialog(QDialog):
         
         # Select all/none buttons
         select_layout = QHBoxLayout()
-        select_layout.setContentsMargins(0, 4, 0, 0)  # Margens adequadas
-        select_layout.setSpacing(8)  # Adequate spacing between buttons
+        select_layout.setContentsMargins(0, Spacing.XS, 0, 0)  # Margens adequadas
+        select_layout.setSpacing(Spacing.SM)  # Adequate spacing between buttons
         
         self.select_all_btn = HoverButton("Select All")
         self.select_all_btn.clicked.connect(self._select_all_games)
@@ -433,13 +433,13 @@ class GameDeletionDialog(QDialog):
         """Cria o painel de detalhes do jogo selecionado."""
         frame = ModernFrame()
         layout = QVBoxLayout(frame)
-        layout.setContentsMargins(8, 6, 8, 6)  # Margens adequadas
-        layout.setSpacing(4)  # Spacing adequado
+        layout.setContentsMargins(Spacing.SM, Spacing.XS, Spacing.SM, Spacing.XS)  # Margens adequadas
+        layout.setSpacing(Spacing.XS)  # Spacing adequado
         
         # Details title
         details_title = QLabel("Game Details")
         details_font = get_font_setting("selected_font", "TrixieCyrG-Plain Regular") or "TrixieCyrG-Plain Regular"
-        details_title.setFont(QFont(details_font, 12, QFont.Weight.Bold))
+        details_title.setFont(QFont(details_font, Typography.BODY_SIZE, QFont.Weight.Bold))
         details_title.setStyleSheet(f"color: {theme.colors.TEXT_ACCENT}; margin: 0; margin-bottom: 6px; border: none; background: transparent;")
         layout.addWidget(details_title)
         
@@ -469,7 +469,7 @@ class GameDeletionDialog(QDialog):
         
         # Compatdata info label
         compatdata_info = QLabel("Uncheck to preserve save games in compatdata/APPID/")
-        compatdata_info.setStyleSheet(f"color: {theme.colors.TEXT_SECONDARY}; font-style: italic; font-size: 10px; padding: 4px;")
+        compatdata_info.setStyleSheet(f"color: {theme.colors.TEXT_SECONDARY}; font-style: italic; {Typography.get_font_style(Typography.CAPTION_SIZE)}; padding: {Spacing.XS}px;")
         compatdata_layout.addWidget(compatdata_info)
         
         layout.addWidget(compatdata_group)
@@ -485,7 +485,7 @@ class GameDeletionDialog(QDialog):
             "• This action cannot be undone\n"
             "• Only ACCELA-downloaded games will be shown"
         )
-        warning_text.setStyleSheet(f"color: {theme.colors.TEXT_PRIMARY}; padding: 6px; font-size: 10px;")
+        warning_text.setStyleSheet(f"color: {theme.colors.TEXT_PRIMARY}; padding: {Spacing.XS}px; {Typography.get_font_style(Typography.CAPTION_SIZE)};")
         warning_layout.addWidget(warning_text)
         
         layout.addWidget(warning_group)
@@ -498,8 +498,8 @@ class GameDeletionDialog(QDialog):
         frame = QFrame()
         frame.setMaximumHeight(45)  # Adequate height for buttons
         layout = QHBoxLayout(frame)
-        layout.setContentsMargins(16, 6, 16, 6)  # Margens adequadas
-        layout.setSpacing(12)  # Adequate spacing between buttons
+        layout.setContentsMargins(Spacing.MD, Spacing.XS, Spacing.MD, Spacing.XS)  # Margens adequadas
+        layout.setSpacing(Spacing.MD)  # Adequate spacing between buttons
         
         # Refresh button
         self.refresh_btn = HoverButton("Refresh List")
@@ -529,12 +529,12 @@ class GameDeletionDialog(QDialog):
         frame = ModernFrame()
         frame.setMaximumHeight(70)  # Altura adequada para progresso
         layout = QVBoxLayout(frame)
-        layout.setContentsMargins(12, 8, 12, 8)  # Margens adequadas
-        layout.setSpacing(6)  # Spacing adequado
+        layout.setContentsMargins(Spacing.MD, Spacing.SM, Spacing.MD, Spacing.SM)  # Margens adequadas
+        layout.setSpacing(Spacing.SM)  # Spacing adequado
         
         # Progress label
         self.progress_label = QLabel("Preparing deletion...")
-        self.progress_label.setStyleSheet(f"color: {theme.colors.TEXT_PRIMARY}; font-size: 11px;")
+        self.progress_label.setStyleSheet(f"color: {theme.colors.TEXT_PRIMARY}; {Typography.get_font_style(Typography.BODY_SIZE)};")
         layout.addWidget(self.progress_label)
         
         # Progress bar

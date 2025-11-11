@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt
 from ui.enhanced_dialogs import ModernDialog
+from ui.theme import theme, Typography, Spacing, BorderRadius
 from utils.settings import get_font_setting, set_font_setting
 
 logger = logging.getLogger(__name__)
@@ -49,7 +50,7 @@ class FontSettingsDialog(ModernDialog):
         
         # Add preview area
         preview_label = QLabel("Preview:")
-        preview_label.setStyleSheet("font-weight: bold; margin-top: 10px;")
+        preview_label.setStyleSheet(f"font-weight: bold; margin-top: {Spacing.SM}px;")
         font_layout.addWidget(preview_label)
         
         self.preview_text = QLabel(
@@ -58,14 +59,14 @@ class FontSettingsDialog(ModernDialog):
             "abcdefghijklmnopqrstuvwxyz\n"
             "0123456789 !@#$%&*()"
         )
-        self.preview_text.setStyleSheet("""
-            QLabel {
-                background: #252525;
-                border: 1px solid #353535;
-                padding: 10px;
-                border-radius: 4px;
-                font-size: 12px;
-            }
+        self.preview_text.setStyleSheet(f"""
+            QLabel {{
+                background: {theme.colors.SURFACE};
+                border: 1px solid {theme.colors.BORDER};
+                padding: {Spacing.SM}px;
+                border-radius: {BorderRadius.SMALL}px;
+                {Typography.get_font_style(Typography.BODY_SIZE)};
+            }}
         """)
         self.preview_text.setWordWrap(True)
         font_layout.addWidget(self.preview_text)
@@ -79,7 +80,7 @@ class FontSettingsDialog(ModernDialog):
             "• Default font is TrixieCyrG-Plain Regular"
         )
         info_label.setWordWrap(True)
-        info_label.setStyleSheet("color: #666; font-size: 11px; margin: 10px 0;")
+        info_label.setStyleSheet(f"color: {theme.colors.TEXT_SECONDARY}; {Typography.get_font_style(Typography.CAPTION_SIZE)}; margin: {Spacing.SM}px 0;")
         
         # Buttons
         button_layout = QHBoxLayout()
@@ -121,11 +122,11 @@ class FontSettingsDialog(ModernDialog):
             font_key = selected_button.property("font_key")
             self.preview_text.setStyleSheet(f"""
                 QLabel {{
-                    background: #252525;
-                    border: 1px solid #353535;
-                    padding: 10px;
-                    border-radius: 4px;
-                    font-size: 12px;
+                    background: {theme.colors.SURFACE};
+                    border: 1px solid {theme.colors.BORDER};
+                    padding: {Spacing.SM}px;
+                    border-radius: {BorderRadius.SMALL}px;
+                    {Typography.get_font_style(Typography.BODY_SIZE)};
                     font-family: '{font_key}';
                 }}
             """)

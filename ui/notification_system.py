@@ -3,6 +3,8 @@ from PyQt6.QtWidgets import QFrame, QLabel, QPushButton, QHBoxLayout, QVBoxLayou
 from PyQt6.QtCore import Qt, QTimer, QPropertyAnimation, QEasingCurve, pyqtSignal, QRect
 from PyQt6.QtGui import QFont
 
+from ui.theme import theme, Typography, Spacing
+
 logger = logging.getLogger(__name__)
 
 class NotificationManager:
@@ -14,7 +16,7 @@ class NotificationManager:
         self.parent = parent
         self.active_notifications = []
         self.max_visible = 3
-        self.notification_spacing = 10
+        self.notification_spacing = Spacing.SM
         
     def show_notification(self, message, notification_type="info", duration=5000):
         """Show a new notification."""
@@ -71,7 +73,7 @@ class NotificationWidget(QFrame):
         self._setup_style()
         
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(15, 10, 15, 10)
+        layout.setContentsMargins(Spacing.MD, Spacing.SM, Spacing.MD, Spacing.SM)
         
         # Icon label
         icon_label = QLabel()
@@ -80,7 +82,7 @@ class NotificationWidget(QFrame):
         icon_label.setText(self._get_icon())
         icon_label.setStyleSheet(f"""
             QLabel {{
-                font-size: 16px;
+                {Typography.get_font_style(Typography.H2_SIZE)};
                 color: {self._get_color()};
                 background: transparent;
             }}
@@ -93,8 +95,7 @@ class NotificationWidget(QFrame):
         message_label.setStyleSheet(f"""
             QLabel {{
                 color: {self._get_color()};
-                font-size: 12px;
-                font-weight: 500;
+                {Typography.get_font_style(Typography.BODY_SIZE)};
                 background: transparent;
             }}
         """)
@@ -108,8 +109,7 @@ class NotificationWidget(QFrame):
                 background: transparent;
                 border: none;
                 color: {self._get_color()};
-                font-size: 16px;
-                font-weight: bold;
+                {Typography.get_font_style(Typography.H2_SIZE, Typography.WEIGHT_BOLD)};
             }}
             QPushButton:hover {{
                 background: rgba(255, 255, 255, 0.1);
@@ -121,10 +121,10 @@ class NotificationWidget(QFrame):
     def _setup_style(self):
         """Apply notification styling based on type."""
         colors = {
-            "info": ("#6C84C0", "#5A6C9E"),
-            "success": ("#6CC084", "#5AA06E"), 
-            "warning": ("#C0A06C", "#9E805A"),
-            "error": ("#C06C84", "#A05C74")
+            "info": (theme.colors.PRIMARY, theme.colors.PRIMARY_DARK),
+            "success": (theme.colors.SUCCESS, theme.colors.SUCCESS_DARK), 
+            "warning": (theme.colors.WARNING, theme.colors.WARNING_DARK),
+            "error": (theme.colors.ERROR, theme.colors.ERROR_DARK)
         }
         
         primary, secondary = colors.get(self.notification_type, colors["info"])
@@ -134,7 +134,7 @@ class NotificationWidget(QFrame):
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
                                           stop:0 {primary}, stop:1 {secondary});
                 border: 1px solid {primary};
-                color: #1E1E1E;
+                color: {theme.colors.BACKGROUND};
             }}
         """)
         
@@ -160,7 +160,7 @@ class NotificationWidget(QFrame):
         
     def _get_color(self):
         """Get text color for notification type."""
-        return "#1E1E1E"  # Dark text for all notification types
+        return theme.colors.BACKGROUND  # Dark text for all notification types
         
     def show_notification(self):
         """Show notification with slide animation."""
@@ -238,16 +238,18 @@ class ProgressNotification:
         # Update notification text with progress
         progress_text = f"{self.title} - {progress}%"
         # Update the notification's message label
-        for child in self.notification.children():
-            if isinstance(child, QLabel) and child.text() != "×" and "[i]" not in child.text():
-                child.setText(progress_text)
-                break
+        if self.notification:
+            for child in self.notification.children():
+                if isinstance(child, QLabel) and child.text() != "×" and "[i]" not in child.text():
+                    child.setText(progress_text)
+                    break
                 
     def complete(self, success_message="Completed!"):
         """Mark progress as complete."""
         self.update_progress(100, success_message)
         # Auto-dismiss after completion
-        QTimer.singleShot(2000, self.notification.dismiss)
+        if self.notification and hasattr(self.notification, 'dismiss'):
+            QTimer.singleShot(2000, self.notification.dismiss)
         
     def dismiss(self):
         """Dismiss progress notification."""

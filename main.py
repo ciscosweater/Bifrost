@@ -11,7 +11,7 @@ if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
 from ui.main_window import MainWindow
-from ui.theme import theme
+from ui.theme import theme, Typography
 from utils.logger import setup_logging
 from utils.settings import get_font_setting
 
@@ -68,9 +68,9 @@ def main():
     
     # Apply font if loaded successfully
     if font_loaded:
-        custom_font = QFont(font_name, 10)
+        custom_font = QFont(font_name, Typography.BODY_SIZE)
         app.setFont(custom_font)
-        logger.info(f"Applied selected font: '{font_name}'")
+        logger.info(f"Applied selected font: '{font_name}' with size {Typography.BODY_SIZE}px")
     else:
         logger.warning(f"Could not load selected font '{selected_font}', using fallback: {font_name}")
     

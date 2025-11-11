@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt
 from ui.enhanced_dialogs import ModernDialog
+from ui.theme import theme, Typography, Spacing, BorderRadius
 from utils.settings import get_logging_setting, set_logging_setting
 from utils.logger import update_logging_mode
 
@@ -57,7 +58,7 @@ class LoggingSettingsDialog(ModernDialog):
             "• Detailed logs are useful for debugging problems"
         )
         info_label.setWordWrap(True)
-        info_label.setStyleSheet("color: #666; font-size: 11px; margin: 10px 0;")
+        info_label.setStyleSheet(f"color: {theme.colors.TEXT_SECONDARY}; {Typography.get_font_style(Typography.CAPTION_SIZE)}; margin: {Spacing.SM}px 0;")
         
         # Buttons
         button_layout = QHBoxLayout()

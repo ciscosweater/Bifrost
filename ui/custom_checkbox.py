@@ -3,6 +3,8 @@ from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButt
 from PyQt6.QtCore import Qt, pyqtSignal, QSize
 from PyQt6.QtGui import QPainter, QColor, QPen, QBrush, QFont, QMouseEvent
 
+from ui.theme import theme, Spacing
+
 logger = logging.getLogger(__name__)
 
 class CheckBoxWidget(QWidget):
@@ -27,15 +29,15 @@ class CheckBoxWidget(QWidget):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         
         # Draw border
-        pen = QPen(QColor('#C06C84'), 2)
+        pen = QPen(QColor(theme.colors.PRIMARY), 2)
         painter.setPen(pen)
         
         # Draw background
         if self._checked:
-            brush = QBrush(QColor('#C06C84'))
+            brush = QBrush(QColor(theme.colors.PRIMARY))
             painter.setBrush(brush)
         else:
-            brush = QBrush(QColor('#1E1E1E'))
+            brush = QBrush(QColor(theme.colors.BACKGROUND))
             painter.setBrush(brush)
         
         # Draw rounded rectangle (ajustado para 20x20)
@@ -43,7 +45,7 @@ class CheckBoxWidget(QWidget):
         
         # Draw checkmark if checked (ajustado para 20x20)
         if self._checked:
-            painter.setPen(QPen(QColor('white'), 2))
+            painter.setPen(QPen(QColor(theme.colors.TEXT_ON_PRIMARY), 2))
             painter.drawLine(6, 10, 8, 12)
             painter.drawLine(8, 12, 13, 7)
         
@@ -61,7 +63,7 @@ class CustomCheckBox(QWidget):
         # Setup layout
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(5)
+        layout.setSpacing(Spacing.XS)
         
         # Checkbox
         self.checkbox_widget = CheckBoxWidget()

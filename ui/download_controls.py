@@ -7,7 +7,7 @@ from PyQt6.QtWidgets import QWidget, QHBoxLayout, QPushButton, QVBoxLayout, QLab
 from PyQt6.QtCore import Qt, pyqtSignal, QSize
 from PyQt6.QtGui import QFont
 
-from ui.theme import theme
+from ui.theme import theme, Typography, Spacing, BorderRadius
 from ui.enhanced_widgets import SecondaryButton
 
 logger = logging.getLogger(__name__)
@@ -30,8 +30,8 @@ class DownloadControls(QWidget):
     def _setup_ui(self):
         """Configura interface do componente"""
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(8, 8, 8, 8)  # Reduced margins
-        layout.setSpacing(8)  # Reduced spacing
+        layout.setContentsMargins(Spacing.SM, Spacing.SM, Spacing.SM, Spacing.SM)
+        layout.setSpacing(Spacing.SM)
 
         # Status label
         self.status_label = QLabel("Ready to download")
@@ -44,12 +44,12 @@ class DownloadControls(QWidget):
         self.status_label.setStyleSheet(f"""
             QLabel {{
                 color: {theme.colors.TEXT_SECONDARY};
-                font-size: 12px;
+                {Typography.get_font_style(Typography.BODY_SIZE)};
                 font-weight: 500;
                 background: {theme.colors.SURFACE};
                 border: 1px solid {theme.colors.BORDER};
-                border-radius: 4px;
-                padding: 6px 12px;
+                border-radius: {BorderRadius.SMALL}px;
+                padding: {Spacing.XS}px {Spacing.SM}px;
                 {theme.animations.get_transition("all", theme.animations.DURATION_NORMAL)};
             }}
         """)
@@ -58,7 +58,7 @@ class DownloadControls(QWidget):
         # Control buttons
         buttons_layout = QHBoxLayout()
         buttons_layout.setContentsMargins(0, 0, 0, 0)
-        buttons_layout.setSpacing(8)  # Reduced spacing
+        buttons_layout.setSpacing(Spacing.SM)  # Reduced spacing
 
         # Pause button
         self.pause_button = QPushButton("Pause")
@@ -95,10 +95,10 @@ class DownloadControls(QWidget):
                     background: {theme.colors.PRIMARY};
                     color: white;
                     border: none;
-                    padding: 5px 8px;
-                    border-radius: 4px;
+                    padding: {Spacing.XS}px {Spacing.XS}px;
+                    border-radius: {BorderRadius.SMALL}px;
                     font-weight: bold;
-                    font-size: 12px;
+                    {Typography.get_font_style(Typography.BODY_SIZE)};
                     min-width: 70px;
                     min-height: 16px;
                 }}
@@ -118,10 +118,10 @@ class DownloadControls(QWidget):
                     background: {theme.colors.SUCCESS};
                     color: white;
                     border: none;
-                    padding: 5px 8px;
-                    border-radius: 4px;
+                    padding: {Spacing.XS}px {Spacing.XS}px;
+                    border-radius: {BorderRadius.SMALL}px;
                     font-weight: bold;
-                    font-size: 12px;
+                    {Typography.get_font_style(Typography.BODY_SIZE)};
                     min-width: 70px;
                     min-height: 16px;
                 }}
@@ -141,10 +141,10 @@ class DownloadControls(QWidget):
                     background: {theme.colors.PRIMARY};
                     color: white;
                     border: none;
-                    padding: 5px 8px;
-                    border-radius: 4px;
+                    padding: {Spacing.XS}px {Spacing.XS}px;
+                    border-radius: {BorderRadius.SMALL}px;
                     font-weight: bold;
-                    font-size: 12px;
+                    {Typography.get_font_style(Typography.BODY_SIZE)};
                     min-width: 70px;
                     min-height: 16px;
                 }}
@@ -171,13 +171,13 @@ class DownloadControls(QWidget):
         self.status_label.setStyleSheet(f"""
             QLabel {{
                 color: {theme.colors.TEXT_ON_PRIMARY};
-                font-size: 12px;
+                {Typography.get_font_style(Typography.BODY_SIZE)};
                 font-weight: 600;
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
                     stop:0 {theme.colors.PRIMARY}, stop:1 {theme.colors.PRIMARY_DARK});
                 border: 1px solid {theme.colors.PRIMARY_DARK};
-                border-radius: 4px;
-                padding: 6px 12px;
+                border-radius: {BorderRadius.SMALL}px;
+                padding: {Spacing.XS}px {Spacing.SM}px;
                 {theme.shadows.get_shadow(theme.shadows.SUBTLE)};
             }}
         """)
@@ -194,13 +194,13 @@ class DownloadControls(QWidget):
         self.status_label.setStyleSheet(f"""
             QLabel {{
                 color: {theme.colors.TEXT_ON_PRIMARY};
-                font-size: 12px;
+                {Typography.get_font_style(Typography.BODY_SIZE)};
                 font-weight: 600;
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
                     stop:0 {theme.colors.WARNING}, stop:1 {theme.colors.WARNING_DARK});
                 border: 1px solid {theme.colors.WARNING_DARK};
-                border-radius: 4px;
-                padding: 6px 12px;
+                border-radius: {BorderRadius.SMALL}px;
+                padding: {Spacing.XS}px {Spacing.SM}px;
                 {theme.shadows.get_shadow(theme.shadows.SUBTLE)};
             }}
         """)
@@ -217,13 +217,13 @@ class DownloadControls(QWidget):
         self.status_label.setStyleSheet(f"""
             QLabel {{
                 color: {theme.colors.TEXT_ON_PRIMARY};
-                font-size: 12px;
+                {Typography.get_font_style(Typography.BODY_SIZE)};
                 font-weight: 600;
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
                     stop:0 {theme.colors.SUCCESS}, stop:1 {theme.colors.SUCCESS_DARK});
                 border: 1px solid {theme.colors.SUCCESS_DARK};
-                border-radius: 4px;
-                padding: 6px 12px;
+                border-radius: {BorderRadius.SMALL}px;
+                padding: {Spacing.XS}px {Spacing.SM}px;
                 {theme.shadows.get_shadow(theme.shadows.SUBTLE)};
             }}
         """)
@@ -241,13 +241,13 @@ class DownloadControls(QWidget):
         self.status_label.setStyleSheet(f"""
             QLabel {{
                 color: {theme.colors.TEXT_ON_PRIMARY};
-                font-size: 12px;
+                {Typography.get_font_style(Typography.BODY_SIZE)};
                 font-weight: 600;
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
                     stop:0 {theme.colors.ERROR}, stop:1 {theme.colors.ERROR_DARK});
                 border: 1px solid {theme.colors.ERROR_DARK};
-                border-radius: 4px;
-                padding: 6px 12px;
+                border-radius: {BorderRadius.SMALL}px;
+                padding: {Spacing.XS}px {Spacing.SM}px;
                 {theme.shadows.get_shadow(theme.shadows.SUBTLE)};
             }}
         """)
@@ -267,12 +267,12 @@ class DownloadControls(QWidget):
         self.status_label.setStyleSheet(f"""
             QLabel {{
                 color: {theme.colors.TEXT_SECONDARY};
-                font-size: 12px;
+                {Typography.get_font_style(Typography.BODY_SIZE)};
                 font-weight: 500;
                 background: {theme.colors.SURFACE};
                 border: 1px solid {theme.colors.BORDER};
-                border-radius: 4px;
-                padding: 6px 12px;
+                border-radius: {BorderRadius.SMALL}px;
+                padding: {Spacing.XS}px {Spacing.SM}px;
                 {theme.animations.get_transition("all", theme.animations.DURATION_NORMAL)};
             }}
         """)
@@ -325,26 +325,26 @@ class CompactDownloadControls(QWidget):
     def _setup_ui(self):
         """Configura interface compacta"""
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(0, 5, 0, 5)
-        layout.setSpacing(5)
+        layout.setContentsMargins(0, Spacing.XS, 0, Spacing.XS)
+        layout.setSpacing(Spacing.XS)
 
         # Smaller and more compact buttons
         self.pause_button = QPushButton("||")
         self.pause_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.pause_button.clicked.connect(self.pause_clicked.emit)
-        self.pause_button.setFixedSize(30, 30)
+        self.pause_button.setFixedSize(Spacing.XL * 2, Spacing.XL * 2)
         self.pause_button.hide()
 
         self.resume_button = QPushButton(">")
         self.resume_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.resume_button.clicked.connect(self.resume_clicked.emit)
-        self.resume_button.setFixedSize(30, 30)
+        self.resume_button.setFixedSize(Spacing.XL * 2, Spacing.XL * 2)
         self.resume_button.hide()
 
         self.cancel_button = QPushButton("X")
         self.cancel_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.cancel_button.clicked.connect(self.cancel_clicked.emit)
-        self.cancel_button.setFixedSize(30, 30)
+        self.cancel_button.setFixedSize(Spacing.XL * 2, Spacing.XL * 2)
 
         # Estilo compacto
         compact_style = f"""
@@ -352,8 +352,8 @@ class CompactDownloadControls(QWidget):
                 background: {theme.colors.SURFACE};
                 color: {theme.colors.TEXT_PRIMARY};
                 border: 1px solid {theme.colors.BORDER};
-                border-radius: 4px;
-                font-size: 14px;
+                border-radius: {BorderRadius.SMALL}px;
+                {Typography.get_font_style(Typography.BODY_SIZE)};
                 font-weight: bold;
             }}
             QPushButton:hover {{

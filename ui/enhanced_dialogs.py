@@ -9,6 +9,7 @@ from PyQt6.QtCore import Qt, QObject, pyqtSignal, QThread, QTimer, QPropertyAnim
 from PyQt6.QtGui import QPixmap, QFont
 from ui.interactions import ModernFrame, AnimatedLabel, HoverButton
 from ui.shortcuts import ShortcutHelper
+from ui.theme import theme, BorderRadius, Spacing, Typography
 from ui.custom_checkbox import CustomCheckBox
 from utils.settings import (
     get_settings,
@@ -59,7 +60,7 @@ class ModernDialog(QDialog):
                     stop:0 {theme.colors.BACKGROUND}, stop:1 {theme.colors.SURFACE});
                 border: 2px solid {theme.colors.PRIMARY};
                 color: {theme.colors.TEXT_PRIMARY};
-                border-radius: 8px;
+                border-radius: {BorderRadius.LARGE}px;
             }}
             QLabel {{
                 color: {theme.colors.TEXT_PRIMARY};
@@ -71,14 +72,14 @@ class ModernDialog(QDialog):
                 border: 1px solid {theme.colors.BORDER};
                 padding: 4px;
                 color: {theme.colors.TEXT_PRIMARY};
-                border-radius: 6px;
+                border-radius: {BorderRadius.MEDIUM}px;
             }}
             QListWidget::item {{
                 padding: 8px;
                 margin: 2px;
                 background: {theme.colors.SURFACE_LIGHT};
                 border: 1px solid {theme.colors.BORDER};
-                border-radius: 4px;
+                border-radius: {BorderRadius.SMALL}px;
             }}
             QListWidget::item:selected {{
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0, 
@@ -124,13 +125,13 @@ class SettingsDialog(ModernDialog):
     def _setup_ui(self):
         """Setup modern UI layout."""
         main_layout = QVBoxLayout(self)
-        main_layout.setSpacing(20)
-        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setSpacing(Spacing.LG)
+        main_layout.setContentsMargins(Spacing.LG, Spacing.LG, Spacing.LG, Spacing.LG)
         
         # Title
         title = AnimatedLabel("Application Settings")
         from .theme import theme
-        title.setStyleSheet(f"font-size: 18px; font-weight: bold; color: {theme.colors.TEXT_ACCENT};")
+        title.setStyleSheet(f"{Typography.get_font_style(Typography.H1_SIZE, Typography.WEIGHT_BOLD)}; color: {theme.colors.TEXT_ACCENT};")
         main_layout.addWidget(title)
         
         # Create scroll area for settings
@@ -142,18 +143,18 @@ class SettingsDialog(ModernDialog):
                 background: transparent;
             }
             QScrollBar:vertical {
-                background: #282828;
+                background: {theme.colors.SURFACE_DARK};
                 width: 12px;
             }
             QScrollBar::handle:vertical {
-                background: #C06C84;
+                background: {theme.colors.PRIMARY};
                 min-height: 20px;
             }
         """)
         
         scroll_widget = QWidget()
         scroll_layout = QVBoxLayout(scroll_widget)
-        scroll_layout.setSpacing(15)
+        scroll_layout.setSpacing(Spacing.LG)
         
         # SLSsteam Integration Section
         sls_frame = ModernFrame()
@@ -161,7 +162,7 @@ class SettingsDialog(ModernDialog):
         
         sls_title = QLabel("SLSsteam Integration")
         from .theme import theme
-        sls_title.setStyleSheet(f"font-size: 14px; font-weight: bold; color: {theme.colors.TEXT_ACCENT};")
+        sls_title.setStyleSheet(f"{Typography.get_font_style(Typography.H3_SIZE, Typography.WEIGHT_BOLD)}; color: {theme.colors.TEXT_ACCENT};")
         sls_layout.addWidget(sls_title)
         
         self.slssteam_mode_checkbox = CustomCheckBox("SLSsteam Mode")
@@ -177,7 +178,7 @@ class SettingsDialog(ModernDialog):
         
         schema_title = QLabel("SLScheevo Schema Generator")
         from .theme import theme
-        schema_title.setStyleSheet(f"font-size: 14px; font-weight: bold; color: {theme.colors.TEXT_ACCENT};")
+        schema_title.setStyleSheet(f"{Typography.get_font_style(Typography.H3_SIZE, Typography.WEIGHT_BOLD)}; color: {theme.colors.TEXT_ACCENT};")
         schema_layout.addWidget(schema_title)
         
         self.steam_schema_enabled_checkbox = CustomCheckBox("Enable SLScheevo Schema Generation")
@@ -194,7 +195,7 @@ class SettingsDialog(ModernDialog):
         username_layout = QHBoxLayout()
         username_label = QLabel("SLScheevo Username:")
         from .theme import theme
-        username_label.setStyleSheet(f"color: {theme.colors.TEXT_SECONDARY}; font-size: 11px;")
+        username_label.setStyleSheet(f"color: {theme.colors.TEXT_SECONDARY}; {Typography.get_font_style(Typography.BODY_SIZE)};")
         username_layout.addWidget(username_label)
         
         self.slscheevo_username_edit = QLineEdit()
@@ -220,7 +221,7 @@ class SettingsDialog(ModernDialog):
         
         logging_title = QLabel("Logging Configuration")
         from .theme import theme
-        logging_title.setStyleSheet(f"font-size: 14px; font-weight: bold; color: {theme.colors.TEXT_ACCENT};")
+        logging_title.setStyleSheet(f"{Typography.get_font_style(Typography.H3_SIZE, Typography.WEIGHT_BOLD)}; color: {theme.colors.TEXT_ACCENT};")
         logging_layout.addWidget(logging_title)
         
         self.simple_mode_checkbox = CustomCheckBox("Simplified Log Format")
@@ -232,7 +233,7 @@ class SettingsDialog(ModernDialog):
         level_layout = QHBoxLayout()
         level_label = QLabel("Log Level:")
         from .theme import theme
-        level_label.setStyleSheet(f"color: {theme.colors.TEXT_SECONDARY}; font-size: 11px;")
+        level_label.setStyleSheet(f"color: {theme.colors.TEXT_SECONDARY}; {Typography.get_font_style(Typography.BODY_SIZE)};")
         level_layout.addWidget(level_label)
         
         self.log_level_combo = QComboBox()
@@ -249,7 +250,7 @@ class SettingsDialog(ModernDialog):
         # Info label
         info_label = QLabel("File 'app.log' always saves complete DEBUG logs")
         from .theme import theme
-        info_label.setStyleSheet(f"color: {theme.colors.TEXT_DISABLED}; font-size: 10px; font-style: italic;")
+        info_label.setStyleSheet(f"color: {theme.colors.TEXT_DISABLED}; {Typography.get_font_style(Typography.CAPTION_SIZE)}; font-style: italic;")
         info_label.setWordWrap(True)
         logging_layout.addWidget(info_label)
         
@@ -261,13 +262,13 @@ class SettingsDialog(ModernDialog):
         
         font_title = QLabel("Font Settings")
         from .theme import theme
-        font_title.setStyleSheet(f"font-size: 14px; font-weight: bold; color: {theme.colors.TEXT_ACCENT};")
+        font_title.setStyleSheet(f"{Typography.get_font_style(Typography.H3_SIZE, Typography.WEIGHT_BOLD)}; color: {theme.colors.TEXT_ACCENT};")
         font_layout.addWidget(font_title)
         
         # Font selection
         font_selection_layout = QHBoxLayout()
         font_label = QLabel("Application Font:")
-        font_label.setStyleSheet(f"color: {theme.colors.TEXT_SECONDARY}; font-size: 11px;")
+        font_label.setStyleSheet(f"color: {theme.colors.TEXT_SECONDARY}; {Typography.get_font_style(Typography.BODY_SIZE)};")
         font_selection_layout.addWidget(font_label)
         
         self.font_combo = QComboBox()
@@ -287,7 +288,7 @@ class SettingsDialog(ModernDialog):
         
         # Info label
         font_info_label = QLabel("Requires application restart to take effect")
-        font_info_label.setStyleSheet(f"color: {theme.colors.TEXT_DISABLED}; font-size: 10px; font-style: italic;")
+        font_info_label.setStyleSheet(f"color: {theme.colors.TEXT_DISABLED}; {Typography.get_font_style(Typography.CAPTION_SIZE)}; font-style: italic;")
         font_layout.addWidget(font_info_label)
         
         scroll_layout.addWidget(font_frame)
@@ -298,7 +299,7 @@ class SettingsDialog(ModernDialog):
         
         drm_title = QLabel("DRM Removal")
         from .theme import theme
-        drm_title.setStyleSheet(f"font-size: 14px; font-weight: bold; color: {theme.colors.TEXT_ACCENT};")
+        drm_title.setStyleSheet(f"{Typography.get_font_style(Typography.H3_SIZE, Typography.WEIGHT_BOLD)}; color: {theme.colors.TEXT_ACCENT};")
         drm_layout.addWidget(drm_title)
         
         self.steamless_enabled_checkbox = CustomCheckBox("Enable Steamless DRM Removal")
@@ -548,8 +549,8 @@ class DepotSelectionDialog(ModernDialog):
     def _setup_ui(self, app_id):
         """Setup enhanced UI with search functionality."""
         main_layout = QVBoxLayout(self)
-        main_layout.setSpacing(15)
-        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setSpacing(Spacing.MD)
+        main_layout.setContentsMargins(Spacing.LG, Spacing.LG, Spacing.LG, Spacing.LG)
         
         # Header with image
         self.header_label = QLabel("Loading header image...")
@@ -562,7 +563,7 @@ class DepotSelectionDialog(ModernDialog):
             QLabel {{
                 border: 1px solid {theme.colors.BORDER};
                 background: {theme.colors.SURFACE};
-                border-radius: 6px;
+                border-radius: {BorderRadius.MEDIUM}px;
             }}
         """)
         self._fetch_header_image(app_id)
@@ -604,13 +605,13 @@ class DepotSelectionDialog(ModernDialog):
             QListWidget {{
                 background: {theme.colors.SURFACE};
                 border: 1px solid {theme.colors.BORDER};
-                border-radius: 6px;
+                border-radius: {BorderRadius.MEDIUM}px;
                 padding: 4px;
             }}
             QListWidget::item {{
                 background: {theme.colors.SURFACE_LIGHT};
                 border: 1px solid {theme.colors.BORDER};
-                border-radius: 4px;
+                border-radius: {BorderRadius.SMALL}px;
                 padding: 8px;
                 margin: 2px;
                 min-height: 32px;
@@ -756,13 +757,13 @@ class SteamLibraryDialog(ModernDialog):
     def _setup_ui(self, library_paths):
         """Setup UI for library selection."""
         main_layout = QVBoxLayout(self)
-        main_layout.setSpacing(15)
-        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setSpacing(Spacing.MD)
+        main_layout.setContentsMargins(Spacing.LG, Spacing.LG, Spacing.LG, Spacing.LG)
         
         # Title
         title = AnimatedLabel("Select Steam Library")
         from .theme import theme
-        title.setStyleSheet(f"font-size: 16px; font-weight: bold; color: {theme.colors.TEXT_ACCENT};")
+        title.setStyleSheet(f"{Typography.get_font_style(Typography.H2_SIZE, Typography.WEIGHT_BOLD)}; color: {theme.colors.TEXT_ACCENT};")
         main_layout.addWidget(title)
         
         # Library list
@@ -816,13 +817,13 @@ class DlcSelectionDialog(ModernDialog):
     def _setup_ui(self):
         """Setup UI for DLC selection."""
         main_layout = QVBoxLayout(self)
-        main_layout.setSpacing(15)
-        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setSpacing(Spacing.MD)
+        main_layout.setContentsMargins(Spacing.LG, Spacing.LG, Spacing.LG, Spacing.LG)
         
         # Title
         title = AnimatedLabel("Select DLC")
         from .theme import theme
-        title.setStyleSheet(f"font-size: 16px; font-weight: bold; color: {theme.colors.TEXT_ACCENT};")
+        title.setStyleSheet(f"{Typography.get_font_style(Typography.H2_SIZE, Typography.WEIGHT_BOLD)}; color: {theme.colors.TEXT_ACCENT};")
         main_layout.addWidget(title)
         
         # Select all/none buttons
@@ -860,13 +861,13 @@ class DlcSelectionDialog(ModernDialog):
             QListWidget {{
                 background: {theme.colors.SURFACE};
                 border: 1px solid {theme.colors.BORDER};
-                border-radius: 6px;
+                border-radius: {BorderRadius.MEDIUM}px;
                 padding: 4px;
             }}
             QListWidget::item {{
                 background: {theme.colors.SURFACE_LIGHT};
                 border: 1px solid {theme.colors.BORDER};
-                border-radius: 4px;
+                border-radius: {BorderRadius.SMALL}px;
                 padding: 8px;
                 margin: 2px;
                 min-height: 32px;

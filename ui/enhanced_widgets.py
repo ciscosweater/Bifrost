@@ -1,7 +1,7 @@
 import logging
 from PyQt6.QtWidgets import QProgressBar, QLabel, QFrame
 from PyQt6.QtCore import QTimer, pyqtSignal, Qt
-from ui.theme import theme
+from ui.theme import theme, Typography, BorderRadius
 
 logger = logging.getLogger(__name__)
 
@@ -63,10 +63,10 @@ class EnhancedProgressBar(QProgressBar):
         style = f"""
             QProgressBar {{
                 border: 1px solid {border_color};
-                border-radius: 4px;
+                border-radius: {BorderRadius.SMALL}px;
                 text-align: center;
                 font-weight: bold;
-                font-size: 10px;
+                {Typography.get_font_style(Typography.CAPTION_SIZE)};
                 color: {theme.colors.TEXT_PRIMARY};
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
                     stop:0 {theme.colors.SURFACE}, stop:1 {theme.colors.BACKGROUND});
@@ -76,7 +76,7 @@ class EnhancedProgressBar(QProgressBar):
             QProgressBar::chunk {{
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
                     stop:0 {chunk_color}, stop:0.5 {chunk_color}CC, stop:1 {chunk_color});
-                border-radius: 3px;
+                border-radius: {BorderRadius.SMALL - 1}px;
                 {theme.animations.get_transition("width", theme.animations.DURATION_SLOW)};
             }}
         """
@@ -205,7 +205,7 @@ class PrimaryButton(QLabel):
         
     def mousePressEvent(self, ev):
         """Handle mouse press"""
-        if ev.button() == Qt.MouseButton.LeftButton:
+        if ev and ev.button() == Qt.MouseButton.LeftButton:
             self.clicked.emit()
 
 
@@ -233,7 +233,7 @@ class SecondaryButton(QLabel):
         
     def mousePressEvent(self, ev):
         """Handle mouse press"""
-        if ev.button() == Qt.MouseButton.LeftButton:
+        if ev and ev.button() == Qt.MouseButton.LeftButton:
             self.clicked.emit()
 
 

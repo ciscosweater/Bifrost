@@ -9,7 +9,7 @@ from typing import Dict, Optional, Callable
 from PyQt6.QtWidgets import QWidget, QLabel
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QThread, QObject
 from PyQt6.QtGui import QPixmap, QImage, QMovie
-from .theme import theme
+from .theme import theme, BorderRadius
 
 
 class AssetCache:
@@ -151,7 +151,7 @@ class LazyImageLabel(QLabel):
                 background: {theme.colors.SURFACE};
                 border: 1px dashed {theme.colors.BORDER};
                 color: {theme.colors.TEXT_SECONDARY};
-                border-radius: 4px;
+                border-radius: {BorderRadius.SMALL}px;
                 padding: 16px;
             }}
         """)
@@ -209,7 +209,7 @@ class LazyImageLabel(QLabel):
                 background: {theme.colors.ERROR}20;
                 border: 1px solid {theme.colors.ERROR};
                 color: {theme.colors.ERROR};
-                border-radius: 4px;
+                border-radius: {BorderRadius.SMALL}px;
                 padding: 16px;
             }}
         """)

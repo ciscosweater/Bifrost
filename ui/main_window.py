@@ -23,6 +23,7 @@ from ui.interactions import HoverButton, ModernFrame, AnimatedLabel
 from ui.shortcuts import KeyboardShortcuts
 from ui.notification_system import NotificationManager
 from ui.asset_optimizer import AssetManager
+from ui.theme import theme, Spacing
 
 from ui.game_deletion_dialog import GameDeletionDialog
 from ui.download_controls import DownloadControls
@@ -128,23 +129,24 @@ class MainWindow(QMainWindow):
         self.main_layout.addWidget(self.title_bar)
 
         main_content_frame = QFrame()
-        main_content_frame.setStyleSheet("""
-            QFrame {
-                background: #000000;
+        from .theme import theme, BorderRadius
+        main_content_frame.setStyleSheet(f"""
+            QFrame {{
+                background: {theme.colors.BACKGROUND};
                 border: none;
-                border-radius: 8px;
-            }
+                {BorderRadius.get_border_radius(BorderRadius.LARGE)};
+            }}
         """)
         self.main_layout.addWidget(main_content_frame)
         
         self.content_layout = QVBoxLayout(main_content_frame)
-        self.content_layout.setContentsMargins(16,8,16,4)  # Reduce bottom margin to eliminate extra space
-        self.content_layout.setSpacing(12)  # Adequate spacing between elements
+        self.content_layout.setContentsMargins(Spacing.MD, Spacing.SM, Spacing.MD, Spacing.XS)  # Reduce bottom margin to eliminate extra space
+        self.content_layout.setSpacing(Spacing.MD)  # Adequate spacing between elements
         
         drop_zone_container = QWidget()
         drop_zone_layout = QVBoxLayout(drop_zone_container)
-        drop_zone_layout.setContentsMargins(8,8,8,8)  # Adequate margins for drop zone
-        drop_zone_layout.setSpacing(8)  # Adequate spacing
+        drop_zone_layout.setContentsMargins(Spacing.SM, Spacing.SM, Spacing.SM, Spacing.SM)  # Adequate margins for drop zone
+        drop_zone_layout.setSpacing(Spacing.SM)  # Adequate spacing
 
         self.drop_label = ScaledLabel()
         self.drop_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -166,8 +168,7 @@ class MainWindow(QMainWindow):
                 color: {theme.colors.TEXT_SECONDARY};
                 background-color: transparent;
                 font-family: {Typography.get_font_family()};
-                font-size: 14px;
-                font-weight: 700;
+                {Typography.get_font_style(Typography.H3_SIZE, Typography.WEIGHT_BOLD)};
             }}
         """)
         drop_zone_layout.addWidget(self.drop_text_label, 1)
@@ -191,25 +192,25 @@ class MainWindow(QMainWindow):
         self.game_header_label.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.game_header_label.setScaledContents(False)  # Let scaled() control the aspect ratio
         self.game_header_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.game_header_label.setStyleSheet("""
-            QLabel {
-                border: 1px solid #C06C84;
-                background: #1E1E1E;
-            }
+        from .theme import theme
+        self.game_header_label.setStyleSheet(f"""
+            QLabel {{
+                border: 1px solid {theme.colors.PRIMARY};
+                background: {theme.colors.SURFACE};
+            }}
         """)
         game_image_layout.addWidget(self.game_header_label)
         
         # Game info next to image
         game_info_layout = QVBoxLayout()
-        game_info_layout.setSpacing(2)  # Reduced spacing
+        game_info_layout.setSpacing(Spacing.XS)  # Reduced spacing
         
         self.game_title_label = QLabel("Game Title")
         self.game_title_label.setStyleSheet(f"""
             QLabel {{
                 font-family: {Typography.get_font_family()};
-                font-size: 12px;  # Reduced font size
-                font-weight: bold;
-                color: #C06C84;
+                {Typography.get_font_style(Typography.BODY_SIZE, Typography.WEIGHT_BOLD)};
+                color: {theme.colors.PRIMARY};
                 border: none;
             }}
         """)
@@ -219,8 +220,8 @@ class MainWindow(QMainWindow):
         self.game_status_label.setStyleSheet(f"""
             QLabel {{
                 font-family: {Typography.get_font_family()};
-                font-size: 10px;  # Reduced font size
-                color: #808080;
+                {Typography.get_font_style(Typography.CAPTION_SIZE)};
+                color: {theme.colors.TEXT_SECONDARY};
                 border: none;
             }}
         """)
@@ -260,12 +261,11 @@ class MainWindow(QMainWindow):
         from .theme import Typography
         self.log_output.setStyleSheet(f"""
             QTextEdit {{
-                background-color: #1E1E1E;
-                color: #FFFFFF;
+                background-color: {theme.colors.SURFACE};
+                color: {theme.colors.TEXT_PRIMARY};
                 font-family: {Typography.get_font_family()};
-                font-size: 12px;
-                font-weight: 500;
-                border: 1px solid #C06C84;
+                {Typography.get_font_style(Typography.BODY_SIZE, Typography.WEIGHT_NORMAL)};
+                border: 1px solid {theme.colors.PRIMARY};
             }}
         """)
         # Enable word wrapping and horizontal scrolling for long file paths
@@ -287,7 +287,7 @@ class MainWindow(QMainWindow):
         self.status_bar = QStatusBar()
         self.setStatusBar(self.status_bar)
         self.status_bar.setSizeGripEnabled(True)
-        self.status_bar.setStyleSheet("QStatusBar { border: 0px; background: #000000; height: 8px; }")
+        self.status_bar.setStyleSheet(f"QStatusBar {{ border: 0px; background: {theme.colors.BACKGROUND}; height: 8px; }}")
         self.status_bar.setMaximumHeight(8)  # Minimum status bar just for size grip
 
         self.setAcceptDrops(True)
@@ -628,15 +628,16 @@ class MainWindow(QMainWindow):
         from PyQt6.QtCore import Qt, QSize
         
         # Create a 120x56 pixmap (same size as game_image_label)
+        from .theme import theme
         pixmap = QPixmap(120, 56)
-        pixmap.fill(QColor('#2A2A2A'))  # Dark background
+        pixmap.fill(theme.colors.get_qcolor(theme.colors.SURFACE_DARK))  # Dark background
         
         painter = QPainter(pixmap)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         
         # Draw game controller icon
-        painter.setPen(QPen(QColor('#666666'), 2))
-        painter.setBrush(QColor('#444444'))
+        painter.setPen(QPen(theme.colors.get_qcolor(theme.colors.BORDER_LIGHT), 2))
+        painter.setBrush(theme.colors.get_qcolor(theme.colors.BORDER))
         
         # Simple controller shape
         painter.drawRoundedRect(35, 18, 50, 20, 8, 8)
@@ -644,8 +645,8 @@ class MainWindow(QMainWindow):
         painter.drawRoundedRect(80, 22, 15, 12, 4, 4)
         
         # Draw dots for buttons
-        painter.setPen(QPen(QColor('#666666'), 1))
-        painter.setBrush(QColor('#555555'))
+        painter.setPen(QPen(theme.colors.get_qcolor(theme.colors.BORDER_LIGHT), 1))
+        painter.setBrush(theme.colors.get_qcolor(theme.colors.BORDER))
         painter.drawEllipse(85, 25, 3, 3)
         painter.drawEllipse(90, 25, 3, 3)
         painter.drawEllipse(87, 28, 3, 3)
@@ -904,15 +905,16 @@ class MainWindow(QMainWindow):
         from PyQt6.QtCore import Qt, QSize
         
         # Create a 184x69 pixmap (Steam header size)
+        from .theme import theme
         pixmap = QPixmap(184, 69)
-        pixmap.fill(QColor('#2A2A2A'))  # Dark background
+        pixmap.fill(theme.colors.get_qcolor(theme.colors.SURFACE_DARK))  # Dark background
         
         painter = QPainter(pixmap)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         
         # Draw game controller icon
-        painter.setPen(QPen(QColor('#666666'), 2))
-        painter.setBrush(QColor('#444444'))
+        painter.setPen(QPen(theme.colors.get_qcolor(theme.colors.BORDER_LIGHT), 2))
+        painter.setBrush(theme.colors.get_qcolor(theme.colors.BORDER))
         
         # Simple controller shape centered
         controller_x = 92 - 30  # Center horizontally
@@ -922,15 +924,15 @@ class MainWindow(QMainWindow):
         painter.drawRoundedRect(controller_x + 50, controller_y + 4, 20, 12, 4, 4)
         
         # Draw dots for buttons
-        painter.setPen(QPen(QColor('#666666'), 1))
-        painter.setBrush(QColor('#555555'))
+        painter.setPen(QPen(theme.colors.get_qcolor(theme.colors.BORDER_LIGHT), 1))
+        painter.setBrush(theme.colors.get_qcolor(theme.colors.BORDER))
         painter.drawEllipse(controller_x + 55, controller_y + 7, 4, 4)
         painter.drawEllipse(controller_x + 62, controller_y + 7, 4, 4)
         painter.drawEllipse(controller_x + 58, controller_y + 11, 4, 4)
         painter.drawEllipse(controller_x + 58, controller_y + 3, 4, 4)
         
         # Add "No Image" text
-        painter.setPen(QColor('#888888'))
+        painter.setPen(theme.colors.get_qcolor(theme.colors.TEXT_DISABLED))
         font = QFont()
         font.setPointSize(8)
         painter.setFont(font)

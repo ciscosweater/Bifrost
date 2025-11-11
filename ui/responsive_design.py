@@ -2,6 +2,7 @@ import logging
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel
 from PyQt6.QtCore import Qt, QSize, pyqtSignal
 from PyQt6.QtGui import QResizeEvent
+from .theme import theme, Typography, BorderRadius, Spacing
 
 logger = logging.getLogger(__name__)
 
@@ -106,12 +107,12 @@ class ResponsiveHeader(QWidget):
         
         # Title
         self.title_label = QLabel("ACCELA")
-        self.title_label.setStyleSheet("""
-            QLabel {
-                color: #C06C84;
-                font-size: 18px;
-                font-weight: bold;
-            }
+        from .theme import theme, Typography
+        self.title_label.setStyleSheet(f"""
+            QLabel {{
+                color: {theme.colors.PRIMARY};
+                {Typography.get_font_style(Typography.H2_SIZE, Typography.WEIGHT_BOLD)};
+            }}
         """)
         layout.addWidget(self.title_label)
         
@@ -127,22 +128,21 @@ class ResponsiveHeader(QWidget):
         
     def apply_responsive_style(self, size_class):
         """Apply responsive styling."""
+        from .theme import theme, Typography
         if size_class == 'mobile':
-            self.title_label.setStyleSheet("""
-                QLabel {
-                    color: #C06C84;
-                    font-size: 14px;
-                    font-weight: bold;
-                }
+            self.title_label.setStyleSheet(f"""
+                QLabel {{
+                    color: {theme.colors.PRIMARY};
+                    {Typography.get_font_style(Typography.H3_SIZE, Typography.WEIGHT_BOLD)};
+                }}
             """)
             self.controls_widget.hide()
         else:
-            self.title_label.setStyleSheet("""
-                QLabel {
-                    color: #C06C84;
-                    font-size: 18px;
-                    font-weight: bold;
-                }
+            self.title_label.setStyleSheet(f"""
+                QLabel {{
+                    color: {theme.colors.PRIMARY};
+                    {Typography.get_font_style(Typography.H2_SIZE, Typography.WEIGHT_BOLD)};
+                }}
             """)
             self.controls_widget.show()
 
@@ -206,42 +206,40 @@ class ResponsiveDropZone(QWidget):
         # Text label
         self.text_label = QLabel("Drag and Drop ZIP file here")
         self.text_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.text_label.setStyleSheet("""
-            QLabel {
-                color: #C06C84;
-                font-size: 16px;
-                font-weight: 500;
-            }
+        from .theme import theme, Typography
+        self.text_label.setStyleSheet(f"""
+            QLabel {{
+                color: {theme.colors.PRIMARY};
+                {Typography.get_font_style(Typography.H2_SIZE, Typography.WEIGHT_NORMAL)};
+            }}
         """)
         layout.addWidget(self.text_label)
         
     def apply_responsive_style(self, size_class):
         """Apply responsive styling."""
+        from .theme import theme, Typography
         if size_class == 'mobile':
-            self.text_label.setStyleSheet("""
-                QLabel {
-                    color: #C06C84;
-                    font-size: 14px;
-                    font-weight: 500;
-                }
+            self.text_label.setStyleSheet(f"""
+                QLabel {{
+                    color: {theme.colors.PRIMARY};
+                    {Typography.get_font_style(Typography.H3_SIZE, Typography.WEIGHT_NORMAL)};
+                }}
             """)
             self.animation_label.setMinimumHeight(150)
         elif size_class == 'tablet':
-            self.text_label.setStyleSheet("""
-                QLabel {
-                    color: #C06C84;
-                    font-size: 15px;
-                    font-weight: 500;
-                }
+            self.text_label.setStyleSheet(f"""
+                QLabel {{
+                    color: {theme.colors.PRIMARY};
+                    {Typography.get_font_style(Typography.H3_SIZE + 1, Typography.WEIGHT_NORMAL)};
+                }}
             """)
             self.animation_label.setMinimumHeight(175)
         else:  # desktop, large
-            self.text_label.setStyleSheet("""
-                QLabel {
-                    color: #C06C84;
-                    font-size: 16px;
-                    font-weight: 500;
-                }
+            self.text_label.setStyleSheet(f"""
+                QLabel {{
+                    color: {theme.colors.PRIMARY};
+                    {Typography.get_font_style(Typography.H2_SIZE, Typography.WEIGHT_NORMAL)};
+                }}
             """)
             self.animation_label.setMinimumHeight(200)
 
@@ -261,42 +259,42 @@ class ResponsiveProgressArea(QWidget):
         
         # Progress bar
         self.progress_bar = QLabel()  # Placeholder for actual progress bar
-        self.progress_bar.setStyleSheet("""
-            QLabel {
-                background: #282828;
-                border: 1px solid #C06C84;
-                border-radius: 6px;
+        self.progress_bar.setStyleSheet(f"""
+            QLabel {{
+                background: {theme.colors.SURFACE_DARK};
+                border: 1px solid {theme.colors.PRIMARY};
+                {BorderRadius.get_border_radius(BorderRadius.MEDIUM)};
                 height: 12px;
-            }
+            }}
         """)
         layout.addWidget(self.progress_bar)
         
         # Speed label
         self.speed_label = QLabel("")
         self.speed_label.setAlignment(Qt.AlignmentFlag.AlignRight)
-        self.speed_label.setStyleSheet("""
-            QLabel {
-                color: #808080;
-                font-size: 12px;
-            }
+        self.speed_label.setStyleSheet(f"""
+            QLabel {{
+                color: {theme.colors.TEXT_SECONDARY};
+                {Typography.get_font_style(Typography.BODY_SIZE)};
+            }}
         """)
         layout.addWidget(self.speed_label)
         
     def apply_responsive_style(self, size_class):
         """Apply responsive styling."""
         if size_class == 'mobile':
-            self.speed_label.setStyleSheet("""
-                QLabel {
-                    color: #808080;
-                    font-size: 10px;
-                }
+            self.speed_label.setStyleSheet(f"""
+                QLabel {{
+                    color: {theme.colors.TEXT_SECONDARY};
+                    {Typography.get_font_style(Typography.CAPTION_SIZE)};
+                }}
             """)
         else:
-            self.speed_label.setStyleSheet("""
-                QLabel {
-                    color: #808080;
-                    font-size: 12px;
-                }
+            self.speed_label.setStyleSheet(f"""
+                QLabel {{
+                    color: {theme.colors.TEXT_SECONDARY};
+                    {Typography.get_font_style(Typography.BODY_SIZE)};
+                }}
             """)
 
 class ResponsiveGameInfo(QWidget):
@@ -316,35 +314,34 @@ class ResponsiveGameInfo(QWidget):
         # Game image
         self.game_image = QLabel()
         self.game_image.setFixedSize(184, 69)
-        self.game_image.setStyleSheet("""
-            QLabel {
-                border: 1px solid #C06C84;
-                border-radius: 4px;
-                background: #1E1E1E;
-            }
+        self.game_image.setStyleSheet(f"""
+            QLabel {{
+                border: 1px solid {theme.colors.PRIMARY};
+                {BorderRadius.get_border_radius(BorderRadius.SMALL)};
+                background: {theme.colors.SURFACE};
+            }}
         """)
         layout.addWidget(self.game_image)
         
         # Game info
         info_layout = QVBoxLayout()
-        info_layout.setSpacing(5)
+        info_layout.setSpacing(Spacing.XS)
         
         self.game_title = QLabel("Game Title")
-        self.game_title.setStyleSheet("""
-            QLabel {
-                color: #C06C84;
-                font-size: 14px;
-                font-weight: bold;
-            }
+        self.game_title.setStyleSheet(f"""
+            QLabel {{
+                color: {theme.colors.PRIMARY};
+                {Typography.get_font_style(Typography.H3_SIZE, Typography.WEIGHT_BOLD)};
+            }}
         """)
         info_layout.addWidget(self.game_title)
         
         self.game_status = QLabel("Status")
-        self.game_status.setStyleSheet("""
-            QLabel {
-                color: #808080;
-                font-size: 12px;
-            }
+        self.game_status.setStyleSheet(f"""
+            QLabel {{
+                color: {theme.colors.TEXT_SECONDARY};
+                {Typography.get_font_style(Typography.BODY_SIZE)};
+            }}
         """)
         info_layout.addWidget(self.game_status)
         
@@ -355,33 +352,31 @@ class ResponsiveGameInfo(QWidget):
         """Apply responsive styling."""
         if size_class == 'mobile':
             self.game_image.setFixedSize(140, 52)
-            self.game_title.setStyleSheet("""
-                QLabel {
-                    color: #C06C84;
-                    font-size: 12px;
-                    font-weight: bold;
-                }
+            self.game_title.setStyleSheet(f"""
+                QLabel {{
+                    color: {theme.colors.PRIMARY};
+                    {Typography.get_font_style(Typography.BODY_SIZE, Typography.WEIGHT_BOLD)};
+                }}
             """)
-            self.game_status.setStyleSheet("""
-                QLabel {
-                    color: #808080;
-                    font-size: 10px;
-                }
+            self.game_status.setStyleSheet(f"""
+                QLabel {{
+                    color: {theme.colors.TEXT_SECONDARY};
+                    {Typography.get_font_style(Typography.CAPTION_SIZE)};
+                }}
             """)
         else:
             self.game_image.setFixedSize(184, 69)
-            self.game_title.setStyleSheet("""
-                QLabel {
-                    color: #C06C84;
-                    font-size: 14px;
-                    font-weight: bold;
-                }
+            self.game_title.setStyleSheet(f"""
+                QLabel {{
+                    color: {theme.colors.PRIMARY};
+                    {Typography.get_font_style(Typography.H3_SIZE, Typography.WEIGHT_BOLD)};
+                }}
             """)
-            self.game_status.setStyleSheet("""
-                QLabel {
-                    color: #808080;
-                    font-size: 12px;
-                }
+            self.game_status.setStyleSheet(f"""
+                QLabel {{
+                    color: {theme.colors.TEXT_SECONDARY};
+                    {Typography.get_font_style(Typography.BODY_SIZE)};
+                }}
             """)
 
 class ResponsiveLogArea(QWidget):
@@ -400,16 +395,16 @@ class ResponsiveLogArea(QWidget):
         
         # Log display
         self.log_display = QLabel("Log output will appear here...")
-        self.log_display.setStyleSheet("""
-            QLabel {
-                background: #000000;
-                border: 1px solid #282828;
-                border-radius: 4px;
-                color: #C06C84;
-                font-family: inherit;
-                font-size: 10px;
-                padding: 10px;
-            }
+        self.log_display.setStyleSheet(f"""
+            QLabel {{
+                background: {theme.colors.BACKGROUND};
+                border: 1px solid {theme.colors.SURFACE_DARK};
+                {BorderRadius.get_border_radius(BorderRadius.SMALL)};
+                color: {theme.colors.PRIMARY};
+                font-family: {Typography.get_font_family()};
+                {Typography.get_font_style(Typography.CAPTION_SIZE)};
+                {Spacing.get_padding(Spacing.MD)};
+            }}
         """)
         self.log_display.setWordWrap(True)
         layout.addWidget(self.log_display)
@@ -417,28 +412,28 @@ class ResponsiveLogArea(QWidget):
     def apply_responsive_style(self, size_class):
         """Apply responsive styling."""
         if size_class == 'mobile':
-            self.log_display.setStyleSheet("""
-                QLabel {
-                    background: #000000;
-                    border: 1px solid #282828;
-                    border-radius: 4px;
-                    color: #C06C84;
-                    font-family: inherit;
-                    font-size: 8px;
-                    padding: 8px;
-                }
+            self.log_display.setStyleSheet(f"""
+                QLabel {{
+                    background: {theme.colors.BACKGROUND};
+                    border: 1px solid {theme.colors.SURFACE_DARK};
+                    {BorderRadius.get_border_radius(BorderRadius.SMALL)};
+                    color: {theme.colors.PRIMARY};
+                    font-family: {Typography.get_font_family()};
+                    {Typography.get_font_style(Typography.CAPTION_SIZE - 2)};
+                    {Spacing.get_padding(Spacing.SM)};
+                }}
             """)
         else:
-            self.log_display.setStyleSheet("""
-                QLabel {
-                    background: #000000;
-                    border: 1px solid #282828;
-                    border-radius: 4px;
-                    color: #C06C84;
-                    font-family: inherit;
-                    font-size: 10px;
-                    padding: 10px;
-                }
+            self.log_display.setStyleSheet(f"""
+                QLabel {{
+                    background: {theme.colors.BACKGROUND};
+                    border: 1px solid {theme.colors.SURFACE_DARK};
+                    {BorderRadius.get_border_radius(BorderRadius.SMALL)};
+                    color: {theme.colors.PRIMARY};
+                    font-family: {Typography.get_font_family()};
+                    {Typography.get_font_style(Typography.CAPTION_SIZE)};
+                    {Spacing.get_padding(Spacing.MD)};
+                }}
             """)
 
 class ResponsiveFooter(QWidget):
@@ -458,11 +453,11 @@ class ResponsiveFooter(QWidget):
         
         # Status label
         self.status_label = QLabel("Ready")
-        self.status_label.setStyleSheet("""
-            QLabel {
-                color: #808080;
-                font-size: 11px;
-            }
+        self.status_label.setStyleSheet(f"""
+            QLabel {{
+                color: {theme.colors.TEXT_SECONDARY};
+                {Typography.get_font_style(Typography.CAPTION_SIZE + 1)};
+            }}
         """)
         layout.addWidget(self.status_label)
         
@@ -470,11 +465,11 @@ class ResponsiveFooter(QWidget):
         
         # Version info
         self.version_label = QLabel("v1.0")
-        self.version_label.setStyleSheet("""
-            QLabel {
-                color: #808080;
-                font-size: 10px;
-            }
+        self.version_label.setStyleSheet(f"""
+            QLabel {{
+                color: {theme.colors.TEXT_SECONDARY};
+                {Typography.get_font_style(Typography.CAPTION_SIZE)};
+            }}
         """)
         layout.addWidget(self.version_label)
         

@@ -6,7 +6,7 @@ Provides smooth transitions and enhanced user feedback
 from PyQt6.QtWidgets import QWidget, QGraphicsOpacityEffect
 from PyQt6.QtCore import QPropertyAnimation, QEasingCurve, QTimer, pyqtSignal, Qt, QRect
 from PyQt6.QtGui import QPainter, QColor, QPen
-from .theme import theme, Animations
+from .theme import theme, Animations, BorderRadius
 
 
 class AnimatedWidget(QWidget):
@@ -359,7 +359,7 @@ class NotificationToast(AnimatedWidget):
         self.setStyleSheet(f"""
             QWidget {{
                 background: {color};
-                border-radius: 8px;
+                border-radius: {BorderRadius.LARGE}px;
                 color: white;
             }}
         """)
@@ -420,7 +420,7 @@ class AnimationHelper:
         overlay.setStyleSheet(f"""
             QWidget {{
                 background: {theme.colors.OVERLAY};
-                border-radius: 8px;
+                border-radius: {BorderRadius.LARGE}px;
             }}
         """)
         

@@ -4,6 +4,8 @@ from PyQt6.QtCore import QThread, pyqtSignal, QObject, Qt
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import QFrame, QHBoxLayout, QLabel, QVBoxLayout
 
+from ui.theme import theme, Typography, Spacing
+
 logger = logging.getLogger(__name__)
 
 class GameImageDisplay(QObject):
@@ -21,13 +23,13 @@ class GameImageDisplay(QObject):
         # Game header image area (initially hidden)
         self.game_image_container = QFrame()
         self.game_image_container.setVisible(False)
-        self.game_image_container.setStyleSheet("""
-            QFrame {
-                background: rgba(30, 30, 30, 0.95);
-                border: 1px solid #C06C84;
-                margin: 5px;
-                padding: 5px;
-            }
+        self.game_image_container.setStyleSheet(f"""
+            QFrame {{
+                background: {theme.colors.OVERLAY};
+                border: 1px solid {theme.colors.PRIMARY};
+                margin: {Spacing.SM}px;
+                padding: {Spacing.SM}px;
+            }}
         """)
         game_image_layout = QHBoxLayout(self.game_image_container)
         game_image_layout.setContentsMargins(10, 10, 10, 10)
@@ -35,36 +37,35 @@ class GameImageDisplay(QObject):
         self.game_header_label = QLabel()
         self.game_header_label.setMinimumSize(184, 69)  # Steam header image aspect ratio
         self.game_header_label.setMaximumSize(184, 69)
-        self.game_header_label.setStyleSheet("""
-            QLabel {
-                border: 1px solid #C06C84;
-                background: #1E1E1E;
-            }
+        self.game_header_label.setStyleSheet(f"""
+            QLabel {{
+                border: 1px solid {theme.colors.PRIMARY};
+                background: {theme.colors.BACKGROUND};
+            }}
         """)
         game_image_layout.addWidget(self.game_header_label)
         
         # Game info next to image
         game_info_layout = QVBoxLayout()
-        game_info_layout.setSpacing(5)
+        game_info_layout.setSpacing(Spacing.XS)
         
         self.game_title_label = QLabel("Game Title")
-        self.game_title_label.setStyleSheet("""
-            QLabel {
-                font-size: 14px;
-                font-weight: bold;
-                color: #C06C84;
+        self.game_title_label.setStyleSheet(f"""
+            QLabel {{
+                {Typography.get_font_style(Typography.H3_SIZE, Typography.WEIGHT_BOLD)};
+                color: {theme.colors.PRIMARY};
                 border: none;
-            }
+            }}
         """)
         game_info_layout.addWidget(self.game_title_label)
         
         self.game_status_label = QLabel("Downloading...")
-        self.game_status_label.setStyleSheet("""
-            QLabel {
-                font-size: 12px;
-                color: #808080;
+        self.game_status_label.setStyleSheet(f"""
+            QLabel {{
+                {Typography.get_font_style(Typography.BODY_SIZE)};
+                color: {theme.colors.TEXT_SECONDARY};
                 border: none;
-            }
+            }}
         """)
         game_info_layout.addWidget(self.game_status_label)
         

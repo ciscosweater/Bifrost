@@ -33,7 +33,7 @@ class Colors:
     ERROR_DARK = "#A05C74"        # Error pressed
     
     # Neutral colors
-    BACKGROUND = "#1A1A1A"        # Main background (slightly darker)
+    BACKGROUND = "#000000"        # Main background (slightly darker)
     SURFACE = "#252525"           # Card surfaces (enhanced contrast)
     SURFACE_LIGHT = "#303030"     # Hover surfaces
     SURFACE_DARK = "#151515"      # Dark surfaces
@@ -67,12 +67,12 @@ class Colors:
 class Typography:
     """Unified typography system"""
     
-    # Font sizes
-    H1_SIZE = 24       # Main titles
-    H2_SIZE = 18       # Section headers
-    H3_SIZE = 14       # Sub-headers
-    BODY_SIZE = 12     # Body text
-    CAPTION_SIZE = 10  # Small text/captions
+    # Font sizes (versão compacta)
+    H1_SIZE = 18       # Títulos principais
+    H2_SIZE = 12       # Cabeçalhos de seção
+    H3_SIZE = 10        # Subtítulos
+    BODY_SIZE = 10      # Texto comum
+    CAPTION_SIZE = 10   # Legendas / texto pequeno
     
     # Font weights
     WEIGHT_LIGHT = "light"

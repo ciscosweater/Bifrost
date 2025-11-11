@@ -7,7 +7,7 @@ from PyQt6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QLabel, QPushButt
 from PyQt6.QtCore import Qt, pyqtSignal, QTimer, QPropertyAnimation, QEasingCurve
 from PyQt6.QtGui import QFont
 
-from ui.theme import theme
+from ui.theme import theme, Typography, BorderRadius, Spacing
 
 logger = logging.getLogger(__name__)
 
@@ -37,8 +37,8 @@ class MinimalDownloadWidget(QWidget):
     def _setup_ui(self):
         """Configure minimalist interface with optimized layout"""
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(8, 8, 8, 8)
-        layout.setSpacing(8)
+        layout.setContentsMargins(Spacing.SM, Spacing.SM, Spacing.SM, Spacing.SM)
+        layout.setSpacing(Spacing.SM)
 
         # Container principal sem fundo
         self.setStyleSheet(f"""
@@ -52,7 +52,7 @@ class MinimalDownloadWidget(QWidget):
         # Linha 1: Imagem + Nome do jogo (ocupando largura total)
         header_layout = QHBoxLayout()
         header_layout.setContentsMargins(0, 0, 0, 0)
-        header_layout.setSpacing(12)
+        header_layout.setSpacing(Spacing.MD)
 
         # Container for game image - Steam header ratio (920x430 ≈ 2.14:1)
         self.game_image_label = QLabel()
@@ -61,7 +61,7 @@ class MinimalDownloadWidget(QWidget):
             QLabel {{
                 background: transparent;
                 border: none;
-                border-radius: 4px;
+                border-radius: {BorderRadius.SMALL}px;
             }}
         """)
         self.game_image_label.hide()
@@ -71,7 +71,7 @@ class MinimalDownloadWidget(QWidget):
         self.game_name_label.setStyleSheet(f"""
             QLabel {{
                 color: {theme.colors.TEXT_PRIMARY};
-                font-size: 18px;
+                {Typography.get_font_style(Typography.H2_SIZE)};
                 font-weight: 700;
                 background: transparent;
             }}
@@ -83,7 +83,7 @@ class MinimalDownloadWidget(QWidget):
         self.status_label.setStyleSheet(f"""
             QLabel {{
                 color: {theme.colors.TEXT_SECONDARY};
-                font-size: 12px;
+                {Typography.get_font_style(Typography.BODY_SIZE)};
                 font-weight: 500;
                 background: transparent;
             }}
@@ -100,7 +100,7 @@ class MinimalDownloadWidget(QWidget):
         self.progress_container.setStyleSheet(f"""
             QWidget {{
                 background: {theme.colors.BACKGROUND};
-                border-radius: 4px;
+                border-radius: {BorderRadius.SMALL}px;
             }}
         """)
 
@@ -109,7 +109,7 @@ class MinimalDownloadWidget(QWidget):
         self.progress_bar.setStyleSheet(f"""
             QWidget {{
                 background: {theme.colors.PRIMARY};
-                border-radius: 4px;
+                border-radius: {BorderRadius.SMALL}px;
             }}
         """)
 
@@ -120,15 +120,15 @@ class MinimalDownloadWidget(QWidget):
 
         # Linha 3: Velocidade (esquerda) + controles (direita)
         bottom_layout = QHBoxLayout()
-        bottom_layout.setContentsMargins(0, 4, 0, 0)
-        bottom_layout.setSpacing(12)
+        bottom_layout.setContentsMargins(0, Spacing.XS, 0, 0)
+        bottom_layout.setSpacing(Spacing.MD)
 
         # Velocidade label (lado esquerdo)
         self.speed_label = QLabel("")
         self.speed_label.setStyleSheet(f"""
             QLabel {{
                 color: {theme.colors.PRIMARY};
-                font-size: 11px;
+                {Typography.get_font_style(Typography.CAPTION_SIZE)};
                 font-weight: 600;
                 background: transparent;
             }}
@@ -169,14 +169,14 @@ class MinimalDownloadWidget(QWidget):
         
         # Create a 120x56 pixmap (same size as game_image_label)
         pixmap = QPixmap(120, 56)
-        pixmap.fill(QColor('#2A2A2A'))  # Dark background
+        pixmap.fill(QColor(theme.colors.SURFACE))
         
         painter = QPainter(pixmap)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         
         # Draw game controller icon
-        painter.setPen(QPen(QColor('#666666'), 2))
-        painter.setBrush(QColor('#444444'))
+        painter.setPen(QPen(QColor(theme.colors.TEXT_SECONDARY), 2))
+        painter.setBrush(QColor(theme.colors.BACKGROUND))
         
         # Simple controller shape
         painter.drawRoundedRect(35, 18, 50, 20, 8, 8)
@@ -184,8 +184,8 @@ class MinimalDownloadWidget(QWidget):
         painter.drawRoundedRect(80, 22, 15, 12, 4, 4)
         
         # Draw dots for buttons
-        painter.setPen(QPen(QColor('#666666'), 1))
-        painter.setBrush(QColor('#555555'))
+        painter.setPen(QPen(QColor(theme.colors.TEXT_SECONDARY), 1))
+        painter.setBrush(QColor(theme.colors.TEXT_SECONDARY))
         painter.drawEllipse(85, 25, 3, 3)
         painter.drawEllipse(90, 25, 3, 3)
         painter.drawEllipse(87, 28, 3, 3)
@@ -207,8 +207,8 @@ class MinimalDownloadWidget(QWidget):
                 background: {theme.colors.SURFACE};
                 color: {theme.colors.TEXT_SECONDARY};
                 border: 1px solid {theme.colors.BORDER};
-                border-radius: 6px;
-                font-size: 12px;
+                border-radius: {BorderRadius.MEDIUM}px;
+                {Typography.get_font_style(Typography.BODY_SIZE)};
                 font-weight: 600;
             }}
             QPushButton:hover {{
@@ -306,7 +306,7 @@ class MinimalDownloadWidget(QWidget):
         self.progress_bar.setStyleSheet(f"""
             QWidget {{
                 background: {theme.colors.WARNING};
-                border-radius: 3px;
+                border-radius: {BorderRadius.SMALL}px;
             }}
         """)
         
@@ -322,7 +322,7 @@ class MinimalDownloadWidget(QWidget):
         self.progress_bar.setStyleSheet(f"""
             QWidget {{
                 background: {theme.colors.SUCCESS};
-                border-radius: 3px;
+                border-radius: {BorderRadius.SMALL}px;
             }}
         """)
         
@@ -339,7 +339,7 @@ class MinimalDownloadWidget(QWidget):
         self.progress_bar.setStyleSheet(f"""
             QWidget {{
                 background: {theme.colors.ERROR};
-                border-radius: 3px;
+                border-radius: {BorderRadius.SMALL}px;
             }}
         """)
         

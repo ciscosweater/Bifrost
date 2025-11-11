@@ -6,6 +6,7 @@ from PyQt6.QtWidgets import (
 )
 from ui.custom_checkbox import CustomCheckBox
 from PyQt6.QtCore import Qt, QTimer
+from ui.theme import theme, Typography, Spacing, BorderRadius
 
 logger = logging.getLogger(__name__)
 
@@ -28,100 +29,100 @@ class SteamLoginDialog(QDialog):
         self.mobile_confirmation_counter = 0
         
         # Apply ACCELA's dark theme styling
-        self.setStyleSheet("""
-            QDialog {
-                background-color: #000000;
-                color: #ffffff;
-            }
-            QLabel {
-                color: #ffffff;
+        self.setStyleSheet(f"""
+            QDialog {{
+                background-color: {theme.colors.BACKGROUND};
+                color: {theme.colors.TEXT_PRIMARY};
+            }}
+            QLabel {{
+                color: {theme.colors.TEXT_PRIMARY};
                 background-color: transparent;
-                font-size: 12px;
-            }
-            QLineEdit {
-                background-color: #1a1a1a;
-                border: 1px solid #333333;
-                padding: 10px;
-                color: #ffffff;
-                font-size: 12px;
-            }
-            QLineEdit:focus {
-                border: 2px solid #C06C84;
-            }
-            QComboBox {
-                background-color: #1a1a1a;
-                border: 1px solid #333333;
-                padding: 10px;
-                color: #ffffff;
-                font-size: 12px;
-            }
-            QComboBox::drop-down {
+                {Typography.get_font_style(Typography.BODY_SIZE)};
+            }}
+            QLineEdit {{
+                background-color: {theme.colors.SURFACE};
+                border: 1px solid {theme.colors.BORDER};
+                padding: {Spacing.SM}px;
+                color: {theme.colors.TEXT_PRIMARY};
+                {Typography.get_font_style(Typography.BODY_SIZE)};
+            }}
+            QLineEdit:focus {{
+                border: 2px solid {theme.colors.PRIMARY};
+            }}
+            QComboBox {{
+                background-color: {theme.colors.SURFACE};
+                border: 1px solid {theme.colors.BORDER};
+                padding: {Spacing.SM}px;
+                color: {theme.colors.TEXT_PRIMARY};
+                {Typography.get_font_style(Typography.BODY_SIZE)};
+            }}
+            QComboBox::drop-down {{
                 border: none;
                 width: 20px;
-            }
-            QComboBox::down-arrow {
+            }}
+            QComboBox::down-arrow {{
                 image: none;
                 border-left: 4px solid transparent;
                 border-right: 4px solid transparent;
-                border-top: 4px solid #C06C84;
-            }
-            QComboBox QAbstractItemView {
-                background-color: #1a1a1a;
-                border: 1px solid #333333;
-                color: #ffffff;
-                selection-background-color: #C06C84;
-            }
-            QCheckBox {
-                color: #ffffff;
+                border-top: 4px solid {theme.colors.PRIMARY};
+            }}
+            QComboBox QAbstractItemView {{
+                background-color: {theme.colors.SURFACE};
+                border: 1px solid {theme.colors.BORDER};
+                color: {theme.colors.TEXT_PRIMARY};
+                selection-background-color: {theme.colors.PRIMARY};
+            }}
+            QCheckBox {{
+                color: {theme.colors.TEXT_PRIMARY};
                 background-color: transparent;
-                font-size: 11px;
-            }
-            QCheckBox::indicator {
+                {Typography.get_font_style(Typography.BODY_SIZE)};
+            }}
+            QCheckBox::indicator {{
                 width: 14px;
                 height: 14px;
-                background-color: #1a1a1a;
-                border: 1px solid #333333;
-                border-radius: 2px;
-            }
-            QCheckBox::indicator:checked {
-                background-color: #C06C84;
-                border: 1px solid #C06C84;
-            }
-            QPushButton {
-                background-color: #C06C84;
+                background-color: {theme.colors.SURFACE};
+                border: 1px solid {theme.colors.BORDER};
+                border-radius: {BorderRadius.SMALL - 2}px;
+            }}
+            QCheckBox::indicator:checked {{
+                background-color: {theme.colors.PRIMARY};
+                border: 1px solid {theme.colors.PRIMARY};
+            }}
+            QPushButton {{
+                background-color: {theme.colors.PRIMARY};
                 border: none;
-                border-radius: 4px;
-                padding: 10px 20px;
-                color: #000000;
-                font-size: 11px;
+                border-radius: {BorderRadius.SMALL}px;
+                padding: {Spacing.SM}px {Spacing.MD}px;
+                color: {theme.colors.TEXT_ON_PRIMARY};
+                {Typography.get_font_style(Typography.BODY_SIZE)};
                 font-weight: bold;
                 text-transform: uppercase;
-            }
-            QPushButton:hover {
-                background-color: #d07d94;
-            }
-            QPushButton:pressed {
-                background-color: #b05c74;
-            }
-            QPushButton:disabled {
-                background-color: #333333;
-                color: #666666;
-            }
+            }}
+            QPushButton:hover {{
+                background-color: {theme.colors.PRIMARY_LIGHT};
+            }}
+            QPushButton:pressed {{
+                background-color: {theme.colors.PRIMARY_DARK};
+            }}
+            QPushButton:disabled {{
+                background-color: {theme.colors.SURFACE_LIGHT};
+                color: {theme.colors.TEXT_DISABLED};
+            }}
         """)
         
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(25, 25, 25, 25)
-        layout.setSpacing(15)
+        layout.setContentsMargins(Spacing.LG + 5, Spacing.LG + 5, Spacing.LG + 5, Spacing.LG + 5)
+        layout.setSpacing(Spacing.MD)
         
         # Title
         title = QLabel("STEAM LOGIN")
-        title.setStyleSheet("color: #C06C84; font-size: 16px; font-weight: bold;")
+        title.setStyleSheet(f"color: {theme.colors.PRIMARY}; {Typography.get_font_style(Typography.H2_SIZE, Typography.WEIGHT_BOLD)};")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(title)
         
         # Subtitle
         subtitle = QLabel("Authenticate with your Steam account")
-        subtitle.setStyleSheet("color: #888888; font-size: 10px;")
+        subtitle.setStyleSheet(f"color: {theme.colors.TEXT_SECONDARY}; {Typography.get_font_style(Typography.CAPTION_SIZE)};")
         subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(subtitle)
         
@@ -133,7 +134,7 @@ class SteamLoginDialog(QDialog):
         
         # Saved account
         self.saved_label = QLabel("Account:")
-        self.saved_label.setStyleSheet("color: #C06C84; font-size: 10px; font-weight: bold;")
+        self.saved_label.setStyleSheet(f"color: {theme.colors.PRIMARY}; {Typography.get_font_style(Typography.CAPTION_SIZE, Typography.WEIGHT_BOLD)};")
         layout.addWidget(self.saved_label)
         
         self.saved_accounts_combo = QComboBox()
@@ -141,27 +142,9 @@ class SteamLoginDialog(QDialog):
         
         # New login fields
         self.username_label = QLabel("Username:")
-        self.username_label.setStyleSheet("color: #C06C84; font-size: 10px; font-weight: bold;")
-        layout.addWidget(self.username_label)
-        
-        self.username_input = QLineEdit()
-        self.username_input.setPlaceholderText("Steam username")
-        self.username_input.returnPressed.connect(self.attempt_login)
-        layout.addWidget(self.username_input)
-        
-        self.password_label = QLabel("Password:")
-        self.password_label.setStyleSheet("color: #C06C84; font-size: 10px; font-weight: bold;")
-        layout.addWidget(self.password_label)
-        
-        self.password_input = QLineEdit()
-        self.password_input.setPlaceholderText("Steam password")
-        self.password_input.setEchoMode(QLineEdit.EchoMode.Password)
-        self.password_input.returnPressed.connect(self.attempt_login)
-        layout.addWidget(self.password_input)
-        
-        # 2FA Code field (initially hidden)
-        self.twofa_label = QLabel("2FA Code:")
-        self.twofa_label.setStyleSheet("color: #C06C84; font-size: 10px; font-weight: bold;")
+        self.username_label.setStyleSheet(f"color: {theme.colors.PRIMARY}; {Typography.get_font_style(Typography.CAPTION_SIZE, Typography.WEIGHT_BOLD)};")
+        self.password_label.setStyleSheet(f"color: {theme.colors.PRIMARY}; {Typography.get_font_style(Typography.CAPTION_SIZE, Typography.WEIGHT_BOLD)};")
+        self.twofa_label.setStyleSheet(f"color: {theme.colors.PRIMARY}; {Typography.get_font_style(Typography.CAPTION_SIZE, Typography.WEIGHT_BOLD)};")
         self.twofa_label.setVisible(False)
         layout.addWidget(self.twofa_label)
         
@@ -173,13 +156,13 @@ class SteamLoginDialog(QDialog):
         
         # Status
         self.status_label = QLabel("")
-        self.status_label.setStyleSheet("color: #4a9eff; font-size: 11px;")
+        self.status_label.setStyleSheet(f"color: {theme.colors.PRIMARY_LIGHT}; {Typography.get_font_style(Typography.BODY_SIZE)};")
         self.status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.status_label)
         
         # Buttons
         button_layout = QHBoxLayout()
-        button_layout.setSpacing(10)
+        button_layout.setSpacing(Spacing.SM)
         
         self.cancel_button = QPushButton("Cancel")
         self.cancel_button.clicked.connect(self.reject)
@@ -502,40 +485,40 @@ class SteamStatusDialog(QDialog):
         self.setModal(True)
         self.setFixedSize(350, 150)
         
-        self.setStyleSheet("""
-            QDialog {
-                background-color: #000000;
-                color: #ffffff;
-            }
-            QLabel {
-                color: #ffffff;
-                font-size: 12px;
-            }
-            QPushButton {
-                background-color: #C06C84;
+        self.setStyleSheet(f"""
+            QDialog {{
+                background-color: {theme.colors.BACKGROUND};
+                color: {theme.colors.TEXT_PRIMARY};
+            }}
+            QLabel {{
+                color: {theme.colors.TEXT_PRIMARY};
+                {Typography.get_font_style(Typography.BODY_SIZE)};
+            }}
+            QPushButton {{
+                background-color: {theme.colors.PRIMARY};
                 border: none;
-                border-radius: 4px;
-                padding: 8px 16px;
-                color: #000000;
-                font-size: 11px;
+                border-radius: {BorderRadius.SMALL}px;
+                padding: {Spacing.XS}px {Spacing.SM}px;
+                color: {theme.colors.TEXT_ON_PRIMARY};
+                {Typography.get_font_style(Typography.BODY_SIZE)};
                 font-weight: bold;
-            }
-            QPushButton:hover {
-                background-color: #d07d94;
-            }
+            }}
+            QPushButton:hover {{
+                background-color: {theme.colors.PRIMARY_LIGHT};
+            }}
         """)
         
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(20, 20, 20, 20)
-        layout.setSpacing(15)
+        layout.setContentsMargins(Spacing.LG, Spacing.LG, Spacing.LG, Spacing.LG)
+        layout.setSpacing(Spacing.MD)
         
         title = QLabel("Steam Status")
-        title.setStyleSheet("color: #C06C84; font-size: 14px; font-weight: bold;")
+        title.setStyleSheet(f"color: {theme.colors.PRIMARY}; {Typography.get_font_style(Typography.H3_SIZE, Typography.WEIGHT_BOLD)};")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(title)
         
         status = QLabel("Steam login functionality is currently unavailable.")
-        status.setStyleSheet("color: #888888; font-size: 11px;")
+        status.setStyleSheet(f"color: {theme.colors.TEXT_SECONDARY}; {Typography.get_font_style(Typography.BODY_SIZE)};")
         status.setAlignment(Qt.AlignmentFlag.AlignCenter)
         status.setWordWrap(True)
         layout.addWidget(status)
