@@ -405,12 +405,12 @@ class SteamSchemaIntegration:
                 
                 # Check return codes
                 if result.returncode == 0:
-                    logger.info(f"✓ SLScheevo completed successfully for AppID {app_id_int}")
+                    logger.info(f"[OK] SLScheevo completed successfully for AppID {app_id_int}")
                     # Copy generated bins to ACCELA data directory
                     self._copy_slscheevo_bins_to_accela(slscheevo_dir)
                     return True
                 elif result.returncode == 2:  # EXIT_NO_ACHIEVEMENTS
-                    logger.info(f"ℹ Game {app_id_int} has no achievements - this is normal")
+                    logger.info(f"[INFO] Game {app_id_int} has no achievements - this is normal")
                     # Check if any files were generated anyway
                     if self._check_slscheevo_success(slscheevo_dir, app_id_int):
                         self._copy_slscheevo_bins_to_accela(slscheevo_dir)
@@ -429,7 +429,7 @@ class SteamSchemaIntegration:
                 else:
                     # Check if SLScheevo actually succeeded despite the exit code
                     if self._check_slscheevo_success(slscheevo_dir, app_id_int):
-                        logger.info(f"✓ SLScheevo completed successfully for AppID {app_id_int} (exit code {result.returncode})")
+                        logger.info(f"[OK] SLScheevo completed successfully for AppID {app_id_int} (exit code {result.returncode})")
                         # Copy generated bins to ACCELA data directory
                         self._copy_slscheevo_bins_to_accela(slscheevo_dir)
                         return True
@@ -439,13 +439,13 @@ class SteamSchemaIntegration:
                     stderr_lower = result.stderr.lower()
                     if ("no achievement" in stdout_lower or "no schema" in stdout_lower or 
                         "has no achievements" in stdout_lower or "no stats" in stdout_lower):
-                        logger.info(f"ℹ Game {app_id_int} has no achievements")
+                        logger.info(f"[INFO] Game {app_id_int} has no achievements")
                         return True
                     
-                    logger.error(f"✗ SLScheevo failed with return code {result.returncode}")
+                    logger.error(f"[X] SLScheevo failed with return code {result.returncode}")
                     if result.stderr:
                         # Filter out common Linux warnings
-                        stderr_filtered = result.stderr.replace("sh: linha 1: cls: comando não encontrado\n", "")
+                        stderr_filtered = result.stderr.replace("sh: line 1: cls: command not found\n", "")
                         stderr_filtered = stderr_filtered.replace("TERM environment variable not set.\n", "")
                         if stderr_filtered.strip():
                             logger.error(f"Error details: {stderr_filtered}")
@@ -534,7 +534,7 @@ class SteamSchemaIntegration:
             stats_file = os.path.join(slscheevo_data_dir, f"UserGameStats_104148900_{app_id_int}.bin")
             
             if os.path.exists(schema_file) and os.path.exists(stats_file):
-                logger.info(f"✓ Found generated schema files for AppID {app_id_int}")
+                logger.info(f"[OK] Found generated schema files for AppID {app_id_int}")
                 return True
             else:
                 logger.warning(f"Schema files not found for AppID {app_id_int}")

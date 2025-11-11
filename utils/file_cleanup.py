@@ -1,5 +1,5 @@
 """
-File Cleanup Manager - Limpeza de arquivos parciais e temporários
+File Cleanup Manager - Cleanup of partial and temporary files
 """
 import os
 import shutil
@@ -10,43 +10,43 @@ logger = logging.getLogger(__name__)
 
 
 class FileCleanupManager:
-    """Gerencia limpeza de arquivos temporários e parciais"""
+    """Manages cleanup of temporary and partial files"""
     
     def __init__(self):
         self.temp_extensions = ['.tmp', '.partial', '.downloading', '.temp', '.incomplete']
         self.temp_files = ['keys.vdf', 'manifest', 'appinfo.vdf']
         self.temp_directories = ['temp', 'cache', 'tmp']
-        # Padrões adicionais para arquivos do DepotDownloaderMod
+        # Additional patterns for DepotDownloaderMod files
         self.depotdownloader_patterns = [
-            # Arquivos que podem ser criados durante o download
+            # Files that can be created during download
             '*.tmp', '*.partial', '*.downloading',
-            # Manifest files temporários
+            # Temporary manifest files
             'manifest_*.depot', '*.manifest.tmp',
-            # Arquivos de chunk do Steam
+            # Steam chunk files
             '*.chunk', '*.chunk.tmp',
-            # Padrões de bloqueio
+            # Lock patterns
             '*.lock', '*.download', '~$*'
         ]
     
     def _is_partial_file(self, filename: str, session_id: Optional[str] = None) -> bool:
-        """Verifica se um arquivo é parcial/temporário"""
+        """Check if a file is partial/temporary"""
         filename_lower = filename.lower()
         
-        # Verificar extensões temporárias
+        # Check temporary extensions
         for ext in self.temp_extensions:
             if filename_lower.endswith(ext):
                 return True
         
-        # Verificar arquivos temporários conhecidos
+        # Check known temporary files
         for temp_file in self.temp_files:
             if temp_file in filename_lower:
                 return True
         
-        # Verificar se contém ID de sessão (se fornecido)
+        # Check if contains session ID (if provided)
         if session_id and session_id in filename:
             return True
         
-        # Verificar padrões do DepotDownloaderMod
+        # Check DepotDownloaderMod patterns
         import fnmatch
         for pattern in self.depotdownloader_patterns:
             if fnmatch.fnmatch(filename_lower, pattern.lower()):
@@ -55,7 +55,7 @@ class FileCleanupManager:
         return False
     
     def cleanup_session(self, session_id: Optional[str] = None) -> dict:
-        """Limpa arquivos temporários de uma sessão específica ou geral"""
+        """Clean temporary files from a specific session or general"""
         try:
             logger.info(f"Starting cleanup for session {session_id or 'unknown'}")
             
@@ -63,11 +63,11 @@ class FileCleanupManager:
             cleaned_dirs = []
             errors = []
             
-            # Limpar diretório atual
+            # Clean current directory
             current_dir = os.getcwd()
             self._cleanup_directory_recursive(current_dir, session_id, cleaned_files, cleaned_dirs, errors)
             
-            # Limpar diretórios temporários conhecidos
+            # Clean known temporary directories
             self._cleanup_temp_directories(session_id, cleaned_files, cleaned_dirs, errors)
             
             result = {
@@ -88,13 +88,13 @@ class FileCleanupManager:
     def _cleanup_directory_recursive(self, directory: str, session_id: Optional[str], 
                                    cleaned_files: List[str], cleaned_dirs: List[str], 
                                    errors: List[str]) -> None:
-        """Limpa diretório recursivamente"""
+        """Clean directory recursively"""
         try:
             with os.scandir(directory) as entries:
                 files_to_remove = []
                 subdirs = []
                 
-                # Primeira passada: identificar arquivos e subdiretórios
+                # First pass: identify files and subdirectories
                 for entry in entries:
                     if entry.is_file():
                         if self._is_partial_file(entry.name, session_id):

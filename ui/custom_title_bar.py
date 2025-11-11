@@ -31,7 +31,7 @@ class CustomTitleBar(QFrame):
         super().__init__(parent)
         self.parent = parent
         self.drag_pos = None
-        self.setFixedHeight(35)  # Aumentado para evitar corte e melhor proporção
+        self.setFixedHeight(35)  # Increased to avoid cutting and better proportion
         from .theme import theme
 
         self.setStyleSheet(f"""
@@ -45,7 +45,7 @@ class CustomTitleBar(QFrame):
 
         layout = QHBoxLayout()
         layout.setContentsMargins(8, 6, 8, 6)  # Melhores margens para altura maior
-        layout.setSpacing(8)  # Melhor espaçamento
+        layout.setSpacing(8)  # Better spacing
 
         # Create containers for left and right elements to properly balance them.
         left_widget = QWidget()
@@ -71,7 +71,7 @@ class CustomTitleBar(QFrame):
         right_widget = QWidget()
         right_layout = QHBoxLayout(right_widget)
         right_layout.setContentsMargins(0, 0, 0, 0)
-        right_layout.setSpacing(6)  # Melhor espaçamento entre botões
+        right_layout.setSpacing(6)  # Better spacing between buttons
 
         # Add SLSsteam status indicator (compact) - before ZIP button
         from .slssteam_status import SlssteamStatusWidget
@@ -146,7 +146,7 @@ class CustomTitleBar(QFrame):
                 try:
                     self.drag_pos = (
                         a0.globalPosition().toPoint()
-                        - self.parent.frameGeometry().topLeft()
+                        - self.parent.frameGeometry().topLeft()  # type: ignore
                     )
                 except:
                     pass
@@ -164,7 +164,7 @@ class CustomTitleBar(QFrame):
         ):
             if hasattr(self.parent, "move"):
                 try:
-                    self.parent.move(a0.globalPosition().toPoint() - self.drag_pos)
+                    self.parent.move(a0.globalPosition().toPoint() - self.drag_pos)  # type: ignore
                 except:
                     pass
             a0.accept()
@@ -177,13 +177,6 @@ class CustomTitleBar(QFrame):
         if a0:
             a0.accept()
 
-    def mouseReleaseEvent(self, event: QMouseEvent):
-        """
-        Resets the drag position when the mouse button is released.
-        """
-        self.drag_pos = None
-        event.accept()
-
     def _create_svg_button(self, svg_data, on_click, tooltip):
         """
         Helper method to create a button from SVG data, recoloring the icon without distortion.
@@ -193,7 +186,7 @@ class CustomTitleBar(QFrame):
             button.setToolTip(tooltip)
 
             renderer = QSvgRenderer(svg_data.encode("utf-8"))
-            icon_size = QSize(18, 18)  # Ícones maiores para botões maiores
+            icon_size = QSize(18, 18)  # Larger icons for larger buttons
 
             pixmap = QPixmap(icon_size)
             pixmap.fill(Qt.GlobalColor.transparent)
@@ -217,7 +210,7 @@ class CustomTitleBar(QFrame):
 
             button.setIcon(icon)
             button.setIconSize(icon_size)
-            button.setFixedSize(22, 22)  # Botões maiores para title bar aumentada
+            button.setFixedSize(22, 22)  # Larger buttons for increased title bar
             from .theme import theme
 
             button.setStyleSheet(f"""
@@ -251,7 +244,7 @@ class CustomTitleBar(QFrame):
         try:
             button = QPushButton(text)
             button.setToolTip(tooltip)
-            button.setFixedSize(22, 22)  # Botões maiores para title bar aumentada
+            button.setFixedSize(22, 22)  # Larger buttons for increased title bar
             from .theme import theme
 
             button.setStyleSheet(f"""

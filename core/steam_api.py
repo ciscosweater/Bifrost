@@ -32,7 +32,7 @@ class SteamAPIConfig:
 
 def retry(max_attempts: int = 3, backoff_factor: float = 2.0, 
           exceptions: tuple = (requests.exceptions.RequestException,)):
-    """Enhanced decorator para retry com exponential backoff e jitter."""
+    """Enhanced decorator for retry with exponential backoff and jitter."""
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -48,11 +48,11 @@ def retry(max_attempts: int = 3, backoff_factor: float = 2.0,
                         jitter = base_wait * 0.1 * (0.5 + (hash(str(args)) % 100) / 100)
                         wait_time = base_wait + jitter
                         
-                        logger.warning(f"Tentativa {attempt + 1}/{max_attempts} falhou, "
-                                     f"retry em {wait_time:.2f}s: {type(e).__name__}: {e}")
+                        logger.warning(f"Attempt {attempt + 1}/{max_attempts} failed, "
+                                     f"retry in {wait_time:.2f}s: {type(e).__name__}: {e}")
                         time.sleep(wait_time)
                     else:
-                        logger.error(f"Todas as {max_attempts} tentativas falharam para {func.__name__}")
+                        logger.error(f"All {max_attempts} attempts failed for {func.__name__}")
             raise last_exception if last_exception is not None else Exception("All attempts failed")
         return wrapper
     return decorator
@@ -177,7 +177,7 @@ except Exception as e:
 def _fetch_with_web_api(app_id: str) -> Dict[str, Any]:
     """
     Fetches data from the public Steam store API as a fallback.
-    Implementa retry com exponential backoff e timeout configurável.
+    Implements retry with exponential backoff and configurable timeout.
     """
     url = "https://store.steampowered.com/api/appdetails"
     params = {"appids": app_id}
@@ -198,16 +198,16 @@ def _fetch_with_web_api(app_id: str) -> Dict[str, Any]:
         data = response.json()
         return _parse_web_api_response(app_id, data)
     except requests.exceptions.Timeout:
-        logger.error(f"Timeout ao buscar dados da Web API para AppID {app_id}")
+        logger.error(f"Timeout fetching data from Web API for AppID {app_id}")
         raise
     except requests.exceptions.ConnectionError:
-        logger.error(f"Erro de conexão com Web API para AppID {app_id}")
+        logger.error(f"Connection error with Web API for AppID {app_id}")
         raise
     except requests.exceptions.RequestException as e:
-        logger.error(f"Erro na requisição Web API para AppID {app_id}: {e}")
+        logger.error(f"Web API request error for AppID {app_id}: {e}")
         raise
     except json.JSONDecodeError as e:
-        logger.error(f"Resposta JSON inválida da Web API para AppID {app_id}: {e}")
+        logger.error(f"Invalid JSON response from Web API for AppID {app_id}: {e}")
         return {}
 
 def _parse_web_api_response(app_id, data):

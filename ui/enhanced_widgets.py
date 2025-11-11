@@ -59,7 +59,7 @@ class EnhancedProgressBar(QProgressBar):
             glow_color = "transparent"
             self.setFormat("%p%")
         
-        # Aplicar estilo dinâmico com gradientes e sombras
+        # Apply dynamic style with gradients and shadows
         style = f"""
             QProgressBar {{
                 border: 1px solid {border_color};

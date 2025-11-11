@@ -16,7 +16,7 @@ _CACHE_TTL_SECONDS = 900  # 15 minutes
 _MAX_CACHE_SIZE = 200  # Increased cache size
 
 class DirectorySizeWorker(QThread):
-    """Worker thread para calcular tamanho de diretórios sem bloquear UI."""
+    """Worker thread to calculate directory sizes without blocking UI."""
     size_calculated = pyqtSignal(int)
     
     def __init__(self, path: str):
@@ -24,19 +24,19 @@ class DirectorySizeWorker(QThread):
         self.path = path
     
     def run(self):
-        """Calcula tamanho do diretório em background."""
+        """Calculates directory size in background."""
         size = self._calculate_directory_size_optimized(self.path)
         self.size_calculated.emit(size)
     
     @staticmethod
     def _calculate_directory_size_optimized(path: str, max_depth: int = 20) -> int:
-        """Calcula tamanho usando os.scandir com cache e otimizações avançadas."""
-        # Validar path antes de processar
+        """Calculates size using os.scandir with cache and advanced optimizations."""
+        # Validate path before processing
         if not path or not isinstance(path, str):
             logger.debug("Invalid path provided for size calculation")
             return 0
         
-        # Normalizar path
+        # Normalize path
         path = os.path.normpath(path)
         
         # Check cache first
@@ -49,7 +49,7 @@ class DirectorySizeWorker(QThread):
                 logger.debug(f"Using cached size for {os.path.basename(path)}: {cached_size} bytes")
                 return cached_size
         
-        # Verificar se o diretório existe
+        # Check if directory exists
         if not os.path.exists(path):
             logger.debug(f"Directory does not exist: {path}")
             _DIRECTORY_SIZE_CACHE[cache_key] = (0, current_time)  # Cache negative result
@@ -67,13 +67,13 @@ class DirectorySizeWorker(QThread):
         try:
             with os.scandir(path) as entries:
                 for entry in entries:
-                    # Removido limite de arquivos para cálculo preciso - jogos grandes precisam de contagem completa
+                    # Removed file limit for accurate calculation - large games need complete counting
                         
                     try:
                         stat_info = entry.stat()
                         
                         if entry.is_file():
-                            # Verificar tamanho de arquivo muito grande
+                            # Check for very large file size
                             file_size = stat_info.st_size
                             if file_size > 1024 * 1024 * 1024:  # > 1GB
                                 large_files += 1
@@ -82,13 +82,13 @@ class DirectorySizeWorker(QThread):
                             file_count += 1
                             
                         elif entry.is_dir() and max_depth > 0:
-                            # Evitar recursão em diretórios de sistema
+                            # Avoid recursion in system directories
                             dir_name = entry.name.lower()
                             if dir_name in ['node_modules', '.git', '__pycache__', 'venv', '.venv']:
                                 logger.debug(f"Skipping system directory: {entry.path}")
                                 continue
                             
-                            # Recursive call com depth limit
+                            # Recursive call with depth limit
                             dir_size = DirectorySizeWorker._calculate_directory_size_optimized(
                                 entry.path, max_depth - 1
                             )
@@ -116,7 +116,7 @@ class DirectorySizeWorker(QThread):
         if len(_DIRECTORY_SIZE_CACHE) > _MAX_CACHE_SIZE:
             DirectorySizeWorker._cleanup_size_cache()
         
-        # Log estatísticas se for um diretório grande
+        # Log statistics if it's a large directory
         if logger.isEnabledFor(logging.DEBUG) and (file_count > 100 or dir_count > 10):
             logger.debug(f"Directory stats for {os.path.basename(path)}: "
                         f"{file_count} files, {dir_count} subdirs, {large_files} large files, "
@@ -126,18 +126,18 @@ class DirectorySizeWorker(QThread):
     
     @staticmethod
     def _cleanup_size_cache():
-        """Remove expired entries from directory size cache com LRU fallback."""
+        """Remove expired entries from directory size cache with LRU fallback."""
         current_time = time.time()
         expired_keys = []
         
-        # Primeiro remover entradas expiradas
+        # First remove expired entries
         for key, (_, cached_time) in _DIRECTORY_SIZE_CACHE.items():
             if current_time - cached_time > _CACHE_TTL_SECONDS:
                 expired_keys.append(key)
         
-        # Se ainda houver muitas entradas, remover as mais antigas (LRU)
+        # If there are still many entries, remove the oldest ones (LRU)
         if len(_DIRECTORY_SIZE_CACHE) - len(expired_keys) > _MAX_CACHE_SIZE // 2:
-            # Ordenar por tempo e remover as mais antigas
+            # Sort by time and remove the oldest ones
             sorted_items = sorted(_DIRECTORY_SIZE_CACHE.items(), key=lambda x: x[1][1])
             excess_count = len(_DIRECTORY_SIZE_CACHE) - len(expired_keys) - (_MAX_CACHE_SIZE // 2)
             
@@ -145,7 +145,7 @@ class DirectorySizeWorker(QThread):
                 if i < len(sorted_items):
                     expired_keys.append(sorted_items[i][0])
         
-        # Remover as chaves expiradas/selecionadas
+        # Remove expired/selected keys
         for key in expired_keys:
             if key in _DIRECTORY_SIZE_CACHE:
                 del _DIRECTORY_SIZE_CACHE[key]
@@ -156,20 +156,20 @@ class DirectorySizeWorker(QThread):
 
 class GameManager:
     """
-    Gerencia operações com jogos baixados pelo ACCELA.
-    Responsável por escanear, parsear e deletar jogos com segurança.
+    Manages operations with games downloaded by ACCELA.
+    Responsible for scanning, parsing, and safely deleting games.
     """
     
     @staticmethod
     def scan_accela_games(async_size_calculation: bool = True) -> List[Dict]:
         """
-        Escaneia todas as bibliotecas Steam em busca de jogos ACCELA.
+        Scans all Steam libraries for ACCELA games.
 
         Args:
-            async_size_calculation: Se True, calcula tamanhos de forma assíncrona para melhor performance
+            async_size_calculation: If True, calculates sizes asynchronously for better performance
 
         Returns:
-            Lista de dicionários com informações dos jogos encontrados
+            List of dictionaries with information about found games
         """
         games = []
         libraries = steam_helpers.get_steam_libraries()
@@ -206,18 +206,18 @@ class GameManager:
                         game_info['library_path'] = library_path
                         game_info['acf_path'] = acf_file
 
-                        # Calcular tamanho do diretório do jogo
+                        # Calculate game directory size
                         installdir = game_info.get('installdir', '')
                         if installdir:
                             game_dir = os.path.join(library_path, 'steamapps', 'common', installdir)
                             
-                            # Verificar se o diretório existe antes de calcular tamanho
+                            # Check if directory exists before calculating size
                             if os.path.exists(game_dir):
                                 if async_size_calculation:
-                                    # Cálculo assíncrono para melhor performance
+                                    # Async calculation for better performance
                                     size_bytes = DirectorySizeWorker._calculate_directory_size_optimized(game_dir)
                                 else:
-                                    # Cálculo síncrono (fallback)
+                                    # Sync calculation (fallback)
                                     size_bytes = DirectorySizeWorker._calculate_directory_size_optimized(game_dir)
                                 
                                 game_info['size_formatted'] = GameManager._format_size(size_bytes)
@@ -241,10 +241,10 @@ class GameManager:
     
     @staticmethod
     def _find_acf_files(steamapps_path: str) -> List[str]:
-        """Encontra todos os arquivos ACF de forma otimizada com validações."""
+        """Find all ACF files optimized with validations."""
         acf_files = []
         
-        # Validar diretório
+        # Validate directory
         if not steamapps_path or not os.path.exists(steamapps_path):
             logger.error(f"Invalid steamapps path: {steamapps_path}")
             return []
@@ -257,16 +257,16 @@ class GameManager:
             with os.scandir(steamapps_path) as entries:
                 for entry in entries:
                     try:
-                        # Validar que é um arquivo ACF válido
+                        # Validate it's a valid ACF file
                         if (entry.is_file() and 
                             entry.name.startswith('appmanifest_') and 
                             entry.name.endswith('.acf')):
                             
-                            # Validar formato do nome (appmanifest_{appid}.acf)
+                            # Validate name format (appmanifest_{appid}.acf)
                             name_parts = entry.name[:-4].split('_')  # Remove .acf
                             if len(name_parts) == 2 and name_parts[0] == 'appmanifest':
                                 appid_part = name_parts[1]
-                                # Verificar se appid é numérico
+                                # Check if appid is numeric
                                 if appid_part.isdigit():
                                     acf_files.append(entry.path)
                                 else:
@@ -288,9 +288,9 @@ class GameManager:
     
     @staticmethod
     def _parse_acf_file(acf_path: str) -> Optional[Dict]:
-        """Parseia arquivo ACF do Steam com validação robusta."""
+        """Parse Steam ACF file with robust validation."""
         try:
-            # Validar arquivo antes de ler
+            # Validate file before reading
             if not os.path.exists(acf_path):
                 logger.error(f"ACF file does not exist: {acf_path}")
                 return None
@@ -299,7 +299,7 @@ class GameManager:
                 logger.error(f"ACF path is not a file: {acf_path}")
                 return None
             
-            # Validar tamanho do arquivo para evitar ler arquivos corrompidos
+            # Validate file size to avoid reading corrupted files
             file_size = os.path.getsize(acf_path)
             if file_size == 0:
                 logger.warning(f"ACF file is empty: {acf_path}")
@@ -323,18 +323,18 @@ class GameManager:
                 line_number += 1
                 line = line.strip()
                 
-                # Pular linhas vazias ou comentários
+                # Skip empty lines or comments
                 if not line or line.startswith('//'):
                     continue
                 
-                # Parse de chave-valor no formato do Steam (aceita tabs ou espaços)
+                # Parse key-value in Steam format (accepts tabs or spaces)
                 if ('"' in line and 
-                    (('\t' in line and line.count('\t') >= 2) or  # Formato com tabs
-                     ('  ' in line and line.count('"') >= 4))):   # Formato com espaços
+                    (('\t' in line and line.count('\t') >= 2) or  # Tab format
+                     ('  ' in line and line.count('"') >= 4))):   # Space format
                     try:
-                        # Remove tabs e espaços extras, depois split por quotes
+                        # Remove tabs and extra spaces, then split by quotes
                         cleaned_line = line.replace('\t', ' ').strip()
-                        # Normalizar múltiplos espaços para um único espaço
+                        # Normalize multiple spaces to single space
                         while '  ' in cleaned_line:
                             cleaned_line = cleaned_line.replace('  ', ' ')
                         
@@ -343,7 +343,7 @@ class GameManager:
                             key = parts[1].strip()
                             value = parts[3] if len(parts) > 3 else ''
                             
-                            # Validar chave
+                            # Validate key
                             if key and not key.isspace():
                                 game_info[key] = value
                             else:
@@ -352,12 +352,12 @@ class GameManager:
                         logger.debug(f"Error parsing line {line_number} in {acf_path}: {e}")
                         continue
             
-            # Validar campos essenciais
+            # Validate essential fields
             if not game_info:
                 logger.warning(f"No valid data parsed from ACF: {acf_path}")
                 return {}
             
-            # Log de debug com campos importantes
+            # Debug log with important fields
             if logger.isEnabledFor(logging.DEBUG):
                 important_fields = ['appid', 'name', 'installdir', 'SizeOnDisk']
                 found_fields = {k: v for k, v in game_info.items() if k in important_fields}
@@ -377,7 +377,7 @@ class GameManager:
     
     @staticmethod
     def _is_accela_game(game_info: Dict) -> bool:
-        """Verifica se o jogo é do ACCELA com validações robustas."""
+        """Check if the game is ACCELA with robust validations."""
         try:
             if not game_info or not isinstance(game_info, dict):
                 logger.debug("Invalid game_info: not a dictionary or empty")
@@ -391,29 +391,29 @@ class GameManager:
             name = game_info.get('name', '').strip()
             installdir = game_info.get('installdir', '').strip()
             
-            # Validações mais rigorosas
+            # More rigorous validations
             if not isinstance(size_on_disk, str):
                 logger.debug(f"Invalid SizeOnDisk type: {type(size_on_disk)}")
                 return False
             
-            # Converter para string se necessário e limpar
+            # Convert to string if necessary and clean
             try:
                 size_on_disk_clean = str(size_on_disk).strip()
             except Exception:
                 logger.debug("Failed to convert SizeOnDisk to string")
                 return False
             
-            # Validar nome
+            # Validate name
             if not name or len(name) < 1:
                 logger.debug("Invalid or empty game name")
                 return False
             
-            # Validar installdir
+            # Validate installdir
             if not installdir or len(installdir) < 1:
                 logger.debug("Invalid or empty installdir")
                 return False
             
-            # Verificar se não contém caracteres suspeitos
+            # Check if doesn't contain suspicious characters
             if '..' in installdir or '/' in installdir or '\\' in installdir:
                 logger.debug(f"Suspicious characters in installdir: {installdir}")
                 return False
@@ -438,13 +438,13 @@ class GameManager:
     
     @staticmethod
     def delete_game(game_info: Dict, delete_compatdata: bool = False) -> Tuple[bool, str]:
-        """Deleta jogo ACCELA com segurança e validações adicionais."""
+        """Delete ACCELA game safely with additional validations."""
         try:
             app_id = game_info.get('appid')
             library_path = game_info.get('library_path')
             installdir = game_info.get('installdir')
             
-            # Validação robusta de entrada
+            # Robust input validation
             if not app_id or not app_id.isdigit():
                 return False, "Invalid or missing app_id"
             if not library_path:
@@ -454,21 +454,21 @@ class GameManager:
             if not os.path.exists(library_path):
                 return False, f"Library path does not exist: {library_path}"
             
-            # Sanitização de paths para prevenir path traversal
+            # Path sanitization to prevent path traversal
             library_path = os.path.normpath(library_path)
             installdir = os.path.normpath(installdir).lstrip('/\\')
             
-            # Validações de segurança adicionais
+            # Additional security validations
             if '..' in installdir or installdir.startswith('~'):
                 return False, f"Invalid installdir format: {installdir}"
             
-            # Construir paths seguros
+            # Build secure paths
             steamapps_path = os.path.join(library_path, 'steamapps')
             common_path = os.path.join(steamapps_path, 'common')
             game_dir = os.path.join(common_path, installdir)
             acf_path = game_info.get('acf_path')
             
-            # Validar que estamos dentro dos diretórios esperados
+            # Validate we're within expected directories
             try:
                 if common_path and os.path.exists(common_path):
                     common_real = os.path.realpath(common_path)
@@ -478,7 +478,7 @@ class GameManager:
             except Exception:
                 return False, "Failed to validate directory paths"
             
-            # Confirmar que é realmente um jogo ACCELA antes de deletar
+            # Confirm it's really an ACCELA game before deleting
             if acf_path and os.path.exists(acf_path):
                 parsed_info = GameManager._parse_acf_file(acf_path)
                 if not parsed_info or not GameManager._is_accela_game(parsed_info):
@@ -487,10 +487,10 @@ class GameManager:
             deleted_items = []
             errors = []
             
-            # Deletar diretório do jogo com validação adicional
+            # Delete game directory with additional validation
             if game_dir and os.path.exists(game_dir):
                 try:
-                    # Verificar se não é um diretório crítico
+                    # Check if it's not a critical directory
                     if os.path.samefile(game_dir, common_path):
                         errors.append("Cannot delete common directory")
                     else:
@@ -502,10 +502,10 @@ class GameManager:
             elif game_dir:
                 logger.warning(f"Game directory not found: {game_dir}")
             
-            # Deletar arquivo ACF
+            # Delete ACF file
             if acf_path and os.path.exists(acf_path):
                 try:
-                    # Validar que é um arquivo ACF válido
+                    # Validate it's a valid ACF file
                     if not acf_path.endswith('.acf') or not os.path.basename(acf_path).startswith('appmanifest_'):
                         errors.append("Invalid ACF file format")
                     else:
@@ -517,12 +517,12 @@ class GameManager:
             elif acf_path:
                 logger.warning(f"ACF file not found: {acf_path}")
             
-            # Deletar compatdata se solicitado (com validação)
+            # Delete compatdata if requested (with validation)
             if delete_compatdata:
                 compatdata_path = os.path.join(library_path, 'steamapps', 'compatdata', app_id)
                 if os.path.exists(compatdata_path):
                     try:
-                        # Validar que está dentro de compatdata
+                        # Validate it's within compatdata
                         compatdata_base = os.path.join(library_path, 'steamapps', 'compatdata')
                         compatdata_real = os.path.realpath(compatdata_path)
                         compatdata_base_real = os.path.realpath(compatdata_base)
@@ -538,7 +538,7 @@ class GameManager:
                 else:
                     logger.info(f"Compatdata directory not found: {compatdata_path}")
             
-            # Resultado da operação
+            # Operation result
             if errors:
                 if deleted_items:
                     return False, f"Partial success. Deleted: {', '.join(deleted_items)}. Errors: {'; '.join(errors)}"

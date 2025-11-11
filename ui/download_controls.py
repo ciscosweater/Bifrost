@@ -55,25 +55,25 @@ class DownloadControls(QWidget):
         """)
         layout.addWidget(self.status_label)
 
-        # Botões de controle
+        # Control buttons
         buttons_layout = QHBoxLayout()
         buttons_layout.setContentsMargins(0, 0, 0, 0)
         buttons_layout.setSpacing(8)  # Reduced spacing
 
-        # Botão Pause
+        # Pause button
         self.pause_button = QPushButton("Pause")
         self.pause_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.pause_button.clicked.connect(self.pause_clicked.emit)
         self._setup_button_style(self.pause_button, "pause")
 
-        # Botão Resume (inicialmente escondido)
+        # Resume button (initially hidden)
         self.resume_button = QPushButton("Resume")
         self.resume_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.resume_button.clicked.connect(self.resume_clicked.emit)
         self.resume_button.hide()
         self._setup_button_style(self.resume_button, "resume")
 
-        # Botão Cancel
+        # Cancel button
         self.cancel_button = QPushButton("Cancel")
         self.cancel_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.cancel_button.clicked.connect(self.cancel_clicked.emit)
@@ -88,7 +88,7 @@ class DownloadControls(QWidget):
         layout.addLayout(buttons_layout)
 
     def _setup_button_style(self, button, button_type):
-        """Configura estilo dos botões"""
+        """Configure button style"""
         styles = {
             "pause": f"""
                 QPushButton {{
@@ -261,7 +261,7 @@ class DownloadControls(QWidget):
         self._set_idle_state()
 
     def _set_idle_state(self):
-        """Configura estado idle (método interno)"""
+        """Configure idle state (internal method)"""
         self.current_state = "idle"
         self.status_label.setText("Ready to download")
         self.status_label.setStyleSheet(f"""
@@ -299,18 +299,18 @@ class DownloadControls(QWidget):
         else:
             full_text = message
 
-        # Se o texto completo ainda for muito longo, truncar o prefix também
+        # If full text is still too long, truncate prefix too
         if len(full_text) > 80:
             full_text = full_text[:77] + "..."
 
         self.status_label.setText(full_text)
 
-        # Atualizar geometria para que o layout respeite o tamanho mínimo configurado
+        # Update geometry so layout respects configured minimum size
         self.status_label.updateGeometry()
 
 
 class CompactDownloadControls(QWidget):
-    """Versão compacta dos controles para espaços menores"""
+    """Compact version of controls for smaller spaces"""
 
     pause_clicked = pyqtSignal()
     resume_clicked = pyqtSignal()
@@ -328,20 +328,20 @@ class CompactDownloadControls(QWidget):
         layout.setContentsMargins(0, 5, 0, 5)
         layout.setSpacing(5)
 
-        # Botões menores e mais compactos
-        self.pause_button = QPushButton("⏸")
+        # Smaller and more compact buttons
+        self.pause_button = QPushButton("||")
         self.pause_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.pause_button.clicked.connect(self.pause_clicked.emit)
         self.pause_button.setFixedSize(30, 30)
         self.pause_button.hide()
 
-        self.resume_button = QPushButton("▶")
+        self.resume_button = QPushButton(">")
         self.resume_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.resume_button.clicked.connect(self.resume_clicked.emit)
         self.resume_button.setFixedSize(30, 30)
         self.resume_button.hide()
 
-        self.cancel_button = QPushButton("✕")
+        self.cancel_button = QPushButton("X")
         self.cancel_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.cancel_button.clicked.connect(self.cancel_clicked.emit)
         self.cancel_button.setFixedSize(30, 30)

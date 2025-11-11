@@ -1,5 +1,5 @@
 """
-Download Session - Modelo de dados para persistência de estado de downloads
+Download Session - Data model for download state persistence
 """
 import json
 import os
@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 class DownloadState(Enum):
-    """Estados possíveis de um download"""
+    """Possible states of a download"""
     IDLE = "idle"
     DOWNLOADING = "downloading"
     PAUSED = "paused"
@@ -26,7 +26,7 @@ class DownloadState(Enum):
 
 @dataclass
 class DownloadSession:
-    """Armazena estado persistente de download"""
+    """Stores persistent download state"""
     session_id: str
     game_data: Dict[str, Any]
     selected_depots: List[str]
@@ -40,7 +40,7 @@ class DownloadSession:
     error_message: str = ""
     
     def to_dict(self) -> Dict[str, Any]:
-        """Converte para dicionário serializável"""
+        """Convert to serializable dictionary"""
         return {
             "session_id": self.session_id,
             "game_data": self.game_data,
@@ -57,7 +57,7 @@ class DownloadSession:
     
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'DownloadSession':
-        """Cria instância a partir de dicionário"""
+        """Create instance from dictionary"""
         return cls(
             session_id=data["session_id"],
             game_data=data["game_data"],
@@ -73,12 +73,12 @@ class DownloadSession:
         )
     
     def save(self):
-        """Salva sessão em arquivo"""
+        """Save session to file"""
         try:
             sessions = DownloadSession.load_all_sessions()
             sessions[self.session_id] = self.to_dict()
             
-            # Garantir que diretório existe
+            # Ensure directory exists
             os.makedirs("data/sessions", exist_ok=True)
             
             with open("data/sessions/download_sessions.json", 'w') as f:
@@ -91,7 +91,7 @@ class DownloadSession:
     
     @classmethod
     def load_session(cls, session_id: str) -> Optional['DownloadSession']:
-        """Carrega sessão específica"""
+        """Load specific session"""
         try:
             sessions = cls.load_all_sessions()
             if session_id in sessions:
@@ -102,7 +102,7 @@ class DownloadSession:
     
     @classmethod
     def load_all_sessions(cls) -> Dict[str, Dict[str, Any]]:
-        """Carrega todas as sessões"""
+        """Load all sessions"""
         try:
             if os.path.exists("data/sessions/download_sessions.json"):
                 with open("data/sessions/download_sessions.json", 'r') as f:
@@ -113,7 +113,7 @@ class DownloadSession:
     
     @classmethod
     def delete_session(cls, session_id: str):
-        """Remove sessão salva"""
+        """Remove saved session"""
         try:
             sessions = cls.load_all_sessions()
             if session_id in sessions:
@@ -129,7 +129,7 @@ class DownloadSession:
     
     @classmethod
     def cleanup_old_sessions(cls, days: int = 7):
-        """Remove sessões antigas (padrão: 7 dias)"""
+        """Remove old sessions (default: 7 days)"""
         try:
             sessions = cls.load_all_sessions()
             cutoff_date = datetime.now().timestamp() - (days * 24 * 3600)

@@ -1,5 +1,5 @@
 """
-Directory Utilities - Funções otimizadas para operações de diretório
+Directory Utilities - Optimized functions for directory operations
 """
 import os
 import logging
@@ -9,16 +9,16 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 class DirectoryUtils:
-    """Utilitários otimizados para operações de diretório"""
+    """Optimized utilities for directory operations"""
     
     @staticmethod
     def safe_scandir(directory: str, pattern: Optional[str] = None) -> Generator[os.DirEntry, None, None]:
         """
-        Versão otimizada de os.scandir com tratamento de erros e filtering
+        Optimized version of os.scandir with error handling and filtering
         
         Args:
-            directory: Diretório para escanear
-            pattern: Padrão opcional para filtrar nomes (suporta * e ?)
+            directory: Directory to scan
+            pattern: Optional pattern to filter names (supports * and ?)
             
         Yields:
             os.DirEntry objects
@@ -40,14 +40,14 @@ class DirectoryUtils:
     @staticmethod
     def find_files_by_extension(directory: str, extensions: List[str]) -> List[str]:
         """
-        Encontra arquivos por extensão de forma otimizada
+        Find files by extension in optimized way
         
         Args:
-            directory: Diretório para buscar
-            extensions: Lista de extensões (ex: ['.txt', '.json'])
+            directory: Directory to search
+            extensions: List of extensions (ex: ['.txt', '.json'])
             
         Returns:
-            Lista de caminhos completos dos arquivos encontrados
+            List of full paths of found files
         """
         if not extensions:
             return []

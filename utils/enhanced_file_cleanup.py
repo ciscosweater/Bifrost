@@ -117,7 +117,7 @@ class EnhancedFileCleanupManager(FileCleanupManager):
                            game_data: Dict,
                            session_id: str = "") -> Dict:
         """
-        🚨 LIMPEZA COMPLETA PARA CANCELAMENTO DE DOWNLOAD 🚨
+        COMPLETE CLEANUP FOR DOWNLOAD CANCELLATION
         
         Método otimizado para cancelamento COM LIMPEZA COMPLETA:
         - 100% seguro para Steam (verificações extremas)
@@ -126,13 +126,13 @@ class EnhancedFileCleanupManager(FileCleanupManager):
         - Só funciona durante cancelamento de download
         - Múltiplas confirmações de segurança
         """
-        logger.warning(f"🚨 STARTING COMPLETE CANCEL CLEANUP for game: {game_data.get('game_name', 'Unknown')} 🚨")
+        logger.warning(f"STARTING COMPLETE CANCEL CLEANUP for game: {game_data.get('game_name', 'Unknown')}")
         logger.warning(f"Install Directory: {install_dir}")
         logger.warning(f"Session ID: {session_id}")
         
         # Verificação adicional: só deve funcionar com session_id válido
         if not session_id or len(session_id) < 5:
-            error_msg = "🚨 INVALID SESSION ID - This should only be called during download cancellation"
+            error_msg = "INVALID SESSION ID - This should only be called during download cancellation"
             logger.error(error_msg)
             return {
                 'success': False,
@@ -142,7 +142,7 @@ class EnhancedFileCleanupManager(FileCleanupManager):
         
         # Verificação de dados do jogo
         if not game_data.get('game_name') or not game_data.get('appid'):
-            error_msg = "🚨 INVALID GAME DATA - Missing game name or appid"
+            error_msg = "INVALID GAME DATA - Missing game name or appid"
             logger.error(error_msg)
             return {
                 'success': False,
@@ -150,7 +150,7 @@ class EnhancedFileCleanupManager(FileCleanupManager):
                 'cleanup_type': 'CANCEL_CLEANUP_BLOCKED'
             }
         
-        logger.warning("🚨 ALL PRE-CHECKS PASSED - PROCEEDING WITH COMPLETE CLEANUP 🚨")
+        logger.warning("ALL PRE-CHECKS PASSED - PROCEEDING WITH COMPLETE CLEANUP")
         
         return self.cleanup_partial_download_enhanced(
             download_dir="",  # Não limpar diretórios temporários legados

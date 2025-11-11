@@ -1,5 +1,5 @@
 """
-Download Manager - Control central para downloads com pause/cancel/retomada
+Download Manager - Central control for downloads with pause/cancel/resume
 """
 import os
 import sys
@@ -22,9 +22,9 @@ logger = logging.getLogger(__name__)
 
 
 class DownloadManager(QObject):
-    """Gerencia downloads com capacidade de pause/cancel/retomada"""
+    """Manages downloads with pause/cancel/resume capability"""
     
-    # Signals principais
+    # Main signals
     download_started = pyqtSignal(str)  # session_id
     download_progress = pyqtSignal(int, str)  # percentage, current_depot
     download_paused = pyqtSignal()
@@ -33,7 +33,7 @@ class DownloadManager(QObject):
     download_completed = pyqtSignal(str)  # session_id
     download_error = pyqtSignal(str)
     
-    # Signals de estado
+    # State signals
     state_changed = pyqtSignal(str)  # DownloadState value
     depot_completed = pyqtSignal(str)  # depot_id
     
@@ -213,7 +213,7 @@ class DownloadManager(QObject):
             if self.current_process:
                 self._terminate_process()
             
-            # 🎯 ENHANCED CLEANUP: Aggressive but Steam-safe cleanup
+            # ENHANCED CLEANUP: Aggressive but Steam-safe cleanup
             if self.current_session and self.current_session.dest_path:
                 # Calcular o diretório de instalação específico do jogo
                 game_data = self.current_session.game_data
@@ -256,7 +256,7 @@ class DownloadManager(QObject):
     
     def _is_accela_temp_directory(self, directory: str) -> bool:
         """
-        🔒 SAFETY CHECK: Verify this is really an ACCELA temp directory before deletion
+        SAFETY CHECK: Verify this is really an ACCELA temp directory before deletion
         """
         if not directory or not os.path.exists(directory):
             return False

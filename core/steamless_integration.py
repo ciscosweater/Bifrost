@@ -249,9 +249,9 @@ class SteamlessIntegration(QObject):
         # Check disk performance for optimization tips
         disk_info = self._check_disk_performance(game_directory)
         if disk_info.get('low_space_warning'):
-            self.progress.emit("⚠️ Low disk space detected - this may slow down Steamless")
+            self.progress.emit("[!] Low disk space detected - this may slow down Steamless")
         if not disk_info.get('is_likely_ssd', True):
-            self.progress.emit("💡 Tip: Using SSD would significantly improve Steamless performance")
+            self.progress.emit("[TIP] Using SSD would significantly improve Steamless performance")
         
         # Clean temporary files for better performance
         if self.performance_mode:
@@ -313,7 +313,7 @@ class SteamlessIntegration(QObject):
                 # Check available memory
                 memory = psutil.virtual_memory()
                 if memory.percent > 80:
-                    self.progress.emit("⚠️ High memory usage detected - consider closing other applications")
+                    self.progress.emit("[!] High memory usage detected - consider closing other applications")
                 
             logger.info("System performance optimized for Steamless")
         except Exception as e:
@@ -467,7 +467,7 @@ class SteamlessIntegration(QObject):
                         pass
             
             if cleaned_count > 0:
-                self.progress.emit(f"🧹 Cleaned {cleaned_count} temporary files for better performance")
+                self.progress.emit(f"Cleaned {cleaned_count} temporary files for better performance")
         except Exception as e:
             logger.debug(f"Could not clean temp files: {e}")
 

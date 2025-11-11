@@ -278,16 +278,16 @@ class SlssteamSetupDialog(ModernDialog):
             success = self.checker.fix_play_not_owned_games()
             
             if success:
-                self.output_text.append("✓ PlayNotOwnedGames set to 'yes'")
+                self.output_text.append("[OK] PlayNotOwnedGames set to 'yes'")
                 self.progress_bar.setValue(100)
                 self._on_setup_finished(True, "Configuration fixed successfully")
             else:
-                self.output_text.append("✗ Failed to update configuration")
+                self.output_text.append("[X] Failed to update configuration")
                 self._on_setup_finished(False, "Failed to fix configuration")
                 
         except Exception as e:
             logger.error(f"Error fixing configuration: {e}")
-            self.output_text.append(f"✗ Error: {e}")
+            self.output_text.append(f"[X] Error: {e}")
             self._on_setup_finished(False, str(e))
     
     def _on_output_received(self, output: str):
@@ -315,10 +315,10 @@ class SlssteamSetupDialog(ModernDialog):
         
         if success:
             self.status_label.setText("Setup completed successfully!")
-            self.output_text.append(f"\n✓ {message}")
+            self.output_text.append(f"\n[OK] {message}")
         else:
             self.status_label.setText("Setup failed!")
-            self.output_text.append(f"\n✗ {message}")
+            self.output_text.append(f"\n[X] {message}")
         
         # Reset buttons
         self.action_button.setEnabled(True)

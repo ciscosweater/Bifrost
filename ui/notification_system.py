@@ -151,12 +151,12 @@ class NotificationWidget(QFrame):
     def _get_icon(self):
         """Get icon for notification type."""
         icons = {
-            "info": "ℹ️",
-            "success": "✅", 
-            "warning": "⚠️",
-            "error": "❌"
+            "info": "[i]",
+            "success": "[OK]", 
+            "warning": "[!]",
+            "error": "[X]"
         }
-        return icons.get(self.notification_type, "ℹ️")
+        return icons.get(self.notification_type, "[i]")
         
     def _get_color(self):
         """Get text color for notification type."""
@@ -239,7 +239,7 @@ class ProgressNotification:
         progress_text = f"{self.title} - {progress}%"
         # Update the notification's message label
         for child in self.notification.children():
-            if isinstance(child, QLabel) and child.text() != "×" and "ℹ️" not in child.text():
+            if isinstance(child, QLabel) and child.text() != "×" and "[i]" not in child.text():
                 child.setText(progress_text)
                 break
                 

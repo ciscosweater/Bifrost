@@ -128,7 +128,7 @@ class GameImageDisplay(QObject):
                 Qt.TransformationMode.SmoothTransformation
             ))
         else:
-            self.game_header_label.setText("📷\nNo Image")
+            self.game_header_label.setText("[IMAGE]\nNo Image")
 
 class ImageFetcher(QObject):
     finished = pyqtSignal(bytes)

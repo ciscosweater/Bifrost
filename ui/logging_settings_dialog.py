@@ -17,7 +17,7 @@ class LoggingSettingsDialog(ModernDialog):
     
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Configurações de Log")
+        self.setWindowTitle("Logging Settings")
         self.setMinimumWidth(400)
         self._setup_ui()
         self._load_settings()
@@ -27,24 +27,24 @@ class LoggingSettingsDialog(ModernDialog):
         layout = QVBoxLayout()
         
         # Log level group
-        level_group = QGroupBox("Nível do Log")
+        level_group = QGroupBox("Log Level")
         level_layout = QVBoxLayout()
         
         self.level_combo = QComboBox()
         self.level_combo.addItems(["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"])
-        self.level_combo.setToolTip("Define o nível mínimo de mensagens que serão exibidas")
+        self.level_combo.setToolTip("Sets the minimum level of messages that will be displayed")
         
-        level_layout.addWidget(QLabel("Nível mínimo:"))
+        level_layout.addWidget(QLabel("Minimum Level:"))
         level_layout.addWidget(self.level_combo)
         level_group.setLayout(level_layout)
         
         # Display mode group
-        display_group = QGroupBox("Modo de Exibição")
+        display_group = QGroupBox("Display Mode")
         display_layout = QVBoxLayout()
         
-        self.simple_mode_checkbox = QCheckBox("Modo simplificado")
+        self.simple_mode_checkbox = QCheckBox("Simplified Mode")
         self.simple_mode_checkbox.setToolTip(
-            "Ativa formato simplificado: 'NÍVEL: mensagem' em vez de 'data - módulo - nível - mensagem'"
+            "Enables simplified format: 'LEVEL: message' instead of 'date - module - level - message'"
         )
         
         display_layout.addWidget(self.simple_mode_checkbox)
@@ -52,9 +52,9 @@ class LoggingSettingsDialog(ModernDialog):
         
         # Info label
         info_label = QLabel(
-            "• Arquivo app.log sempre conterá todos os logs (DEBUG completo)\n"
-            "• Mudanças aplicadas imediatamente ao console e interface\n"
-            "• Logs detalhados são úteis para debug de problemas"
+            "• app.log file will always contain all logs (complete DEBUG)\n"
+            "• Changes applied immediately to console and interface\n"
+            "• Detailed logs are useful for debugging problems"
         )
         info_label.setWordWrap(True)
         info_label.setStyleSheet("color: #666; font-size: 11px; margin: 10px 0;")
@@ -63,10 +63,10 @@ class LoggingSettingsDialog(ModernDialog):
         button_layout = QHBoxLayout()
         button_layout.addStretch()
         
-        self.cancel_button = QPushButton("Cancelar")
+        self.cancel_button = QPushButton("Cancel")
         self.cancel_button.clicked.connect(self.reject)
         
-        self.save_button = QPushButton("Salvar")
+        self.save_button = QPushButton("Save")
         self.save_button.clicked.connect(self._save_settings)
         self.save_button.setDefault(True)
         
@@ -111,8 +111,8 @@ class LoggingSettingsDialog(ModernDialog):
             
             QMessageBox.information(
                 self,
-                "Configurações Salvas",
-                "As configurações de log foram atualizadas com sucesso!"
+                "Settings Saved",
+                "Logging settings have been updated successfully!"
             )
             
             self.accept()
@@ -121,6 +121,6 @@ class LoggingSettingsDialog(ModernDialog):
             logger.error(f"Error saving logging settings: {e}")
             QMessageBox.critical(
                 self,
-                "Erro",
-                f"Ocorreu um erro ao salvar as configurações: {e}"
+                "Error",
+                f"An error occurred while saving settings: {e}"
             )

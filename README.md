@@ -2,7 +2,7 @@
 
 Graphical interface for downloading Steam depots with advanced management features.
 
-## 🚀 Quick Installation
+## Quick Installation
 
 ### Linux (Recommended)
 ```bash
@@ -24,7 +24,7 @@ pip install -r requirements.txt
 python main.py
 ```
 
-## 📋 Requirements
+## Requirements
 
 - **Linux operating system** (Ubuntu, Arch, Fedora, etc.)
 - Python 3.8+
@@ -32,7 +32,7 @@ python main.py
 - Internet connection
 - 32-bit compatibility libraries (for SLSsteam integration)
 
-## 🎮 How to Use
+## How to Use
 
 1. **Configure your Steam credentials on SLScheevo** (optional, for generating achievements)
 2. **Run ACCELA** through installer or manually
@@ -41,15 +41,15 @@ python main.py
 5. **Set the destination** directory
 6. **Start the download** and monitor progress
 
-## 🔧 Features
+## Features
 
-- ✅ Intuitive PyQt6-based interface
-- ✅ ZIP file support for processing
-- ✅ Download speed monitoring
-- ✅ Installed games management
-- ✅ Modern dark theme
+- Intuitive PyQt6-based interface
+- ZIP file support for processing
+- Download speed monitoring
+- Installed games management
+- Modern dark theme
 
-## 📁 File Structure
+## File Structure
 
 ```
 ACCELA Python/
@@ -65,7 +65,7 @@ ACCELA Python/
 └── SLSsteam-Any/       # SLSSteam for variants
 ```
 
-## ⚠️ Important Notice
+## Important Notice
 
 This software is intended for educational and personal use. Users are responsible for:
 - Respecting Steam Terms of Service
@@ -73,23 +73,23 @@ This software is intended for educational and personal use. Users are responsibl
 - Not distributing copyrighted content
 - **Linux-only application** - Will not work on Windows or macOS due to SLSsteam dependencies
 
-## 🔐 Security
+## Security
 
 - Steam credentials are stored locally
 - No information is sent to external servers
 - Always use the latest application version
 
-## 🐛 Common Issues
+## Common Issues
 
 **Application doesn't start**: Check if Python 3.8+ is installed
 **Dependency errors**: Run `pip install -r requirements.txt`
 **Download failure**: Check connection and Steam credentials
 
-## 📞 Support
+## Support
 
 For issues and suggestions, check the documentation or contact the developer.
 
-## 🙏 Credits and Acknowledgments
+## Credits and Acknowledgments
 
 **Original ACCELA**: The original ACCELA project was created by an unknown developer. This repository is a modified and enhanced version that improves the user experience and adds new functionality while maintaining the core purpose.
 
@@ -97,7 +97,7 @@ For issues and suggestions, check the documentation or contact the developer.
 
 This project incorporates open-source third-party tools:
 
-### 📦 Included External Tools
+### Included External Tools
 
 - **[DepotDownloader](https://github.com/SteamAutoCracks/DepotDownloaderMod)**
   - Main tool for downloading Steam depots
@@ -114,7 +114,7 @@ This project incorporates open-source third-party tools:
   - Author: xamionex
   - Description: Achievement generator meant to be used with SLSsteam
 
-### 🛠️ Technologies Used
+### Technologies Used
 
 - **Python 3.8+** - Main language
 - **PyQt6** - GUI framework

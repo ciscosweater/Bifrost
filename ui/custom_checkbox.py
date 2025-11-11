@@ -11,7 +11,7 @@ class CheckBoxWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._checked = False
-        self.setFixedSize(20, 20)  # Tamanho aumentado para melhor visualização
+        self.setFixedSize(20, 20)  # Increased size for better visualization
         self.setCursor(Qt.CursorShape.PointingHandCursor)
     
     def isChecked(self):
@@ -78,12 +78,12 @@ class CustomCheckBox(QWidget):
         layout.addStretch()
         self.setLayout(layout)
         
-        # Garantir tamanho mínimo para evitar corte
+        # Ensure minimum size to avoid cutting
         if text:
-            # Se tem texto, não limitar tamanho
+            # If has text, don't limit size
             self.setMinimumHeight(20)
         else:
-            # Se não tem texto, tamanho fixo para tabela
+            # If no text, fixed size for table
             self.setMinimumSize(20, 20)
             self.setMaximumSize(20, 20)
     

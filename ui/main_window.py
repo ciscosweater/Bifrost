@@ -1,10 +1,11 @@
-import logging
+# type: ignore
 import logging
 import os
 import random
 import sys
 import re
 import time
+from typing import Dict, Any, Optional
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QLabel, QProgressBar,
     QTextEdit, QFrame, QFileDialog, QMessageBox,
@@ -94,11 +95,11 @@ class MainWindow(QMainWindow):
         self.keyboard_shortcuts = KeyboardShortcuts(self)
         self.asset_manager = AssetManager(self)
         
-        # Download Manager para pause/cancel/retomada
+        # Download Manager for pause/cancel/resume
         self.download_manager = DownloadManager()
-        # self.download_controls = DownloadControls()  # Legado - comentado
+        # self.download_controls = DownloadControls()  # Legacy - commented
         
-        # Widget minimalista de download (novo componente)
+        # Minimalist download widget (new component)
         self.minimal_download_widget = MinimalDownloadWidget()
         self.minimal_download_widget.setVisible(False)
         
@@ -118,13 +119,13 @@ class MainWindow(QMainWindow):
     def _setup_ui(self):
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
-        self.layout = QVBoxLayout(self.central_widget)
-        self.layout.setContentsMargins(0, 0, 0, 0)
-        self.layout.setSpacing(0)
+        self.main_layout = QVBoxLayout(self.central_widget)
+        self.main_layout.setContentsMargins(0, 0, 0, 0)
+        self.main_layout.setSpacing(0)
 
         # Add title bar at the top of the window
         self.title_bar = CustomTitleBar(self)
-        self.layout.addWidget(self.title_bar)
+        self.main_layout.addWidget(self.title_bar)
 
         main_content_frame = QFrame()
         main_content_frame.setStyleSheet("""
@@ -134,16 +135,16 @@ class MainWindow(QMainWindow):
                 border-radius: 8px;
             }
         """)
-        self.layout.addWidget(main_content_frame)
+        self.main_layout.addWidget(main_content_frame)
         
-        main_layout = QVBoxLayout(main_content_frame)
-        main_layout.setContentsMargins(16,8,16,4)  # Reduce bottom margin to eliminate extra space
-        main_layout.setSpacing(12)  # Spacing adequado entre elementos
+        self.content_layout = QVBoxLayout(main_content_frame)
+        self.content_layout.setContentsMargins(16,8,16,4)  # Reduce bottom margin to eliminate extra space
+        self.content_layout.setSpacing(12)  # Adequate spacing between elements
         
         drop_zone_container = QWidget()
         drop_zone_layout = QVBoxLayout(drop_zone_container)
-        drop_zone_layout.setContentsMargins(8,8,8,8)  # Margens adequadas para drop zone
-        drop_zone_layout.setSpacing(8)  # Spacing adequado
+        drop_zone_layout.setContentsMargins(8,8,8,8)  # Adequate margins for drop zone
+        drop_zone_layout.setSpacing(8)  # Adequate spacing
 
         self.drop_label = ScaledLabel()
         self.drop_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -172,7 +173,7 @@ class MainWindow(QMainWindow):
 
         
 
-        main_layout.addWidget(drop_zone_container, 3)
+        self.content_layout.addWidget(drop_zone_container, 3)
 
         # Game header image area (initially hidden)
         self.game_image_container = ModernFrame()
@@ -181,7 +182,7 @@ class MainWindow(QMainWindow):
         self.game_image_container.setMaximumWidth(600)  # Constrain width to prevent excess space
         self.game_image_container.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         game_image_layout = QHBoxLayout(self.game_image_container)
-        game_image_layout.setContentsMargins(12, 8, 12, 8)  # Margens adequadas
+        game_image_layout.setContentsMargins(12, 8, 12, 8)  # Adequate margins
         
         self.game_header_label = QLabel()
         self.game_header_label.setMinimumSize(100, 30)  # Reduced minimum size
@@ -231,15 +232,15 @@ class MainWindow(QMainWindow):
         # Hide old container to avoid duplication
         self.game_image_container.hide()
 
-        # Widget minimalista de download (novo componente unificado)
+        # Minimalist download widget (new unified component)
         self.minimal_download_widget.setVisible(False)
-        main_layout.addWidget(self.minimal_download_widget, 0, Qt.AlignmentFlag.AlignCenter)
+        self.content_layout.addWidget(self.minimal_download_widget, 0, Qt.AlignmentFlag.AlignCenter)
         
-        # Enhanced progress bar (legado - completamente removido)
+        # Enhanced progress bar (legacy - completely removed)
         # self.progress_bar = EnhancedProgressBar()
         # self.progress_bar.setVisible(False)
         
-        # Download controls (legado - completamente removido)
+        # Download controls (legacy - completely removed)
         # self.download_controls = DownloadControls()
         # self.download_controls.setVisible(False)
         # self.download_controls.setMaximumWidth(350)
@@ -266,7 +267,7 @@ class MainWindow(QMainWindow):
         self.log_output.setLineWrapMode(QTextEdit.LineWrapMode.WidgetWidth)
         self.log_output.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.log_output.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-        main_layout.addWidget(self.log_output, 1)
+        self.content_layout.addWidget(self.log_output, 1)
         # Get the Qt log handler after logging is set up
         try:
             from utils.logger import qt_log_handler
@@ -294,21 +295,21 @@ class MainWindow(QMainWindow):
         dialog = FontSettingsDialog(self)
         dialog.exec()
 
-    def dragEnterEvent(self, event: QDragEnterEvent):
-        if event.mimeData().hasUrls() and len(event.mimeData().urls()) == 1:
-            url = event.mimeData().urls()[0]
+    def dragEnterEvent(self, a0):
+        if a0.mimeData().hasUrls() and len(a0.mimeData().urls()) == 1:
+            url = a0.mimeData().urls()[0]
             if url.isLocalFile() and url.toLocalFile().lower().endswith('.zip'):
-                event.acceptProposedAction()
+                a0.acceptProposedAction()
 
-    def dropEvent(self, event: QDropEvent):
-        url = event.mimeData().urls()[0]
+    def dropEvent(self, a0):
+        url = a0.mimeData().urls()[0]
         zip_path = url.toLocalFile()
         self.log_output.clear()
         self._start_zip_processing(zip_path)
 
     def _setup_download_connections(self):
         """Configure DownloadManager and UI controls connections"""
-        # Conectar signals do DownloadManager
+        # Connect DownloadManager signals
         self.download_manager.download_progress.connect(self._on_download_progress)
         self.download_manager.download_paused.connect(self._on_download_paused)
         self.download_manager.download_resumed.connect(self._on_download_resumed)
@@ -318,7 +319,7 @@ class MainWindow(QMainWindow):
         self.download_manager.state_changed.connect(self._on_download_state_changed)
         self.download_manager.depot_completed.connect(self._on_depot_completed)
         
-        # Conectar controles UI (widget minimalista)
+        # Connect UI controls (minimalist widget)
         self.minimal_download_widget.pause_clicked.connect(self.download_manager.pause_download)
         self.minimal_download_widget.resume_clicked.connect(self.download_manager.resume_download)
         self.minimal_download_widget.cancel_clicked.connect(self._confirm_cancel_download)
@@ -383,7 +384,7 @@ class MainWindow(QMainWindow):
         """Handle download cancellation"""
         self._stop_speed_monitor()
         self.minimal_download_widget.set_error_state("Cancelled")
-        self.log_output.append("✕ Download cancelled by user")
+        self.log_output.append("Download cancelled by user")
         # Clear current session to avoid unwanted behavior
         self.current_session = None
         self._reset_ui_state()
@@ -393,11 +394,11 @@ class MainWindow(QMainWindow):
         try:
             logger.info("Download completion handler started")
             self._stop_speed_monitor()
-            # self.progress_bar.setValue(100)  # Legado - comentado
-            # self.progress_bar.set_download_state("completed")  # Legado - comentado
-            # self.download_controls.set_completed_state()  # Legado - comentado
+            # self.progress_bar.setValue(100)  # Legacy - commented
+            # self.progress_bar.set_download_state("completed")  # Legacy - commented
+            # self.download_controls.set_completed_state()  # Legacy - commented
             self.minimal_download_widget.set_completed_state()
-            self.log_output.append("✓ Download completed successfully!")
+            self.log_output.append("Download completed successfully!")
             
             # Create ACF file and handle completion
             logger.info("Creating ACF file...")
@@ -409,7 +410,8 @@ class MainWindow(QMainWindow):
             self._handle_steam_schema_generation()
             logger.info("Steam schema generation handled")
             
-            self.notification_manager.show_notification(f"Successfully downloaded {self.game_data.get('game_name', 'Game')}!", "success")
+            game_name = self.game_data.get('game_name', 'Game') if self.game_data else 'Game'
+            self.notification_manager.show_notification(f"Successfully downloaded {game_name}!", "success")
             
             if self.slssteam_mode_was_active:
                 logger.info("Prompting for Steam restart...")
@@ -421,7 +423,7 @@ class MainWindow(QMainWindow):
             logger.info("Download completion handler finished")
         except Exception as e:
             logger.error(f"Error in download completion handler: {e}", exc_info=True)
-            self.log_output.append(f"❌ Error during completion: {e}")
+            self.log_output.append(f"Error during completion: {e}")
         
         # Hide controls after a while
         QTimer.singleShot(3000, self._hide_download_controls)
@@ -431,7 +433,7 @@ class MainWindow(QMainWindow):
         
     def _on_download_error(self, error_message):
         """Handle download errors"""
-        self.log_output.append(f"❌ Erro no download: {error_message}")
+        self.log_output.append(f"Download error: {error_message}")
         self.minimal_download_widget.set_idle_state()
         
     def _on_download_state_changed(self, state):
@@ -440,13 +442,13 @@ class MainWindow(QMainWindow):
         
     def _on_depot_completed(self, depot_id):
         """Handle individual depot completion"""
-        self.log_output.append(f"✓ Depot {depot_id} completed")
+        self.log_output.append(f"Depot {depot_id} completed")
         
     def _confirm_cancel_download(self):
         """Show confirmation dialog before cancelling"""
         reply = QMessageBox.question(
             self, 
-            "Cancelar Download",
+            "Cancel Download",
             "Are you sure you want to cancel the download? Partial files will be removed.",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No
@@ -460,8 +462,8 @@ class MainWindow(QMainWindow):
         self.minimal_download_widget.setVisible(False)
         
     def _on_zip_processed(self, game_data):
-        # self.progress_bar.setRange(0, 100)  # Legado - comentado
-        # self.progress_bar.setValue(100)  # Legado - comentado
+        # self.progress_bar.setRange(0, 100)  # Legacy - commented
+        # self.progress_bar.setValue(100)  # Legacy - commented
         self.game_data = game_data
         
         if self.game_data and self.game_data.get('depots'):
@@ -473,6 +475,9 @@ class MainWindow(QMainWindow):
             self._reset_ui_state()
 
     def _show_depot_selection_dialog(self):
+        if not self.game_data:
+            self.log_output.append("Error: No game data available for depot selection")
+            return
         self.depot_dialog = DepotSelectionDialog(self.game_data['appid'], self.game_data['depots'], self)
         if self.depot_dialog.exec():
             selected_depots = self.depot_dialog.get_selected_depots()
@@ -491,7 +496,7 @@ class MainWindow(QMainWindow):
             logger.info(f"SLSsteam mode: {slssteam_mode}")
 
             if slssteam_mode:
-                if self.game_data.get('dlcs'):
+                if self.game_data and self.game_data.get('dlcs'):
                     dlc_dialog = DlcSelectionDialog(self.game_data['dlcs'], self)
                     if dlc_dialog.exec():
                         self.game_data['selected_dlcs'] = dlc_dialog.get_selected_dlcs()
@@ -556,23 +561,26 @@ class MainWindow(QMainWindow):
         # Hide old container to avoid duplication
         self.game_image_container.hide()
         
-        # Conectar signals do widget minimalista ao download manager
+        # Connect minimalist widget signals to download manager
         self.minimal_download_widget.pause_clicked.connect(self.download_manager.pause_download)
         self.minimal_download_widget.resume_clicked.connect(self.download_manager.resume_download)
-        # O cancel já está conectado ao _confirm_cancel_download na linha 319
+        # Cancel is already connected to _confirm_cancel_download at line 319
         
-        # Iniciar download usando NOVO DownloadManager
-        session_id = self.download_manager.start_download(
-            self.game_data, 
-            selected_depots, 
-            dest_path
-        )
+        # Start download using NEW DownloadManager
+        if self.game_data:
+            session_id = self.download_manager.start_download(
+                self.game_data, 
+                selected_depots, 
+                dest_path
+            )
+        else:
+            session_id = None
         
         if session_id:
-            self.log_output.append(f"🚀 Download iniciado (Session: {session_id[:8]}...)")
+            self.log_output.append(f"Download started (Session: {session_id[:8]}...)")
             self._start_speed_monitor()
         else:
-            self.log_output.append("❌ Falha ao iniciar download")
+            self.log_output.append("Failed to start download")
             self._reset_ui_state()
 
     def _get_game_image_for_download(self):
@@ -650,11 +658,11 @@ class MainWindow(QMainWindow):
                 game_name = self.game_data.get('game_name', 'Unknown Game')
                 self.game_title_label.setText(game_name)
                 
-                # Show the game image container (agora integrado no widget minimalista)
+                # Show the game image container (now integrated in minimalist widget)
                 # self.game_image_container.setVisible(True)
                 
                 # Fetch header image
-                app_id = self.game_data.get('appid')
+                app_id = self.game_data.get('appid') if self.game_data else None
                 if app_id:
                     self._fetch_game_header_image(app_id)
         except Exception as e:
@@ -665,6 +673,10 @@ class MainWindow(QMainWindow):
     def _create_acf_file(self):
         self.log_output.append("Generating Steam .acf manifest file...")
         
+        if not self.game_data:
+            self.log_output.append("Error: No game data available")
+            return
+            
         safe_game_name_fallback = re.sub(r'[^\w\s-]', '', self.game_data.get('game_name', '')).strip().replace(' ', '_')
         install_folder_name = self.game_data.get('installdir', safe_game_name_fallback)
         if not install_folder_name:
@@ -964,17 +976,17 @@ class MainWindow(QMainWindow):
             success = schema_integration.get_game_schema_steam_client(app_id)
             
             if success:
-                self.log_output.append("✓ Steam Schema generated successfully!")
+                self.log_output.append("Steam Schema generated successfully!")
                 self.show_notification("Steam achievements generated successfully!", "success")
             else:
-                self.log_output.append("⚠ Steam Schema generation completed with warnings")
+                self.log_output.append("Steam Schema generation completed with warnings")
                 self.show_notification("Steam Schema generation completed with warnings", "warning")
                 
         except ImportError:
             logger.warning("Steam schema utilities not available")
         except Exception as e:
             logger.warning(f"Failed to generate Steam achievements: {e}")
-            self.log_output.append(f"⚠ Steam Schema generation failed: {e}")
+            self.log_output.append(f"Steam Schema generation failed: {e}")
 
     def _generate_steam_achievements(self):
         """Legacy method - use _handle_steam_schema_generation instead"""

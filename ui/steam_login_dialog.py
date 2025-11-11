@@ -2,7 +2,7 @@ import logging
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QLabel, QLineEdit, QPushButton, 
     QMessageBox, QComboBox, QHBoxLayout, QApplication,
-    QInputDialog
+    QInputDialog, QCheckBox
 )
 from ui.custom_checkbox import CustomCheckBox
 from PyQt6.QtCore import Qt, QTimer
@@ -114,7 +114,7 @@ class SteamLoginDialog(QDialog):
         layout.setSpacing(15)
         
         # Title
-        title = QLabel("🎮 STEAM LOGIN")
+        title = QLabel("STEAM LOGIN")
         title.setStyleSheet("color: #C06C84; font-size: 16px; font-weight: bold;")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(title)
@@ -247,6 +247,7 @@ class SteamLoginDialog(QDialog):
             
         username = None
         password = None
+        twofa_code = None
         
         if self.use_saved_checkbox.isChecked():
             if self.saved_accounts_combo.count() == 0:
@@ -273,7 +274,7 @@ class SteamLoginDialog(QDialog):
         # Disable buttons during login
         self.login_button.setEnabled(False)
         self.cancel_button.setEnabled(False)
-        self.status_label.setText("🔄 Authenticating...")
+        self.status_label.setText("Authenticating...")
         QApplication.processEvents()
         
         # Create a timer to update status during mobile confirmation
@@ -294,7 +295,7 @@ class SteamLoginDialog(QDialog):
                 login_type = "username and password"
             
             if client and login_manager.is_logged_in():
-                self.status_label.setText("✅ Login successful!")
+                self.status_label.setText("Login successful!")
                 QApplication.processEvents()
                 
                 QMessageBox.information(
@@ -308,7 +309,7 @@ class SteamLoginDialog(QDialog):
                 
                 self.accept()
             else:
-                self.status_label.setText("❌ Login failed")
+                self.status_label.setText("Login failed")
                 QApplication.processEvents()
                 QMessageBox.warning(
                     self, 
@@ -322,14 +323,14 @@ class SteamLoginDialog(QDialog):
             self.twofa_label.setVisible(True)
             self.twofa_input.setVisible(True)
             self.twofa_input.setFocus()
-            self.status_label.setText("🔐 2FA code required")
+            self.status_label.setText("2FA code required")
             QApplication.processEvents()
             return  # Don't disable buttons, let user try again with code
         except CaptchaRequired as e:
             self.handle_captcha(e)
         except Exception as e:
             logger.error(f"Login error: {e}")
-            self.status_label.setText("❌ Login error")
+            self.status_label.setText("Login error")
             QApplication.processEvents()
             
             # Check for specific error types
@@ -378,26 +379,26 @@ class SteamLoginDialog(QDialog):
         """Update status during mobile confirmation"""
         self.mobile_confirmation_counter += 1
         messages = [
-            "📱 Awaiting mobile confirmation...",
-            "📱 Check your phone for Steam Guard...",
-            "📱 Approve the login on your mobile device...",
-            "📱 Still waiting for mobile confirmation..."
+            "Awaiting mobile confirmation...",
+            "Check your phone for Steam Guard...",
+            "Approve the login on your mobile device...",
+            "Still waiting for mobile confirmation..."
         ]
         message = messages[self.mobile_confirmation_counter % len(messages)]
         self.status_label.setText(f"{message} ({self.mobile_confirmation_counter * 2}s)")
         QApplication.processEvents()
     
-    def closeEvent(self, event):
+    def closeEvent(self, a0):
         """Handle dialog close event"""
         # Stop mobile confirmation timer
         if hasattr(self, 'mobile_confirmation_timer') and self.mobile_confirmation_timer:
             self.mobile_confirmation_timer.stop()
-        super().closeEvent(event)
+        super().closeEvent(a0)
     
     def handle_2fa(self, exception, login_manager, username, password):
         """Handle 2FA authentication"""
         logger.error(f"2FA required: {exception}")
-        self.status_label.setText("🔐 2FA required")
+        self.status_label.setText("2FA required")
         QApplication.processEvents()
         
         auth_type = "Steam Guard" if "TwoFactor" in str(type(exception)) else "Email"
@@ -413,7 +414,7 @@ class SteamLoginDialog(QDialog):
             try:
                 client = login_manager.login(username, password, twofactor_code=code)
                 if client and login_manager.is_logged_in():
-                    self.status_label.setText("✅ Login successful!")
+                    self.status_label.setText("Login successful!")
                     QApplication.processEvents()
                     
                     QMessageBox.information(
@@ -426,22 +427,22 @@ class SteamLoginDialog(QDialog):
                     
                     self.accept()
                 else:
-                    self.status_label.setText("❌ 2FA failed")
+                    self.status_label.setText("2FA failed")
                     QApplication.processEvents()
                     QMessageBox.warning(self, "2FA Failed", "Failed to login with the provided 2FA code.")
             except Exception as retry_e:
                 logger.error(f"2FA retry error: {retry_e}")
-                self.status_label.setText("❌ 2FA error")
+                self.status_label.setText("2FA error")
                 QApplication.processEvents()
                 QMessageBox.critical(self, "2FA Error", f"2FA authentication error:\n\n{str(retry_e)}")
         else:
-            self.status_label.setText("❌ 2FA cancelled")
+            self.status_label.setText("2FA cancelled")
             QApplication.processEvents()
     
     def handle_captcha(self, exception):
         """Handle captcha requirement"""
         logger.error(f"Captcha required: {exception}")
-        self.status_label.setText("🤖 Captcha required")
+        self.status_label.setText("Captcha required")
         QApplication.processEvents()
         
         msg = QMessageBox(self)
@@ -528,7 +529,7 @@ class SteamStatusDialog(QDialog):
         layout.setContentsMargins(20, 20, 20, 20)
         layout.setSpacing(15)
         
-        title = QLabel("🔧 Steam Status")
+        title = QLabel("Steam Status")
         title.setStyleSheet("color: #C06C84; font-size: 14px; font-weight: bold;")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(title)

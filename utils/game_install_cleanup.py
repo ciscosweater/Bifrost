@@ -1,6 +1,6 @@
 """
-Game Install Directory Cleanup - Limpeza segura e agressiva de arquivos parciais
-Específico para diretório de instalação do jogo sendo baixado
+Game Install Directory Cleanup - Safe and aggressive cleanup of partial files
+Specific to game installation directory being downloaded
 """
 import os
 import shutil
@@ -15,62 +15,62 @@ logger = logging.getLogger(__name__)
 
 class GameInstallDirectoryCleanup:
     """
-    Limpeza 100% segura e agressiva de arquivos parciais no diretório de instalação do jogo.
+    100% safe and aggressive cleanup of partial files in game installation directory.
     
-    Características:
-    - 100% segura para Steam (nunca remove arquivos críticos)
-    - Agressiva na limpeza (remove TODOS os arquivos parciais)
-    - Específica por jogo (limpa apenas o diretório do jogo sendo baixado)
-    - Reversível (log detalhado do que foi removido)
+    Features:
+    - 100% safe for Steam (never removes critical files)
+    - Aggressive cleanup (removes ALL partial files)
+    - Game-specific (cleans only the directory of the game being downloaded)
+    - Reversible (detailed log of what was removed)
     """
     
     def __init__(self):
-        # Padrões de arquivos parciais do DepotDownloader
+        # DepotDownloader partial file patterns
         self.partial_extensions = {
             '.tmp', '.partial', '.downloading', '.temp', '.incomplete',
             '.chunk', '.manifest.tmp', '.depot.tmp'
         }
         
-        # Padrões de nomes de arquivos parciais
+        # Partial file name patterns
         self.partial_patterns = {
             'manifest_', 'chunk_', 'temp_', 'tmp_', 'partial_',
             '.download', '.incomplete', '.lock', '~$'
         }
         
-        # Diretórios temporários seguros para remover
+        # Temporary directories safe to remove
         self.temp_directories = {
             '.DepotDownloader', 'temp', 'tmp', 'cache'
         }
         
-        # Arquivos críticos que NUNCA devem ser removidos
+        # Critical files that should NEVER be removed
         self.critical_game_files = {
-            # Executáveis comuns
+            # Common executables
             '.exe', '.sh', '.bin', '.run', '.appimage',
-            # Bibliotecas de jogo
+            # Game libraries
             '.dll', '.so', '.dylib',
-            # Arquivos de dados do jogo
+            # Game data files
             '.pak', '.arc', '.zip', '.rar', '.7z',
             '.dat', '.cfg', '.ini', '.xml', '.json', '.yaml',
-            # Recursos do jogo
+            # Game resources
             '.png', '.jpg', '.jpeg', '.bmp', '.tga', '.dds',
             '.wav', '.mp3', '.ogg', '.flac',
             '.ttf', '.otf', '.woff', '.woff2',
-            # Scripts do jogo
+            # Game scripts
             '.lua', '.py', '.js', '.cs', '.cpp', '.h',
-            # Documentação
+            # Documentation
             '.txt', '.md', '.pdf', '.htm', '.html',
-            # Steam específicos
+            # Steam specific
             'steam_api.dll', 'steam_api64.dll', 'libsteam_api.so',
             'appmanifest', 'acf'
         }
         
-        # Arquivos temporários do DepotDownloader (semprem removidos)
+        # DepotDownloader temporary files (always removed)
         self.depotdownloader_files = {
             'keys.vdf', 'appinfo.vdf', 'package.vdf',
             'manifest_*.cache', '*.chunk.tmp', '*.manifest.tmp'
         }
         
-        # Log de remoções para reversão
+        # Removal log for reversal
         self.removal_log: List[Dict] = []
     
     def cleanup_game_install_directory(self, 
@@ -79,20 +79,20 @@ class GameInstallDirectoryCleanup:
                                      session_id: str = "",
                                      dry_run: bool = False) -> Dict:
         """
-        🚨 LIMPEZA COMPLETA E AGRESSIVA DO DIRETÓRIO DO JOGO 🚨
+        COMPLETE AND AGGRESSIVE CLEANUP OF GAME DIRECTORY
         
-        APAGA TUDO dentro do diretório do jogo específico sendo baixado.
-        NUNCA apaga nada fora da pasta do jogo.
-        100% de segurança para não apagar diretórios errados.
+        Deletes EVERYTHING inside the specific game directory being downloaded.
+        NEVER deletes anything outside the game folder.
+        100% safe to avoid deleting wrong directories.
         
         Args:
-            install_dir: Diretório de instalação do jogo
-            game_data: Dados do jogo (appid, nome, etc.)
-            session_id: ID da sessão de download
-            dry_run: Se True, apenas simula sem remover
+            install_dir: Game installation directory
+            game_data: Game data (appid, name, etc.)
+            session_id: Download session ID
+            dry_run: If True, only simulates without removing
             
         Returns:
-            Dict com resultado da limpeza
+            Dict with cleanup result
         """
         result = {
             'success': False,
@@ -110,51 +110,51 @@ class GameInstallDirectoryCleanup:
         }
         
         try:
-            # 🔒🔒🔒 VERIFICAÇÕES DE SEGURANÇA EXTREMAS 🔒🔒🔒
+            # EXTREME SAFETY CHECKS
             if not self._verify_ultra_safety_checks(install_dir, game_data, session_id):
-                result['errors'].append("🚨 ULTRA SAFETY CHECK FAILED: Directory validation failed - NO FILES DELETED 🚨")
+                result['errors'].append("ULTRA SAFETY CHECK FAILED: Directory validation failed - NO FILES DELETED")
                 return result
             
-            # 🔒🔒🔒 CONFIRMAÇÕES MÚLTIPLAS 🔒🔒🔒
+            # MULTIPLE CONFIRMATIONS
             if not self._multiple_confirmations(install_dir, game_data, session_id):
-                result['errors'].append("🚨 MULTIPLE CONFIRMATIONS FAILED - NO FILES DELETED 🚨")
+                result['errors'].append("MULTIPLE CONFIRMATIONS FAILED - NO FILES DELETED")
                 return result
             
-            logger.warning(f"{'[DRY RUN] ' if dry_run else ''}🚨 STARTING COMPLETE CLEANUP OF GAME DIRECTORY 🚨")
+            logger.warning(f"{'[DRY RUN] ' if dry_run else ''}STARTING COMPLETE CLEANUP OF GAME DIRECTORY")
             logger.warning(f"Directory: {install_dir}")
             logger.warning(f"Game: {result['game_name']} (AppID: {result['appid']})")
             logger.warning(f"Session: {session_id}")
-            logger.warning(f"{'[DRY RUN] ' if dry_run else ''}🚨 ALL CONTENTS WILL BE DELETED 🚨")
+            logger.warning(f"{'[DRY RUN] ' if dry_run else ''}ALL CONTENTS WILL BE DELETED")
             
-            # Inicializar log de remoções
+            # Initialize removal log
             self.removal_log = []
             
-            # 🎯🎯🎯 LIMPEZA COMPLETA DO DIRETÓRIO 🎯🎯🎯
+            # COMPLETE DIRECTORY CLEANUP
             total_size_freed = 0
             
-            # APAGAR ABSOLUTAMENTE TUDO DENTRO DO DIRETÓRIO
+            # DELETE ABSOLUTELY EVERYTHING INSIDE THE DIRECTORY
             complete_result = self._complete_directory_cleanup(install_dir, session_id, dry_run)
             result['files_removed'] = complete_result['files_removed']
             result['dirs_removed'] = complete_result['dirs_removed']
             total_size_freed += complete_result['size']
             result['removals'].extend(complete_result['removals'])
             
-            # Calcular estatísticas finais
+            # Calculate final statistics
             result['space_freed_mb'] = round(total_size_freed / (1024 * 1024), 2)
             result['success'] = True
             
-            # Salvar log de remoções
+            # Save removal log
             if not dry_run:
                 self._save_removal_log(install_dir, game_data, session_id)
             
-            logger.warning(f"{'[DRY RUN] ' if dry_run else ''}🚨 COMPLETE CLEANUP FINISHED 🚨")
+            logger.warning(f"{'[DRY RUN] ' if dry_run else ''}COMPLETE CLEANUP FINISHED")
             logger.warning(f"  Files removed: {result['files_removed']}")
             logger.warning(f"  Directories removed: {result['dirs_removed']}")
             logger.warning(f"  Space freed: {result['space_freed_mb']} MB")
             logger.warning(f"  Directory is now EMPTY: {install_dir}")
             
         except Exception as e:
-            error_msg = f"🚨 ERROR DURING COMPLETE CLEANUP: {e} 🚨"
+            error_msg = f"ERROR DURING COMPLETE CLEANUP: {e}"
             logger.error(error_msg)
             result['errors'].append(error_msg)
         
@@ -162,26 +162,26 @@ class GameInstallDirectoryCleanup:
     
     def _verify_ultra_safety_checks(self, install_dir: str, game_data: Dict, session_id: str) -> bool:
         """
-        🔒🔒🔒 VERIFICAÇÕES DE SEGURANÇA EXTREMAS 🔒🔒🔒
-        Múltiplas camadas de verificação para garantir que só apague o diretório correto
+        EXTREME SAFETY CHECKS
+        Multiple verification layers to ensure only correct directory is deleted
         """
         try:
-            # 🔒 PATH TRAVERSAL SECURITY: Resolve and validate path
+            # PATH TRAVERSAL SECURITY: Resolve and validate path
             install_path = Path(install_dir).resolve()
             
-            logger.info("🔒 STARTING ULTRA SAFETY CHECKS 🔒")
+            logger.info("STARTING ULTRA SAFETY CHECKS")
             
-            # 1. Diretório deve existir
+            # 1. Directory must exist
             if not install_path.exists():
-                logger.error(f"🚨 SAFETY: Install directory does not exist: {install_dir}")
+                logger.error(f"SAFETY: Install directory does not exist: {install_dir}")
                 return False
             
-            # 2. Não pode ser diretório raiz ou system
+            # 2. Cannot be root or system directory
             if install_path.is_absolute() and len(install_path.parts) <= 3:
-                logger.error(f"🚨 SAFETY: Directory too close to root: {install_dir}")
+                logger.error(f"SAFETY: Directory too close to root: {install_dir}")
                 return False
             
-            # 2.1. 🔒 ADDITIONAL SECURITY: Verify against allowed base paths
+            # 2.1. ADDITIONAL SECURITY: Verify against allowed base paths
             allowed_base_paths = [
                 Path.home() / ".steam" / "steam",
                 Path.home() / ".local" / "share" / "Steam",
@@ -199,31 +199,31 @@ class GameInstallDirectoryCleanup:
                     continue
             
             if not is_allowed_path:
-                logger.error(f"🚨 SAFETY: Path not in allowed Steam directories: {install_path}")
+                logger.error(f"SAFETY: Path not in allowed Steam directories: {install_path}")
                 return False
             
-            # 3. DEVE conter 'steamapps/common' no caminho (Steam library structure)
+            # 3. MUST contain 'steamapps/common' in path (Steam library structure)
             if 'steamapps' not in install_dir.lower() or 'common' not in install_dir.lower():
-                logger.error(f"🚨 SAFETY: Not a Steam game directory: {install_dir}")
+                logger.error(f"SAFETY: Not a Steam game directory: {install_dir}")
                 return False
             
-            # 4. O último diretório deve ser o nome do jogo
+            # 4. The last directory must be the game name
             game_name = game_data.get('game_name', '').lower()
             appid = str(game_data.get('appid', ''))
             dir_name = install_path.name.lower()
             
             if not (game_name and game_name in dir_name):
-                logger.error(f"🚨 SAFETY: Directory name doesn't match game name: {dir_name} vs {game_name}")
+                logger.error(f"SAFETY: Directory name doesn't match game name: {dir_name} vs {game_name}")
                 return False
             
-            # 5. Verificar se é realmente o diretório do jogo sendo baixado
+            # 5. Verify if it's really the directory of the game being downloaded
             if not self._verify_game_directory_match(install_dir, game_data):
-                logger.error(f"🚨 SAFETY: Directory doesn't match the game being downloaded")
+                logger.error(f"SAFETY: Directory doesn't match game being downloaded")
                 return False
             
-            # 6. Não pode conter indicadores de sistema Steam crítico
+            # 6. Cannot contain critical Steam system indicators
             dangerous_paths = [
-                'steamapps/common',  # Apenas o diretório pai
+                'steamapps/common',  # Only the parent directory
                 'steam.exe', 'steam.sh',
                 'userdata', 'config', 'steamapps/workshop'
             ]
@@ -231,58 +231,58 @@ class GameInstallDirectoryCleanup:
             install_lower = install_dir.lower()
             for dangerous in dangerous_paths:
                 if dangerous in install_lower and install_dir.lower().endswith(dangerous):
-                    logger.error(f"🚨 SAFETY: Dangerous Steam path detected: {install_dir}")
+                    logger.error(f"SAFETY: Dangerous Steam path detected: {install_dir}")
                     return False
             
-            # 7. Verificação adicional de estrutura Steam
+            # 7. Additional Steam structure verification
             if not self._verify_steam_library_structure(install_dir):
-                logger.error(f"🚨 SAFETY: Invalid Steam library structure: {install_dir}")
+                logger.error(f"SAFETY: Invalid Steam library structure: {install_dir}")
                 return False
             
-            # 8. Verificar se há session_id ativo (só deve limpar durante cancelamento)
+            # 8. Check if there's active session_id (should only clean during cancellation)
             if not session_id:
-                logger.error(f"🚨 SAFETY: No session ID provided - this should only run during download cancellation")
+                logger.error(f"SAFETY: No session ID provided - this should only run during download cancellation")
                 return False
             
-            logger.info(f"✅ ALL ULTRA SAFETY CHECKS PASSED: {install_dir}")
+            logger.info(f"[OK] ALL ULTRA SAFETY CHECKS PASSED: {install_dir}")
             return True
             
         except Exception as e:
-            logger.error(f"🚨 ULTRA SAFETY CHECK ERROR: {e}")
+            logger.error(f"ULTRA SAFETY CHECK ERROR: {e}")
             return False
     
     def _verify_game_directory_match(self, install_dir: str, game_data: Dict) -> bool:
         """
-        Verificação adicional para garantir que é o diretório do jogo correto
+        Additional verification to ensure it's the correct game directory
         """
         try:
             install_path = Path(install_dir)
             game_name = game_data.get('game_name', '').lower()
             appid = str(game_data.get('appid', ''))
             
-            # Verificar se o nome do diretório corresponde ao jogo
+            # Check if directory name corresponds to game
             dir_name = install_path.name.lower()
             
-            # 1. Nome do diretório deve conter o nome do jogo
+            # 1. Directory name must contain game name
             if game_name and game_name not in dir_name:
                 logger.warning(f"Directory name doesn't contain game name: {dir_name} vs {game_name}")
                 return False
             
-            # 2. Verificar se há arquivos que parecem do jogo
+            # 2. Check if there are files that look like game files
             game_files_found = 0
             for item in install_path.iterdir():
                 if item.is_file():
                     file_lower = item.name.lower()
-                    # Arquivos que indicam que é um jogo
+                    # Files that indicate it's a game
                     if any(file_lower.endswith(ext) for ext in ['.exe', '.dll', '.so', '.pak', '.dat', '.bin']):
                         game_files_found += 1
                         if game_files_found >= 2:
                             break
             
-            # Se não encontrar arquivos de jogo, pode ser diretório errado
+            # If no game files found, might be wrong directory
             if game_files_found == 0:
                 logger.warning(f"No game files found in directory: {install_dir}")
-                # Não falha completamente, mas avisa
+                # Doesn't fail completely, but warns
             
             return True
             
@@ -292,12 +292,12 @@ class GameInstallDirectoryCleanup:
     
     def _verify_steam_library_structure(self, install_dir: str) -> bool:
         """
-        Verifica se a estrutura está correta para uma biblioteca Steam
+        Check if structure is correct for a Steam library
         """
         try:
             install_path = Path(install_dir)
             
-            # Deve estar dentro de steamapps/common
+            # Must be inside steamapps/common
             parent = install_path.parent
             if parent.name.lower() != 'common':
                 logger.error(f"Not in steamapps/common directory: {install_dir}")
@@ -308,12 +308,12 @@ class GameInstallDirectoryCleanup:
                 logger.error(f"Not in steamapps directory: {install_dir}")
                 return False
             
-            # Verificar se há outros jogos (indica que é biblioteca Steam válida)
+            # Check if there are other games (indicates valid Steam library)
             sibling_games = 0
             for item in parent.iterdir():
                 if item.is_dir() and item != install_path:
                     sibling_games += 1
-                    if sibling_games >= 1:  # Pelo menos 1 outro jogo
+                    if sibling_games >= 1:  # At least 1 other game
                         break
             
             if sibling_games == 0:
@@ -327,33 +327,33 @@ class GameInstallDirectoryCleanup:
     
     def _multiple_confirmations(self, install_dir: str, game_data: Dict, session_id: str) -> bool:
         """
-        🔒🔒🔒 CONFIRMAÇÕES MÚLTIPLAS ANTES DA DELEÇÃO 🔒🔒🔒
+        MULTIPLE CONFIRMATIONS BEFORE DELETION
         """
         try:
-            logger.info("🔒 STARTING MULTIPLE CONFIRMATIONS 🔒")
+            logger.info("STARTING MULTIPLE CONFIRMATIONS")
             
-            # Confirmação 1: Validar dados do jogo
+            # Confirmation 1: Validate game data
             if not game_data.get('game_name') or not game_data.get('appid'):
-                logger.error("🚨 CONFIRMATION 1 FAILED: Invalid game data")
+                logger.error("CONFIRMATION 1 FAILED: Invalid game data")
                 return False
             
-            # Confirmação 2: Validar session ID
+            # Confirmation 2: Validate session ID
             if not session_id or len(session_id) < 5:
-                logger.error("🚨 CONFIRMATION 2 FAILED: Invalid session ID")
+                logger.error("CONFIRMATION 2 FAILED: Invalid session ID")
                 return False
             
-            # Confirmação 3: Verificar que é realmente cancelamento
-            # (Esta verificação deve ser feita pelo chamador, mas vamos registrar)
+            # Confirmation 3: Verify it's really cancellation
+            # (This verification should be done by caller, but let's log)
             logger.info(f"CONFIRMATION 3 PASSED: Session ID {session_id} indicates download cancellation")
             
-            # Confirmação 4: Verificação final do caminho
+            # Confirmation 4: Final path verification
             install_path = Path(install_dir)
             if not install_path.exists() or not install_path.is_dir():
-                logger.error("🚨 CONFIRMATION 4 FAILED: Invalid directory path")
+                logger.error("CONFIRMATION 4 FAILED: Invalid directory path")
                 return False
             
-            # Confirmação 5: Verificar que não estamos tentando apagar algo crítico
-            # Nota: 'home' foi removido porque é um caminho válido em Linux para bibliotecas Steam
+            # Confirmation 5: Verify we're not trying to delete something critical
+            # Note: 'home' was removed because it's a valid path in Linux for Steam libraries
             critical_checks = [
                 'windows', 'program files', 'system32', 'usr/bin', 'etc', 'var',
                 'root', 'boot', 'lib', 'opt', 'sbin'
@@ -362,19 +362,19 @@ class GameInstallDirectoryCleanup:
             install_lower = install_dir.lower()
             for critical in critical_checks:
                 if critical in install_lower:
-                    logger.error(f"🚨 CONFIRMATION 5 FAILED: Critical system path detected: {critical}")
+                    logger.error(f"CONFIRMATION 5 FAILED: Critical system path detected: {critical}")
                     return False
             
-            logger.info("✅ ALL MULTIPLE CONFIRMATIONS PASSED")
+            logger.info("[OK] ALL MULTIPLE CONFIRMATIONS PASSED")
             return True
             
         except Exception as e:
-            logger.error(f"🚨 MULTIPLE CONFIRMATIONS ERROR: {e}")
+            logger.error(f"MULTIPLE CONFIRMATIONS ERROR: {e}")
             return False
     
     def _complete_directory_cleanup(self, install_dir: str, session_id: str, dry_run: bool) -> Dict:
         """
-        🚨 APAGA ABSOLUTAMENTE TUDO DENTRO DO DIRETÓRIO 🚨
+        DELETES ABSOLUTELY EVERYTHING INSIDE DIRECTORY
         """
         result = {
             'files_removed': 0,
@@ -386,16 +386,16 @@ class GameInstallDirectoryCleanup:
         try:
             install_path = Path(install_dir)
             
-            logger.warning(f"{'[DRY RUN] ' if dry_run else ''}🚨 STARTING COMPLETE DIRECTORY CLEANUP 🚨")
+            logger.warning(f"{'[DRY RUN] ' if dry_run else ''}STARTING COMPLETE DIRECTORY CLEANUP")
             logger.warning(f"Target: {install_dir}")
             
-            # Listar tudo antes de apagar para logging
+            # List everything before deleting for logging
             all_items = list(install_path.iterdir())
             total_items = len(all_items)
             
             logger.warning(f"Found {total_items} items to delete")
             
-            # Apagar cada item individualmente para logging detalhado
+            # Delete each item individually for detailed logging
             for item in all_items:
                 try:
                     if item.is_file():
@@ -404,7 +404,7 @@ class GameInstallDirectoryCleanup:
                         if dry_run:
                             logger.info(f"[DRY RUN] Would delete FILE: {item} ({file_size} bytes)")
                         else:
-                            logger.warning(f"🗑️  DELETING FILE: {item} ({file_size} bytes)")
+                            logger.warning(f"DELETING FILE: {item} ({file_size} bytes)")
                             item.unlink()
                         
                         result['files_removed'] += 1
@@ -422,7 +422,7 @@ class GameInstallDirectoryCleanup:
                         if dry_run:
                             logger.info(f"[DRY RUN] Would delete DIRECTORY: {item} ({dir_size} bytes)")
                         else:
-                            logger.warning(f"🗑️  DELETING DIRECTORY: {item} ({dir_size} bytes)")
+                            logger.warning(f"DELETING DIRECTORY: {item} ({dir_size} bytes)")
                             import shutil
                             shutil.rmtree(str(item))
                         
@@ -437,53 +437,53 @@ class GameInstallDirectoryCleanup:
                         
                 except Exception as e:
                     logger.error(f"Failed to delete {item}: {e}")
-                    # Continuar com outros itens mesmo se um falhar
+                    # Continue with other items even if one fails
             
-            # Verificação final: diretório deve estar vazio
+            # Final verification: directory should be empty
             if not dry_run:
                 remaining_items = list(install_path.iterdir())
                 if remaining_items:
-                    logger.error(f"🚨 DIRECTORY NOT EMPTY AFTER CLEANUP: {len(remaining_items)} items remaining")
+                    logger.error(f"DIRECTORY NOT EMPTY AFTER CLEANUP: {len(remaining_items)} items remaining")
                     for item in remaining_items:
                         logger.error(f"  Remaining: {item}")
                 else:
-                    logger.warning(f"✅ DIRECTORY SUCCESSFULLY CLEANED: {install_dir}")
+                    logger.warning(f"DIRECTORY SUCCESSFULLY CLEANED: {install_dir}")
             
-            logger.warning(f"{'[DRY RUN] ' if dry_run else ''}🚨 COMPLETE CLEANUP SUMMARY 🚨")
+            logger.warning(f"{'[DRY RUN] ' if dry_run else ''}COMPLETE CLEANUP SUMMARY")
             logger.warning(f"  Files deleted: {result['files_removed']}")
             logger.warning(f"  Directories deleted: {result['dirs_removed']}")
             logger.warning(f"  Total size freed: {result['size']} bytes")
             
         except Exception as e:
-            logger.error(f"🚨 ERROR DURING COMPLETE CLEANUP: {e}")
+            logger.error(f"ERROR DURING COMPLETE CLEANUP: {e}")
         
         return result
     
     def _verify_safety_checks(self, install_dir: str, game_data: Dict) -> bool:
         """
-        🔒 VERIFICAÇÕES CRÍTICAS DE SEGURANÇA
+        CRITICAL SAFETY VERIFICATIONS
         """
         try:
             install_path = Path(install_dir)
             
-            # 1. Diretório deve existir
+            # 1. Directory must exist
             if not install_path.exists():
                 logger.error(f"SAFETY: Install directory does not exist: {install_dir}")
                 return False
             
-            # 2. Não pode ser diretório raiz ou system
+            # 2. Cannot be root or system directory
             if install_path.is_absolute() and len(install_path.parts) <= 3:
                 logger.error(f"SAFETY: Directory too close to root: {install_dir}")
                 return False
             
-            # 3. Deve conter 'steamapps/common' no caminho (Steam library structure)
+            # 3. Must contain 'steamapps/common' in path (Steam library structure)
             if 'steamapps' not in install_dir.lower() or 'common' not in install_dir.lower():
                 logger.error(f"SAFETY: Not a Steam game directory: {install_dir}")
                 return False
             
-            # 4. Não pode conter indicadores de sistema Steam crítico
+            # 4. Cannot contain critical Steam system indicators
             dangerous_paths = [
-                'steamapps/common',  # Apenas o diretório pai
+                'steamapps/common',  # Only the parent directory
                 'steam.exe', 'steam.sh',
                 'userdata', 'config', 'steamapps/workshop'
             ]
@@ -494,10 +494,10 @@ class GameInstallDirectoryCleanup:
                     logger.error(f"SAFETY: Dangerous Steam path detected: {install_dir}")
                     return False
             
-            # 5. Verificar se parece com diretório de jogo (tem arquivos de jogo)
+            # 5. Check if it looks like game directory (has game files)
             if not self._looks_like_game_directory(install_dir):
                 logger.warning(f"WARNING: Directory doesn't look like a game: {install_dir}")
-                # Não falha, apenas avisa
+                # Doesn't fail, just warns
             
             logger.info(f"SAFETY CHECKS PASSED: {install_dir}")
             return True
@@ -508,14 +508,14 @@ class GameInstallDirectoryCleanup:
     
     def _looks_like_game_directory(self, install_dir: str) -> bool:
         """
-        Verifica se o diretório parece ser de um jogo
+        Check if directory looks like a game directory
         """
         try:
             game_indicators = 0
             total_files = 0
             
             for root, dirs, files in os.walk(install_dir):
-                # Limitar verificação para não demorar muito
+                # Limit verification to not take too long
                 level = root.replace(install_dir, '').count(os.sep)
                 if level > 2:
                     continue
@@ -524,15 +524,15 @@ class GameInstallDirectoryCleanup:
                     total_files += 1
                     file_lower = file.lower()
                     
-                    # Indicadores de jogo
+                    # Game indicators
                     if any(file_lower.endswith(ext) for ext in ['.exe', '.dll', '.so', '.pak', '.dat']):
                         game_indicators += 1
                     
-                    # Parar se já encontrou suficientes
+                    # Stop if already found enough
                     if game_indicators >= 3:
                         return True
                     
-                    # Limitar verificação
+                    # Limit verification
                     if total_files >= 50:
                         break
             
@@ -543,7 +543,7 @@ class GameInstallDirectoryCleanup:
     
     def _remove_partial_files(self, install_dir: str, session_id: str, dry_run: bool) -> Dict:
         """
-        Remove arquivos parciais/temporários agressivamente
+        Aggressively remove partial/temporary files
         """
         result = {'count': 0, 'size': 0, 'removals': []}
         
@@ -581,13 +581,13 @@ class GameInstallDirectoryCleanup:
     
     def _remove_temp_directories(self, install_dir: str, dry_run: bool) -> Dict:
         """
-        Remove diretórios temporários seguros
+        Remove safe temporary directories
         """
         result = {'count': 0, 'size': 0, 'removals': []}
         
         try:
             for root, dirs, files in os.walk(install_dir, topdown=True):
-                # Modificar a lista de diretórios durante iteração
+                # Modify directory list during iteration
                 dirs[:] = [d for d in dirs if d in self.temp_directories]
                 
                 for dir_name in dirs:
@@ -622,12 +622,12 @@ class GameInstallDirectoryCleanup:
     
     def _cleanup_depotdownloader_artifacts(self, install_dir: str, dry_run: bool) -> Dict:
         """
-        Limpeza específica de artefatos do DepotDownloader
+        Specific cleanup of DepotDownloader artifacts
         """
         result = {'count': 0, 'size': 0, 'removals': []}
         
         try:
-            # Limpar pasta .DepotDownloader
+            # Clean .DepotDownloader folder
             depotdownloader_dir = os.path.join(install_dir, '.DepotDownloader')
             if os.path.exists(depotdownloader_dir):
                 try:
@@ -651,7 +651,7 @@ class GameInstallDirectoryCleanup:
                 except OSError as e:
                     logger.warning(f"Failed to remove .DepotDownloader: {e}")
             
-            # Limpar arquivos específicos do DepotDownloader
+            # Clean specific DepotDownloader files
             for root, dirs, files in os.walk(install_dir):
                 for file in files:
                     file_path = os.path.join(root, file)
@@ -685,23 +685,23 @@ class GameInstallDirectoryCleanup:
     
     def _is_partial_file(self, filename: str, session_id: str = "") -> bool:
         """
-        Verifica se arquivo é parcial/temporário
+        Check if file is partial/temporary
         """
         filename_lower = filename.lower()
         
-        # 1. Extensões temporárias
+        # 1. Temporary extensions
         if any(filename_lower.endswith(ext) for ext in self.partial_extensions):
             return True
         
-        # 2. Padrões de nome
+        # 2. Name patterns
         if any(pattern in filename_lower for pattern in self.partial_patterns):
             return True
         
-        # 3. Session ID específico
+        # 3. Specific session ID
         if session_id and session_id in filename_lower:
             return True
         
-        # 4. Arquivos do DepotDownloader
+        # 4. DepotDownloader files
         if self._is_depotdownloader_artifact(filename):
             return True
         
@@ -709,19 +709,19 @@ class GameInstallDirectoryCleanup:
     
     def _is_depotdownloader_artifact(self, filename: str) -> bool:
         """
-        Verifica se é artefato do DepotDownloader
+        Check if it's a DepotDownloader artifact
         """
         filename_lower = filename.lower()
         
-        # Arquivos específicos
+        # Specific files
         if filename_lower in {'keys.vdf', 'appinfo.vdf', 'package.vdf'}:
             return True
         
-        # Padrões de manifest/chunk
+        # Manifest/chunk patterns
         if filename_lower.startswith(('manifest_', 'chunk_')):
             return True
         
-        # Extensões temporárias do DepotDownloader
+        # DepotDownloader temporary extensions
         if any(filename_lower.endswith(suffix) for suffix in ['.manifest.tmp', '.chunk.tmp', '.depot.tmp']):
             return True
         
@@ -729,23 +729,23 @@ class GameInstallDirectoryCleanup:
     
     def _is_safe_temp_directory(self, dir_path: str) -> bool:
         """
-        Verifica se diretório temporário é seguro para remover
+        Check if temporary directory is safe to remove
         """
         dir_name = os.path.basename(dir_path).lower()
         
-        # Deve ser um diretório temporário conhecido
+        # Must be a known temporary directory
         if dir_name not in self.temp_directories:
             return False
         
         try:
-            # Verificar se contém apenas arquivos temporários
+            # Check if it contains only temporary files
             for root, dirs, files in os.walk(dir_path):
                 for file in files:
                     if not self._is_partial_file(file):
                         logger.warning(f"Non-temporary file in temp dir: {file}")
                         return False
                 
-                # Limitar profundidade
+                # Limit depth
                 level = root.replace(dir_path, '').count(os.sep)
                 if level > 3:
                     return False
@@ -757,7 +757,7 @@ class GameInstallDirectoryCleanup:
     
     def _get_directory_size(self, dir_path: str) -> int:
         """
-        Calcula tamanho total do diretório
+        Calculate total directory size
         """
         total_size = 0
         try:
@@ -774,7 +774,7 @@ class GameInstallDirectoryCleanup:
     
     def _verify_post_cleanup_safety(self, install_dir: str) -> Dict:
         """
-        Verificação de segurança pós-limpeza
+        Post-cleanup safety verification
         """
         check_result = {
             'game_files_preserved': 0,
@@ -789,20 +789,20 @@ class GameInstallDirectoryCleanup:
                     file_path = os.path.join(root, file)
                     file_lower = file.lower()
                     
-                    # Verificar arquivos críticos preservados
+                    # Check preserved critical files
                     if any(file_lower.endswith(ext) for ext in self.critical_game_files):
                         check_result['critical_files_found'] += 1
                     
-                    # Contar arquivos de jogo
+                    # Count game files
                     if any(file_lower.endswith(ext) for ext in ['.exe', '.dll', '.so', '.pak', '.dat']):
                         check_result['game_files_preserved'] += 1
                     
-                    # Verificar se restaram arquivos parciais
+                    # Check if partial files remain
                     if self._is_partial_file(file):
                         check_result['remaining_partial_files'] += 1
                         check_result['warnings'].append(f"Remaining partial file: {file_path}")
             
-            # Avisos importantes
+            # Important warnings
             if check_result['critical_files_found'] == 0:
                 check_result['warnings'].append("No critical game files found - possible over-cleanup")
             
@@ -816,7 +816,7 @@ class GameInstallDirectoryCleanup:
     
     def _save_removal_log(self, install_dir: str, game_data: Dict, session_id: str):
         """
-        Salva log detalhado de remoções para possível reversão
+        Save detailed removal log for possible reversal
         """
         try:
             log_data = {
@@ -827,7 +827,7 @@ class GameInstallDirectoryCleanup:
                 'removals': self.removal_log
             }
             
-            # Criar arquivo de log no diretório do jogo
+            # Create log file in game directory
             log_file = os.path.join(install_dir, f'.accela_cleanup_log_{session_id or datetime.now().strftime("%Y%m%d_%H%M%S")}.json')
             
             with open(log_file, 'w', encoding='utf-8') as f:
@@ -840,7 +840,7 @@ class GameInstallDirectoryCleanup:
     
     def get_removal_log(self, install_dir: str) -> List[Dict]:
         """
-        Carrega logs de remoção anteriores
+        Load previous removal logs
         """
         logs = []
         try:

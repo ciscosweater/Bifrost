@@ -128,7 +128,7 @@ class SettingsDialog(ModernDialog):
         main_layout.setContentsMargins(20, 20, 20, 20)
         
         # Title
-        title = AnimatedLabel("⚙️ Application Settings")
+        title = AnimatedLabel("Application Settings")
         from .theme import theme
         title.setStyleSheet(f"font-size: 18px; font-weight: bold; color: {theme.colors.TEXT_ACCENT};")
         main_layout.addWidget(title)
@@ -159,7 +159,7 @@ class SettingsDialog(ModernDialog):
         sls_frame = ModernFrame()
         sls_layout = QVBoxLayout(sls_frame)
         
-        sls_title = QLabel("🎮 SLSsteam Integration")
+        sls_title = QLabel("SLSsteam Integration")
         from .theme import theme
         sls_title.setStyleSheet(f"font-size: 14px; font-weight: bold; color: {theme.colors.TEXT_ACCENT};")
         sls_layout.addWidget(sls_title)
@@ -175,7 +175,7 @@ class SettingsDialog(ModernDialog):
         schema_frame = ModernFrame()
         schema_layout = QVBoxLayout(schema_frame)
         
-        schema_title = QLabel("🏆 SLScheevo Schema Generator")
+        schema_title = QLabel("SLScheevo Schema Generator")
         from .theme import theme
         schema_title.setStyleSheet(f"font-size: 14px; font-weight: bold; color: {theme.colors.TEXT_ACCENT};")
         schema_layout.addWidget(schema_title)
@@ -204,7 +204,7 @@ class SettingsDialog(ModernDialog):
         username_layout.addWidget(self.slscheevo_username_edit)
         
         # Add refresh button to detect usernames
-        refresh_button = HoverButton("🔄")
+        refresh_button = HoverButton("Refresh")
         refresh_button.setFixedSize(30, 25)
         refresh_button.setToolTip("Detect available SLScheevo usernames")
         refresh_button.clicked.connect(self._detect_slscheevo_usernames)
@@ -218,7 +218,7 @@ class SettingsDialog(ModernDialog):
         logging_frame = ModernFrame()
         logging_layout = QVBoxLayout(logging_frame)
         
-        logging_title = QLabel("📝 Logging Configuration")
+        logging_title = QLabel("Logging Configuration")
         from .theme import theme
         logging_title.setStyleSheet(f"font-size: 14px; font-weight: bold; color: {theme.colors.TEXT_ACCENT};")
         logging_layout.addWidget(logging_title)
@@ -247,7 +247,7 @@ class SettingsDialog(ModernDialog):
         logging_layout.addLayout(level_layout)
         
         # Info label
-        info_label = QLabel("💡 File 'app.log' always saves complete DEBUG logs")
+        info_label = QLabel("File 'app.log' always saves complete DEBUG logs")
         from .theme import theme
         info_label.setStyleSheet(f"color: {theme.colors.TEXT_DISABLED}; font-size: 10px; font-style: italic;")
         info_label.setWordWrap(True)
@@ -259,7 +259,7 @@ class SettingsDialog(ModernDialog):
         font_frame = ModernFrame()
         font_layout = QVBoxLayout(font_frame)
         
-        font_title = QLabel("🔤 Font Settings")
+        font_title = QLabel("Font Settings")
         from .theme import theme
         font_title.setStyleSheet(f"font-size: 14px; font-weight: bold; color: {theme.colors.TEXT_ACCENT};")
         font_layout.addWidget(font_title)
@@ -286,7 +286,7 @@ class SettingsDialog(ModernDialog):
         font_layout.addLayout(font_selection_layout)
         
         # Info label
-        font_info_label = QLabel("💡 Requires application restart to take effect")
+        font_info_label = QLabel("Requires application restart to take effect")
         font_info_label.setStyleSheet(f"color: {theme.colors.TEXT_DISABLED}; font-size: 10px; font-style: italic;")
         font_layout.addWidget(font_info_label)
         
@@ -296,7 +296,7 @@ class SettingsDialog(ModernDialog):
         drm_frame = ModernFrame()
         drm_layout = QVBoxLayout(drm_frame)
         
-        drm_title = QLabel("🔓 DRM Removal")
+        drm_title = QLabel("DRM Removal")
         from .theme import theme
         drm_title.setStyleSheet(f"font-size: 14px; font-weight: bold; color: {theme.colors.TEXT_ACCENT};")
         drm_layout.addWidget(drm_title)
@@ -401,26 +401,26 @@ class SettingsDialog(ModernDialog):
         help_text = """
   Settings Help:
 
-  🎮 SLSsteam Integration
+  SLSsteam Integration
   • Enables compatibility with SLSsteam wrapper
   • Required for Linux Steam integration
   • SLSsteam mode auto-selects Steam library folders
 
-  🏆 Steam Schema Generator  
+  Steam Schema Generator  
   • Auto-generates achievement schemas
   • Requires SLScheevo login credentials
   • Configure username or leave empty to auto-detect
 
-  🔓 DRM Removal
+  DRM Removal
   • Removes Steam DRM from executables
   • Makes games playable without Steam client
 
-  📝 Logging Configuration
+  Logging Configuration
   • Simplified format: 'ERROR: message' vs full timestamp
   • Log levels: DEBUG (all), INFO (normal), WARNING/ERROR/CRITICAL (less)
   • File 'app.log' always saves complete DEBUG logs for troubleshooting
 
-  🔤 Font Settings
+  Font Settings
   • Choose between default and new font styles
   • Changes require application restart
   • Font affects entire application interface
@@ -724,7 +724,7 @@ class DepotSelectionDialog(ModernDialog):
                                         Qt.TransformationMode.SmoothTransformation)
             self.header_label.setPixmap(scaled_pixmap)
         else:
-            self.header_label.setText("📷 Header image not available.")
+            self.header_label.setText("Header image not available.")
             self.original_pixmap = None
     
     def get_header_image(self):
@@ -760,7 +760,7 @@ class SteamLibraryDialog(ModernDialog):
         main_layout.setContentsMargins(20, 20, 20, 20)
         
         # Title
-        title = AnimatedLabel("📁 Select Steam Library")
+        title = AnimatedLabel("Select Steam Library")
         from .theme import theme
         title.setStyleSheet(f"font-size: 16px; font-weight: bold; color: {theme.colors.TEXT_ACCENT};")
         main_layout.addWidget(title)
@@ -820,7 +820,7 @@ class DlcSelectionDialog(ModernDialog):
         main_layout.setContentsMargins(20, 20, 20, 20)
         
         # Title
-        title = AnimatedLabel("🎮 Select DLC")
+        title = AnimatedLabel("Select DLC")
         from .theme import theme
         title.setStyleSheet(f"font-size: 16px; font-weight: bold; color: {theme.colors.TEXT_ACCENT};")
         main_layout.addWidget(title)
