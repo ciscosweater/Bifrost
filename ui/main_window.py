@@ -19,7 +19,7 @@ from ui.custom_title_bar import CustomTitleBar
 from ui.enhanced_dialogs import SettingsDialog, DepotSelectionDialog, SteamLibraryDialog, DlcSelectionDialog
 from ui.font_settings_dialog import FontSettingsDialog
 from ui.enhanced_widgets import EnhancedProgressBar
-from ui.game_image_display import GameImageDisplay, ImageFetcher
+# from ui.game_image_display import GameImageDisplay, ImageFetcher  # Commented out - file not found
 from ui.game_image_manager import GameImageManager
 from utils.image_cache import ImageCacheManager
 from ui.interactions import HoverButton, ModernFrame, AnimatedLabel
@@ -42,6 +42,13 @@ from core.tasks.monitor_speed_task import SpeedMonitorTask
 from core import steam_helpers
 from utils.logger import setup_logging
 from utils.settings import get_settings
+
+# Import i18n
+try:
+    from utils.i18n import tr
+except (ImportError, ModuleNotFoundError):
+    def tr(context, text):
+        return text
 
 logger = logging.getLogger(__name__)
 
@@ -84,7 +91,7 @@ class ScaledFontLabel(QLabel):
 class MainWindow(QMainWindow):
     def __init__(self, zip_file=None):
         super().__init__()
-        self.setWindowTitle("Depot Downloader GUI")
+        self.setWindowTitle(tr("MainWindow", "Depot Downloader GUI"))
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
         self.setGeometry(100, 100, 800, 600)
         self.settings = get_settings()
@@ -197,11 +204,11 @@ class MainWindow(QMainWindow):
             self.main_movie.start()
             self.current_movie = self.main_movie
         else:
-            self.drop_label.setText("Drag and Drop ZIP File Here")
+            self.drop_label.setText(tr("MainWindow", "Drag and Drop ZIP File Here"))
 
         normal_drop_zone_layout.addWidget(self.drop_label, 10)
 
-        self.drop_text_label = ScaledFontLabel("Drag and Drop Zip here")
+        self.drop_text_label = ScaledFontLabel(tr("MainWindow", "Drag and Drop Zip here"))
         self.drop_text_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         from .theme import theme, Typography
         self.drop_text_label.setStyleSheet(f"""
@@ -272,7 +279,7 @@ class MainWindow(QMainWindow):
         
         download_drop_zone_layout.addWidget(self.download_drop_label, 10)
 
-        self.download_drop_text_label = ScaledFontLabel("Downloading...")
+        self.download_drop_text_label = ScaledFontLabel(tr("MainWindow", "Downloading..."))
         self.download_drop_text_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.download_drop_text_label.setStyleSheet(f"""
             QLabel {{
@@ -341,7 +348,7 @@ class MainWindow(QMainWindow):
         game_info_layout = QVBoxLayout()
         game_info_layout.setSpacing(Spacing.XS)  # Reduced spacing
         
-        self.game_title_label = QLabel("Game Title")
+        self.game_title_label = QLabel(tr("MainWindow", "Game Title"))
         self.game_title_label.setStyleSheet(f"""
             QLabel {{
                 font-family: {Typography.get_font_family()};
@@ -352,7 +359,7 @@ class MainWindow(QMainWindow):
         """)
         game_info_layout.addWidget(self.game_title_label)
         
-        self.game_status_label = QLabel("Downloading...")
+        self.game_status_label = QLabel(tr("MainWindow", "Downloading..."))
         self.game_status_label.setStyleSheet(f"""
             QLabel {{
                 font-family: {Typography.get_font_family()};
@@ -469,9 +476,9 @@ class MainWindow(QMainWindow):
         """Open file dialog to select a ZIP file."""
         file_path, _ = QFileDialog.getOpenFileName(
             self,
-            "Select ZIP File",
+            tr("MainWindow", "Select ZIP File"),
             "",
-            "ZIP Files (*.zip);;All Files (*)"
+            tr("MainWindow", "ZIP Files (*.zip);;All Files (*)")
         )
         
         if file_path:
@@ -500,7 +507,7 @@ class MainWindow(QMainWindow):
         # Reset UI state for new processing
         try:
             # Reset drop zone
-            self.drop_text_label.setText("Drop game files here or click to browse")
+            self.drop_text_label.setText(tr("MainWindow", "Drop game files here or click to browse"))
             self.drop_text_label.setVisible(True)
             
             # Reset title bar button
@@ -513,7 +520,7 @@ class MainWindow(QMainWindow):
             
             # Reset game title
             if hasattr(self, 'game_title_label'):
-                self.game_title_label.setText("ACCELA")
+                self.game_title_label.setText(tr("MainWindow", "ACCELA"))
             
             # Reset current data - preserve dest_path only if fix might be needed
             self.game_data = None
@@ -527,10 +534,10 @@ class MainWindow(QMainWindow):
         except Exception as e:
             logger.warning(f"Error resetting UI state: {e}")
 
-        self.log_output.append(f"Processing ZIP file: {zip_path}")
+        self.log_output.append(tr("MainWindow", "Processing ZIP file: {0}").format(zip_path))
 
         # Show visual feedback during ZIP processing
-        self.drop_text_label.setText("Processing ZIP...")
+        self.drop_text_label.setText(tr("MainWindow", "Processing ZIP..."))
         self.drop_text_label.setVisible(True)
         self.title_bar.select_file_button.setVisible(False)
 
@@ -592,18 +599,18 @@ class MainWindow(QMainWindow):
     def _on_download_paused(self):
         """Handle download pause"""
         self.minimal_download_widget.set_paused_state()
-        self.log_output.append("Download paused")
+        self.log_output.append(tr("MainWindow", "Download paused"))
         
     def _on_download_resumed(self):
         """Handle download resume"""
         self.minimal_download_widget.set_downloading_state()
-        self.log_output.append("Download resumed")
+        self.log_output.append(tr("MainWindow", "Download resumed"))
         
     def _on_download_cancelled(self):
         """Handle download cancellation"""
         self._stop_speed_monitor()
-        self.minimal_download_widget.set_error_state("Cancelled")
-        self.log_output.append("Download cancelled by user")
+        self.minimal_download_widget.set_error_state(tr("MainWindow", "Cancelled"))
+        self.log_output.append(tr("MainWindow", "Download cancelled by user"))
         # Clear current session to avoid unwanted behavior
         self.current_session = None
         self._reset_ui_state()
@@ -614,7 +621,7 @@ class MainWindow(QMainWindow):
             logger.debug("Download completion handler started")
             self._stop_speed_monitor()
             self.minimal_download_widget.set_completed_state()
-            self.log_output.append("Download completed successfully!")
+            self.log_output.append(tr("MainWindow", "Download completed successfully!"))
             
             # Create ACF file and handle completion
             logger.info("Creating ACF file...")
@@ -644,19 +651,19 @@ class MainWindow(QMainWindow):
                 # Show completion dialog
                 completion_msg = QMessageBox(self)
                 completion_msg.setIcon(QMessageBox.Icon.Information)
-                completion_msg.setWindowTitle("Download Complete")
-                completion_msg.setText("Game download completed successfully!")
-                completion_msg.setInformativeText("You can now play game or install Online-Fixes if available.")
+                completion_msg.setWindowTitle(tr("MainWindow", "Download Complete"))
+                completion_msg.setText(tr("MainWindow", "Game download completed successfully!"))
+                completion_msg.setInformativeText(tr("MainWindow", "You can now play game or install Online-Fixes if available."))
                 completion_msg.setStandardButtons(QMessageBox.StandardButton.Ok)
                 completion_msg.exec()
             
             game_name = self.game_data.get('game_name', 'Game') if self.game_data else 'Game'
-            self.notification_manager.show_notification(f"Successfully downloaded {game_name}!", "success")
+            self.notification_manager.show_notification(tr("MainWindow", "Successfully downloaded {0}!").format(game_name), "success")
             
             logger.debug("Download completion handler finished")
         except Exception as e:
             logger.error(f"Error in download completion handler: {e}", exc_info=True)
-            self.log_output.append(f"Error during completion: {e}")
+            self.log_output.append(tr("MainWindow", "Error during completion: {0}").format(e))
         
         # Hide controls after a short delay
         QTimer.singleShot(2000, lambda: self.minimal_download_widget.setVisible(False))
@@ -666,7 +673,7 @@ class MainWindow(QMainWindow):
         
     def _on_download_error(self, error_message):
         """Handle download errors"""
-        self.log_output.append(f"Download error: {error_message}")
+        self.log_output.append(tr("MainWindow", "Download error: {0}").format(error_message))
         self.minimal_download_widget.set_idle_state()
         
     def _on_download_state_changed(self, state):
@@ -675,7 +682,7 @@ class MainWindow(QMainWindow):
         
     def _on_depot_completed(self, depot_id):
         """Handle individual depot completion"""
-        self.log_output.append(f"Depot {depot_id} completed")
+        self.log_output.append(tr("MainWindow", "Depot {0} completed").format(depot_id))
     
     def _check_for_online_fixes(self, install_path: str):
         """Inicia verificação de Online-Fixes para o jogo baixado"""
@@ -692,7 +699,7 @@ class MainWindow(QMainWindow):
                 return
             
             logger.info(f"Starting Online-Fixes check for AppID {appid}")
-            self.log_output.append(f"Checking for Online-Fixes for {game_name}...")
+            self.log_output.append(tr("MainWindow", "Checking for Online-Fixes for {0}...").format(game_name))
             
             # Iniciar verificação em thread separada para não bloquear UI
             from PyQt6.QtCore import QThread
@@ -719,7 +726,7 @@ class MainWindow(QMainWindow):
             
         except Exception as e:
             logger.error(f"Error starting Online-Fixes check: {e}")
-            self.log_output.append(f"Error checking Online-Fixes: {e}")
+            self.log_output.append(tr("MainWindow", "Error checking Online-Fixes: {0}").format(e))
     
     def _on_fix_check_started(self, appid: int):
         """Handle Online-Fixes check start"""
@@ -785,7 +792,7 @@ class MainWindow(QMainWindow):
             
             # Criar diálogo customizado
             dialog = QDialog(self)
-            dialog.setWindowTitle("Online-Fixes Available")
+            dialog.setWindowTitle(tr("MainWindow", "Online-Fixes Available"))
             dialog.setFixedSize(500, 400)
             dialog.setWindowModality(Qt.WindowModality.ApplicationModal)
             
@@ -796,7 +803,7 @@ class MainWindow(QMainWindow):
             
             # Título e ícone
             title_layout = QHBoxLayout()
-            title_label = QLabel("Online-Fixes Found!")
+            title_label = QLabel(tr("MainWindow", "Online-Fixes Found!"))
             title_label.setStyleSheet(f"""
                 QLabel {{
                     font-size: 18px;
@@ -810,8 +817,8 @@ class MainWindow(QMainWindow):
             
             # Descrição
             desc_label = QLabel(
-                f"Online-Fixes were found for <b>{game_name}</b>! "
-                "These fixes allow the game to work without an internet connection."
+                tr("MainWindow", "Online-Fixes were found for <b>{0}</b>! "
+                "These fixes allow the game to work without an internet connection.").format(game_name)
             )
             desc_label.setWordWrap(True)
             desc_label.setStyleSheet(f"""
@@ -867,9 +874,9 @@ class MainWindow(QMainWindow):
                 
                 # Descrição do fix
                 if fix_type == 'generic':
-                    fix_desc = QLabel("• Bypasses basic DRM protection\n• Works for most games")
+                    fix_desc = QLabel(tr("MainWindow", "• Bypasses basic DRM protection\n• Works for most games"))
                 else:  # online
-                    fix_desc = QLabel("• Enables online features offline\n• Multiplayer/LAN support")
+                    fix_desc = QLabel(tr("MainWindow", "• Enables online features offline\n• Multiplayer/LAN support"))
                 
                 fix_desc.setStyleSheet(f"""
                     QLabel {{
@@ -881,7 +888,7 @@ class MainWindow(QMainWindow):
                 fix_layout.addWidget(fix_desc)
                 
                 # Botão de aplicação
-                apply_btn = QPushButton(f"Install {fix_name}")
+                apply_btn = QPushButton(tr("MainWindow", "Install {0}").format(fix_name))
                 apply_btn.setStyleSheet(f"""
                     QPushButton {{
                         background: {theme.colors.PRIMARY};
@@ -911,7 +918,7 @@ class MainWindow(QMainWindow):
             buttons_layout.addStretch()
             
             # Botão "Don't Install"
-            skip_btn = QPushButton("Don't Install Any Fix")
+            skip_btn = QPushButton(tr("MainWindow", "Don't Install Any Fix"))
             skip_btn.setStyleSheet(f"""
                 QPushButton {{
                     background: {theme.colors.SURFACE};
@@ -934,7 +941,7 @@ class MainWindow(QMainWindow):
             
             # Se o usuário fechou sem escolher, mostrar mensagem informativa
             if result == QDialog.DialogCode.Rejected:
-                self.log_output.append(f"User chose not to install Online-Fixes for {game_name}")
+                self.log_output.append(tr("MainWindow", "User chose not to install Online-Fixes for {0}").format(game_name))
                 logger.info(f"User declined Online-Fixes installation for AppID {appid}")
                 
                 # Fix was declined, clear the flag
@@ -956,11 +963,11 @@ class MainWindow(QMainWindow):
                     
         except Exception as e:
             logger.error(f"Error showing fixes available dialog: {e}")
-            self.log_output.append(f"Error showing fixes dialog: {e}")
+            self.log_output.append(tr("MainWindow", "Error showing fixes dialog: {0}").format(e))
     
     def _on_fix_download_progress(self, message: str):
         """Handle Online-Fixes download progress"""
-        self.log_output.append(f"Fix download: {message}")
+        self.log_output.append(tr("MainWindow", "Fix download: {0}").format(message))
     
     def _on_fix_applied(self, appid: int, fix_type: str):
         """Handle successful Online-Fixes application"""
@@ -977,15 +984,15 @@ class MainWindow(QMainWindow):
     
     def _on_fix_error(self, error_message: str):
         """Handle Online-Fixes errors"""
-        self.log_output.append(f"Fix error: {error_message}")
-        self.notification_manager.show_notification(f"Fix installation failed: {error_message}", "error")
+        self.log_output.append(tr("MainWindow", "Fix error: {0}").format(error_message))
+        self.notification_manager.show_notification(tr("MainWindow", "Fix installation failed: {0}").format(error_message), "error")
     
     def _confirm_cancel_download(self):
         """Confirm download cancellation with user"""
         reply = QMessageBox.question(
             self,
-            "Cancel Download",
-            "Are you sure you want to cancel the current download?",
+            tr("MainWindow", "Cancel Download"),
+            tr("MainWindow", "Are you sure you want to cancel the current download?"),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No
         )
@@ -1005,21 +1012,20 @@ class MainWindow(QMainWindow):
             # Obter caminho de instalação do jogo
             install_path = self._get_current_install_path()
             if not install_path:
-                self.log_output.append("Error: Could not determine game installation path")
-                QMessageBox.warning(self, "Path Error", 
-                                   "Could not determine the game installation path. "
-                                   "The download session may have been cleared.")
+                self.log_output.append(tr("MainWindow", "Error: Could not determine game installation path"))
+                QMessageBox.warning(self, tr("MainWindow", "Path Error"), 
+                                   tr("MainWindow", "Could not determine the game installation path. "
+                                   "The download session may have been cleared."))
                 self._fix_dialog_open = False
                 return
             
-            self.log_output.append(f"Installing {fix_name}...")
+            self.log_output.append(tr("MainWindow", "Installing {0}...").format(fix_name))
             
             # Confirmar instalação
             reply = QMessageBox.question(
                 self,
-                f"Install {fix_name}",
-                f"Install {fix_name} for {game_name}?\n\n"
-                f"Path: {install_path}",
+                tr("MainWindow", "Install {0}").format(fix_name),
+                tr("MainWindow", "Install {0} for {1}?\n\nPath: {2}").format(fix_name, game_name, install_path),
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                 QMessageBox.StandardButton.Yes
             )
@@ -1039,22 +1045,22 @@ class MainWindow(QMainWindow):
                     
                 except Exception as fix_error:
                     logger.error(f"Error starting fix installation: {fix_error}")
-                    self.log_output.append(f"Error starting installation: {fix_error}")
+                    self.log_output.append(tr("MainWindow", "Error starting installation: {0}").format(fix_error))
                     QMessageBox.critical(
                         self,
-                        "Installation Error",
-                        f"Failed to start {fix_name} installation:\n{str(fix_error)}"
+                        tr("MainWindow", "Installation Error"),
+                        tr("MainWindow", "Failed to start {0} installation:\n{1}").format(fix_name, str(fix_error))
                     )
             else:
-                self.log_output.append(f"Installation cancelled by user")
+                self.log_output.append(tr("MainWindow", "Installation cancelled by user"))
                 
         except Exception as e:
             logger.error(f"Error applying fix from dialog: {e}", exc_info=True)
-            self.log_output.append(f"Error installing fix: {e}")
+            self.log_output.append(tr("MainWindow", "Error installing fix: {0}").format(e))
             QMessageBox.critical(
                 self,
-                "Installation Error",
-                f"An unexpected error occurred:\n{str(e)}"
+                tr("MainWindow", "Installation Error"),
+                tr("MainWindow", "An unexpected error occurred:\n{0}").format(str(e))
             )
         finally:
             # Always reset the flag when done
@@ -1136,12 +1142,12 @@ class MainWindow(QMainWindow):
             self._show_depot_selection_dialog()
         else:
             self.notification_manager.show_notification("No downloadable depots found in ZIP file", "error")
-            QMessageBox.warning(self, "No Depots Found", "Zip file processed, but no downloadable depots were found.")
+            QMessageBox.warning(self, tr("MainWindow", "No Depots Found"), tr("MainWindow", "Zip file processed, but no downloadable depots were found."))
             self._reset_ui_state()
 
     def _show_depot_selection_dialog(self):
         if not self.game_data:
-            self.log_output.append("Error: No game data available for depot selection")
+            self.log_output.append(tr("MainWindow", "Error: No game data available for depot selection"))
             return
         depot_sizes = self.game_data.get('depot_sizes', {})
         total_game_size = self.game_data.get('total_game_size', 0)
@@ -1276,10 +1282,10 @@ class MainWindow(QMainWindow):
             session_id = None
         
         if session_id:
-            self.log_output.append(f"Download started (Session: {session_id[:8]}...)")
+            self.log_output.append(tr("MainWindow", "Download started (Session: {0}...)").format(session_id[:8]))
             self._start_speed_monitor()
         else:
-            self.log_output.append("Failed to start download")
+            self.log_output.append(tr("MainWindow", "Failed to start download"))
             self._reset_ui_state()
 
     def _get_game_image_for_download(self):
@@ -1373,10 +1379,10 @@ class MainWindow(QMainWindow):
     
 
     def _create_acf_file(self):
-        self.log_output.append("Generating Steam .acf manifest file...")
+        self.log_output.append(tr("MainWindow", "Generating Steam .acf manifest file..."))
         
         if not self.game_data:
-            self.log_output.append("Error: No game data available")
+            self.log_output.append(tr("MainWindow", "Error: No game data available"))
             return
             
         safe_game_name_fallback = re.sub(r'[^\w\s-]', '', self.game_data.get('game_name', '')).strip().replace(' ', '_')
@@ -1410,12 +1416,12 @@ class MainWindow(QMainWindow):
         try:
             with open(acf_path, 'w', encoding='utf-8') as f:
                 f.write(acf_content)
-            self.log_output.append(f"Created .acf file at {acf_path}")
+            self.log_output.append(tr("MainWindow", "Created .acf file at {0}").format(acf_path))
             
             # Limpar cache para que o novo jogo apareça na lista
             from core.game_manager import GameManager
             GameManager.clear_games_cache()
-            self.log_output.append("Cleared games cache - new game will be visible")
+            self.log_output.append(tr("MainWindow", "Cleared games cache - new game will be visible"))
             
             # Forçar atualização dos cards de informação na UI
             if hasattr(self, 'games_card'):
@@ -1423,12 +1429,12 @@ class MainWindow(QMainWindow):
             if hasattr(self, 'storage_card'):
                 self.storage_card._update_storage(force_refresh=True)
         except IOError as e:
-            self.log_output.append(f"Error creating .acf file: {e}")
+            self.log_output.append(tr("MainWindow", "Error creating .acf file: {0}").format(e))
 
     def _handle_task_error(self, error_info):
         _, error_value, _ = error_info
         logger.error(f"Task error occurred: {error_value}", exc_info=True)
-        QMessageBox.critical(self, "Error", f"An error occurred: {error_value}")
+        QMessageBox.critical(self, tr("MainWindow", "Error"), tr("MainWindow", "An error occurred: {0}").format(error_value))
         # 🐛 FIX: Clean up ZIP task and runner references on error
         if hasattr(self, 'zip_task'):
             self.zip_task = None
@@ -1446,7 +1452,7 @@ class MainWindow(QMainWindow):
             self.current_movie = self.main_movie
 
         self.drop_text_label.setVisible(True)
-        self.drop_text_label.setText("Drag and Drop Zip here")
+        self.drop_text_label.setText(tr("MainWindow", "Drag and Drop Zip here"))
 
         self.game_image_container.setVisible(False)
         self.title_bar.select_file_button.setVisible(True)  # Show button again
@@ -1545,20 +1551,20 @@ class MainWindow(QMainWindow):
         logger.debug(f"Steam restart prompt - _steam_restart_prompted: {self._steam_restart_prompted}")
         logger.debug(f"Steam restart prompt - _fix_applied_recently: {hasattr(self, '_fix_applied_recently')}")
         
-        reply = QMessageBox.question(self, 'SLSsteam Integration', 
-                                     "SLSsteam files have been created. Would you like to restart Steam now to apply the changes?",
+        reply = QMessageBox.question(self, tr("MainWindow", "SLSsteam Integration"), 
+                                     tr("MainWindow", "SLSsteam files have been created. Would you like to restart Steam now to apply the changes?"),
                                      QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, 
                                      QMessageBox.StandardButton.No)
 
         if reply == QMessageBox.StandardButton.Yes:
             logger.info("User agreed to restart Steam.")
-            self.log_output.append("Closing Steam...")
+            self.log_output.append(tr("MainWindow", "Closing Steam..."))
             
             if sys.platform == 'linux':
                 if not steam_helpers.kill_steam_process():
-                    self.log_output.append("Steam process not found, attempting to launch directly.")
+                    self.log_output.append(tr("MainWindow", "Steam process not found, attempting to launch directly."))
                 else:
-                    self.log_output.append("Steam closed successfully. Waiting 3 seconds before restart...")
+                    self.log_output.append(tr("MainWindow", "Steam closed successfully. Waiting 3 seconds before restart..."))
                     # Wait for Steam to fully close - use non-blocking approach
                     import time
                     start_time = time.time()
@@ -1566,25 +1572,25 @@ class MainWindow(QMainWindow):
                         QApplication.processEvents()
                         time.sleep(0.1)
                 
-                self.log_output.append("Restarting Steam...")
+                self.log_output.append(tr("MainWindow", "Restarting Steam..."))
                 status = steam_helpers.start_steam()
 
                 if status == 'NEEDS_USER_PATH':
-                    self.log_output.append("SLSsteam.so not found. Please locate it manually.")
-                    filePath, _ = QFileDialog.getOpenFileName(self, "Select SLSsteam.so", os.path.expanduser("~"), "SLSsteam.so (SLSsteam.so)")
+                    self.log_output.append(tr("MainWindow", "SLSsteam.so not found. Please locate it manually."))
+                    filePath, _ = QFileDialog.getOpenFileName(self, tr("MainWindow", "Select SLSsteam.so"), os.path.expanduser("~"), "SLSsteam.so (SLSsteam.so)")
                     if filePath:
                         if not steam_helpers.start_steam_with_path(filePath):
-                            QMessageBox.warning(self, "Execution Failed", "Could not start Steam with the selected file.")
+                            QMessageBox.warning(self, tr("MainWindow", "Execution Failed"), tr("MainWindow", "Could not start Steam with the selected file."))
                     else:
-                        self.log_output.append("User cancelled file selection.")
+                        self.log_output.append(tr("MainWindow", "User cancelled file selection."))
                 
                 elif status == 'FAILED':
-                    QMessageBox.warning(self, "Steam Not Found", "Could not restart Steam automatically. Please start it manually.")
+                    QMessageBox.warning(self, tr("MainWindow", "Steam Not Found"), tr("MainWindow", "Could not restart Steam automatically. Please start it manually."))
 
             else:
                 steam_helpers.kill_steam_process()
                 if not steam_helpers.start_steam() == 'SUCCESS':
-                    QMessageBox.warning(self, "Steam Not Found", "Could not restart Steam automatically. Please start it manually.")
+                    QMessageBox.warning(self, tr("MainWindow", "Steam Not Found"), tr("MainWindow", "Could not restart Steam automatically. Please start it manually."))
 
     def _fetch_game_header_image(self, app_id):
         """Fetch game header image for display during download using enhanced manager."""
@@ -1695,15 +1701,15 @@ class MainWindow(QMainWindow):
                 logger.warning("App ID not found for Steam Schema generation")
                 return
                 
-            self.log_output.append("Generating Steam Schema...")
+            self.log_output.append(tr("MainWindow", "Generating Steam Schema..."))
             success = schema_integration.get_game_schema_steam_client(app_id)
             
             if success:
-                self.log_output.append("Steam Schema generated successfully!")
-                self.show_notification("Steam achievements generated successfully!", "success")
+                self.log_output.append(tr("MainWindow", "Steam Schema generated successfully!"))
+                self.show_notification(tr("MainWindow", "Steam achievements generated successfully!"), "success")
             else:
-                self.log_output.append("Steam Schema generation completed with warnings")
-                self.show_notification("Steam Schema generation completed with warnings", "warning")
+                self.log_output.append(tr("MainWindow", "Steam Schema generation completed with warnings"))
+                self.show_notification(tr("MainWindow", "Steam Schema generation completed with warnings"), "warning")
                 
         except ImportError:
             logger.warning("Steam schema utilities not available")
@@ -1720,21 +1726,21 @@ class MainWindow(QMainWindow):
 
     def open_steam_login(self):
         """Steam login is now handled by SLScheevo - no dialog needed"""
-        QMessageBox.information(self, "Steam Login", "Steam login is now handled by SLScheevo!\n\nSLScheevo will automatically login when generating schemas.")
+        QMessageBox.information(self, tr("MainWindow", "Steam Login"), tr("MainWindow", "Steam login is now handled by SLScheevo!\n\nSLScheevo will automatically login when generating schemas."))
     
     def _check_slssteam_prerequisite(self) -> bool:
         """Check if SLSsteam is ready for operations, show dialog if not"""
         if not hasattr(self.title_bar, 'slssteam_status') or not self.title_bar.slssteam_status:
-            QMessageBox.critical(self, "SLSsteam Error", 
-                                "SLSsteam status widget not available. Please restart ACCELA.")
+            QMessageBox.critical(self, tr("MainWindow", "SLSsteam Error"), 
+                                tr("MainWindow", "SLSsteam status widget not available. Please restart ACCELA."))
             return False
         
         if not self.title_bar.slssteam_status.can_start_operations():
             # Show blocking dialog with setup option
             blocking_msg = self.title_bar.slssteam_status.get_blocking_message()
-            reply = QMessageBox.critical(self, "SLSsteam Required", 
-                                        f"SLSsteam is required for ACCELA to function.\n\n{blocking_msg}\n\n"
-                                        "Would you like to configure SLSsteam now?",
+            reply = QMessageBox.critical(self, tr("MainWindow", "SLSsteam Required"), 
+                                        tr("MainWindow", "SLSsteam is required for ACCELA to function.\n\n{0}\n\n"
+                                        "Would you like to configure SLSsteam now?").format(blocking_msg),
                                         QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
             
             if reply == QMessageBox.StandardButton.Yes:
@@ -1764,7 +1770,7 @@ class MainWindow(QMainWindow):
             logger.info("Game Manager dialog opened and closed")
         except Exception as e:
             logger.error(f"Error opening Game Manager: {e}")
-            QMessageBox.critical(self, "Error", f"Failed to open Game Manager: {e}")
+            QMessageBox.critical(self, tr("MainWindow", "Error"), tr("MainWindow", "Failed to open Game Manager: {0}").format(e))
     
     def _open_backup_dialog(self):
         """Open the Backup/Restore dialog for Steam stats"""
@@ -1775,7 +1781,7 @@ class MainWindow(QMainWindow):
             logger.info("Backup dialog opened and closed")
         except Exception as e:
             logger.error(f"Error opening Backup dialog: {e}")
-            QMessageBox.critical(self, "Error", f"Failed to open Backup dialog: {e}")
+            QMessageBox.critical(self, tr("MainWindow", "Error"), tr("MainWindow", "Failed to open Backup dialog: {0}").format(e))
     
     def closeEvent(self, event):
         self._stop_speed_monitor()

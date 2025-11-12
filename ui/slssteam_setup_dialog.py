@@ -14,6 +14,13 @@ from ui.enhanced_widgets import EnhancedProgressBar
 from ui.enhanced_dialogs import ModernDialog
 from .theme import theme, Typography, BorderRadius, Spacing
 
+# Import i18n
+try:
+    from utils.i18n import tr
+except (ImportError, ModuleNotFoundError):
+    def tr(context, text):
+        return text
+
 logger = logging.getLogger(__name__)
 
 class SlssteamInstallThread(QThread):
@@ -98,7 +105,7 @@ class SlssteamSetupDialog(ModernDialog):
     def _setup_dialog_properties(self):
         """Setup dialog-specific properties"""
         self.setFixedSize(600, 500)
-        self.setWindowTitle("SLSsteam Setup")
+        self.setWindowTitle(tr("SlssteamSetupDialog", "SLSsteam Setup"))
     
     def _setup_ui(self):
         """Setup the dialog UI"""
@@ -107,7 +114,7 @@ class SlssteamSetupDialog(ModernDialog):
         layout.setSpacing(15)
         
         # Title
-        self.title_label = QLabel("SLSsteam Setup")
+        self.title_label = QLabel(tr("SlssteamSetupDialog", "SLSsteam Setup"))
         self.title_label.setStyleSheet(f"""
             QLabel {{
                 color: {theme.colors.PRIMARY};
@@ -143,7 +150,7 @@ class SlssteamSetupDialog(ModernDialog):
         # Status area
         status_layout = QVBoxLayout()
         
-        self.status_label = QLabel("Ready to setup SLSsteam")
+        self.status_label = QLabel(tr("SlssteamSetupDialog", "Ready to setup SLSsteam"))
         self.status_label.setStyleSheet(f"""
             QLabel {{
                 color: {theme.colors.PRIMARY};
@@ -183,12 +190,12 @@ class SlssteamSetupDialog(ModernDialog):
         button_layout = QHBoxLayout()
         button_layout.addStretch()
         
-        self.cancel_button = HoverButton("Cancel")
+        self.cancel_button = HoverButton(tr("SlssteamSetupDialog", "Cancel"))
         self.cancel_button.setFixedSize(100, 36)
         self.cancel_button.clicked.connect(self._on_cancel_clicked)
         button_layout.addWidget(self.cancel_button)
         
-        self.action_button = HoverButton("Install")
+        self.action_button = HoverButton(tr("SlssteamSetupDialog", "Install"))
         self.action_button.setFixedSize(100, 36)
         self.action_button.clicked.connect(self._on_action_clicked)
         button_layout.addWidget(self.action_button)
@@ -200,22 +207,22 @@ class SlssteamSetupDialog(ModernDialog):
         self.current_mode = mode
         
         if mode == "install":
-            self.title_label.setText("SLSsteam Installation")
+            self.title_label.setText(tr("SlssteamSetupDialog", "SLSsteam Installation"))
             self.description_label.setText(
-                "SLSsteam is required for ACCELA to function properly. "
-                "This will install SLSsteam and configure it for Steam integration."
+                tr("SlssteamSetupDialog", "SLSsteam is required for ACCELA to function properly. "
+                    "This will install SLSsteam and configure it for Steam integration.")
             )
-            self.action_button.setText("Install")
-            self.status_label.setText("Ready to install SLSsteam")
+            self.action_button.setText(tr("SlssteamSetupDialog", "Install"))
+            self.status_label.setText(tr("SlssteamSetupDialog", "Ready to install SLSsteam"))
             
         elif mode == "fix":
-            self.title_label.setText("SLSsteam Configuration")
+            self.title_label.setText(tr("SlssteamSetupDialog", "SLSsteam Configuration"))
             self.description_label.setText(
-                "SLSsteam is installed but needs configuration. "
-                "This will fix the PlayNotOwnedGames setting to enable game access."
+                tr("SlssteamSetupDialog", "SLSsteam is installed but needs configuration. "
+                    "This will fix the PlayNotOwnedGames setting to enable game access.")
             )
-            self.action_button.setText("Fix Config")
-            self.status_label.setText("Ready to fix configuration")
+            self.action_button.setText(tr("SlssteamSetupDialog", "Fix Config"))
+            self.status_label.setText(tr("SlssteamSetupDialog", "Ready to fix configuration"))
         
         self.output_text.clear()
     
@@ -241,8 +248,8 @@ class SlssteamSetupDialog(ModernDialog):
         if not self.checker.can_install():
             QMessageBox.critical(
                 self,
-                "Installation Error",
-                "SLSsteam installation files not found. Please ensure SLSsteam-Any directory exists."
+                tr("SlssteamSetupDialog", "Installation Error"),
+                tr("SlssteamSetupDialog", "SLSsteam installation files not found. Please ensure SLSsteam-Any directory exists.")
             )
             self._on_setup_finished(False, "Installation files not found")
             return
@@ -254,8 +261,8 @@ class SlssteamSetupDialog(ModernDialog):
             self._on_setup_finished(False, "Could not get install command")
             return
         
-        self.status_label.setText("Installing SLSsteam...")
-        self.output_text.append(f"Running: {install_command}")
+        self.status_label.setText(tr("SlssteamSetupDialog", "Installing SLSsteam..."))
+        self.output_text.append(f"{tr('SlssteamSetupDialog', 'Running')}: {install_command}")
         
         # Start installation thread
         self.install_thread = SlssteamInstallThread(install_command)
@@ -266,8 +273,8 @@ class SlssteamSetupDialog(ModernDialog):
     
     def _start_fix(self):
         """Start configuration fix"""
-        self.status_label.setText("Fixing configuration...")
-        self.output_text.append("Updating PlayNotOwnedGames setting...")
+        self.status_label.setText(tr("SlssteamSetupDialog", "Fixing configuration..."))
+        self.output_text.append(tr("SlssteamSetupDialog", "Updating PlayNotOwnedGames setting..."))
         
         # Simulate progress
         self.progress_bar.setValue(30)
@@ -279,12 +286,12 @@ class SlssteamSetupDialog(ModernDialog):
             success = self.checker.fix_play_not_owned_games()
             
             if success:
-                self.output_text.append("[OK] PlayNotOwnedGames set to 'yes'")
+                self.output_text.append(tr("SlssteamSetupDialog", "[OK] PlayNotOwnedGames set to 'yes'"))
                 self.progress_bar.setValue(100)
-                self._on_setup_finished(True, "Configuration fixed successfully")
+                self._on_setup_finished(True, tr("SlssteamSetupDialog", "Configuration fixed successfully"))
             else:
-                self.output_text.append("[X] Failed to update configuration")
-                self._on_setup_finished(False, "Failed to fix configuration")
+                self.output_text.append(tr("SlssteamSetupDialog", "[X] Failed to update configuration"))
+                self._on_setup_finished(False, tr("SlssteamSetupDialog", "Failed to fix configuration"))
                 
         except Exception as e:
             logger.error(f"Error fixing configuration: {e}")
@@ -315,16 +322,16 @@ class SlssteamSetupDialog(ModernDialog):
         self.progress_bar.setValue(100 if success else 0)
         
         if success:
-            self.status_label.setText("Setup completed successfully!")
+            self.status_label.setText(tr("SlssteamSetupDialog", "Setup completed successfully!"))
             self.output_text.append(f"\n[OK] {message}")
         else:
-            self.status_label.setText("Setup failed!")
+            self.status_label.setText(tr("SlssteamSetupDialog", "Setup failed!"))
             self.output_text.append(f"\n[X] {message}")
         
         # Reset buttons
         self.action_button.setEnabled(True)
         self.cancel_button.setEnabled(False)
-        self.action_button.setText("Close" if not success else "Close")
+        self.action_button.setText(tr("SlssteamSetupDialog", "Close"))
         
         # Emit signal
         self.setup_completed.emit(success)
@@ -342,14 +349,14 @@ class SlssteamSetupDialog(ModernDialog):
             
             QMessageBox.information(
                 self,
-                "Setup Complete",
-                "SLSsteam has been successfully configured!\n\nSLSsteam mode has been automatically enabled."
+                tr("SlssteamSetupDialog", "Setup Complete"),
+                tr("SlssteamSetupDialog", "SLSsteam has been successfully configured!\n\nSLSsteam mode has been automatically enabled.")
             )
         else:
             QMessageBox.warning(
                 self,
-                "Setup Failed",
-                f"SLSsteam setup failed: {message}"
+                tr("SlssteamSetupDialog", "Setup Failed"),
+                tr("SlssteamSetupDialog", "SLSsteam setup failed: {message}").format(message=message)
             )
     
     def _on_cancel_clicked(self):
@@ -357,15 +364,15 @@ class SlssteamSetupDialog(ModernDialog):
         if self.install_thread and self.install_thread.isRunning():
             reply = QMessageBox.question(
                 self,
-                "Cancel Installation",
-                "Are you sure you want to cancel the installation?",
+                tr("SlssteamSetupDialog", "Cancel Installation"),
+                tr("SlssteamSetupDialog", "Are you sure you want to cancel the installation?"),
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
             )
             
             if reply == QMessageBox.StandardButton.Yes:
                 self.install_thread.stop()
                 self.install_thread.wait()
-                self._on_setup_finished(False, "Installation cancelled")
+                self._on_setup_finished(False, tr("SlssteamSetupDialog", "Installation cancelled"))
         else:
             self.close()
     

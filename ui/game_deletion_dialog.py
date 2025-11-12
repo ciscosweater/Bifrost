@@ -17,6 +17,12 @@ from ui.custom_checkbox import CustomCheckBox
 from utils.settings import get_font_setting
 from core.game_manager import GameManager
 
+# Import i18n
+try:
+    from utils.i18n import tr
+except (ImportError, ModuleNotFoundError):
+    def tr(context, text):
+        return text
 
 logger = logging.getLogger(__name__)
 
@@ -131,7 +137,7 @@ class GameDeletionDialog(QDialog):
         self.selected_games = []
         self.deletion_worker = None
         
-        self.setWindowTitle("Uninstall ACCELA Games")
+        self.setWindowTitle(tr("GameDeletionDialog", "Uninstall ACCELA Games"))
         self.setModal(True)
         self.setMinimumSize(800, 500)
         self.resize(850, 600)
@@ -280,7 +286,7 @@ class GameDeletionDialog(QDialog):
         layout.setContentsMargins(Spacing.MD, Spacing.SM, Spacing.MD, Spacing.SM)
         layout.setSpacing(Spacing.XS)
         
-        title = QLabel("Uninstall ACCELA Games")
+        title = QLabel(tr("GameDeletionDialog", "Uninstall ACCELA Games"))
         title.setFont(QFont(Typography.get_font_family(), Typography.H1_SIZE, QFont.Weight.Bold))
         title.setStyleSheet(f"""
             color: {theme.colors.TEXT_ACCENT};
@@ -293,7 +299,7 @@ class GameDeletionDialog(QDialog):
         """)
         layout.addWidget(title)
         
-        subtitle = QLabel("Select and delete games downloaded by ACCELA")
+        subtitle = QLabel(tr("GameDeletionDialog", "Select and delete games downloaded by ACCELA"))
         subtitle.setStyleSheet(f"""
             color: {theme.colors.TEXT_SECONDARY};
             font-size: {Typography.H3_SIZE}px;
@@ -314,7 +320,7 @@ class GameDeletionDialog(QDialog):
         layout.setSpacing(Spacing.XS)  # Spacing adequado
         
         # Table header
-        header_label = QLabel("Installed Games")
+        header_label = QLabel(tr("GameDeletionDialog", "Installed Games"))
         header_label.setFont(QFont(Typography.get_font_family(), Typography.H3_SIZE, QFont.Weight.Bold))
         header_label.setStyleSheet(f"color: {theme.colors.TEXT_ACCENT}; margin: 0; margin-bottom: 6px; border: none; background: transparent;")
         layout.addWidget(header_label)
@@ -323,7 +329,8 @@ class GameDeletionDialog(QDialog):
         self.games_table = QTableWidget()
         self.games_table.setColumnCount(4)
         self.games_table.setHorizontalHeaderLabels([
-            "Select", "Game Name", "Size", "Location"
+            tr("GameDeletionDialog", "Select"), tr("GameDeletionDialog", "Game Name"), 
+            tr("GameDeletionDialog", "Size"), tr("GameDeletionDialog", "Location")
         ])
         
         # Configure vertical headers with safety check
@@ -436,7 +443,7 @@ class GameDeletionDialog(QDialog):
         layout.setSpacing(Spacing.XS)  # Spacing adequado
         
         # Details title
-        details_title = QLabel("Game Details")
+        details_title = QLabel(tr("GameDeletionDialog", "Game Details"))
         details_title.setFont(QFont(Typography.get_font_family(), Typography.H3_SIZE, QFont.Weight.Bold))
         details_title.setStyleSheet(f"color: {theme.colors.TEXT_ACCENT}; margin: 0; margin-bottom: 6px; border: none; background: transparent;")
         layout.addWidget(details_title)
@@ -459,40 +466,40 @@ class GameDeletionDialog(QDialog):
         layout.addWidget(self.game_info_text)
         
         # Compatdata option
-        compatdata_group = QGroupBox("Save Data Options")
+        compatdata_group = QGroupBox(tr("GameDeletionDialog", "Save Data Options"))
         
         compatdata_layout = QVBoxLayout(compatdata_group)
         
-        self.delete_compatdata_checkbox = CustomCheckBox("Delete save data (compatdata folder)")
+        self.delete_compatdata_checkbox = CustomCheckBox(tr("GameDeletionDialog", "Delete save data (compatdata folder)"))
         self.delete_compatdata_checkbox.setChecked(False)  # Default: preserve saves
         self.delete_compatdata_checkbox.setFont(QFont(Typography.get_font_family(), Typography.BODY_SIZE, QFont.Weight.Bold))
         self.delete_compatdata_checkbox.setToolTip(
-            "Check this box to delete the game's save data and configuration files.\n"
+            tr("GameDeletionDialog", "Check this box to delete game's save data and configuration files.\n"
             "The compatdata folder contains:\n"
             "• Game saves and progress\n"
             "• Configuration files\n"
             "• Steam compatibility data\n"
-            "\nIf unchecked, this data will be preserved for future use."
+            "\nIf unchecked, this data will be preserved for future use.")
         )
         compatdata_layout.addWidget(self.delete_compatdata_checkbox)
         
         # Compatdata info label
-        compatdata_info = QLabel("Uncheck to preserve save games in compatdata/APPID/")
+        compatdata_info = QLabel(tr("GameDeletionDialog", "Uncheck to preserve save games in compatdata/APPID/"))
         compatdata_info.setStyleSheet(f"color: {theme.colors.TEXT_SECONDARY}; font-style: italic; {Typography.get_font_style(Typography.BODY_SIZE)}; padding: {Spacing.XS}px;")
         compatdata_layout.addWidget(compatdata_info)
         
         layout.addWidget(compatdata_group)
         
         # Warning box
-        warning_group = QGroupBox("Deletion Warning")
+        warning_group = QGroupBox(tr("GameDeletionDialog", "Deletion Warning"))
         
         warning_layout = QVBoxLayout(warning_group)
         
         warning_text = QLabel(
-            "• This will permanently delete the game and all its files\n"
+            tr("GameDeletionDialog", "• This will permanently delete game and all its files\n"
             "• Save games handling depends on your choice above\n"
             "• This action cannot be undone\n"
-            "• Only ACCELA-downloaded games will be shown"
+            "• Only ACCELA-downloaded games will be shown")
         )
         warning_text.setStyleSheet(f"color: {theme.colors.TEXT_PRIMARY}; padding: {Spacing.XS}px; {Typography.get_font_style(Typography.BODY_SIZE)};")
         warning_layout.addWidget(warning_text)
@@ -511,7 +518,7 @@ class GameDeletionDialog(QDialog):
         layout.setSpacing(Spacing.MD)  # Adequate spacing between buttons
         
         # Refresh button
-        self.refresh_btn = HoverButton("Refresh List")
+        self.refresh_btn = HoverButton(tr("GameDeletionDialog", "Refresh List"))
         self.refresh_btn.clicked.connect(lambda: self._load_games(force_refresh=True))
         self.refresh_btn.setFixedHeight(40)  # Increased height for better touch targets
         self.refresh_btn.setFont(QFont(Typography.get_font_family(), Typography.H3_SIZE, QFont.Weight.Bold))
@@ -520,7 +527,7 @@ class GameDeletionDialog(QDialog):
         layout.addStretch()
         
         # Delete button
-        self.delete_btn = HoverButton("Delete Selected Games")
+        self.delete_btn = HoverButton(tr("GameDeletionDialog", "Delete Selected Games"))
         self.delete_btn.clicked.connect(self._start_deletion)
         self.delete_btn.setEnabled(False)
         self.delete_btn.setFixedHeight(40)  # Increased height for better touch targets
@@ -528,7 +535,7 @@ class GameDeletionDialog(QDialog):
         layout.addWidget(self.delete_btn)
         
         # Close button
-        self.close_btn = HoverButton("Close")
+        self.close_btn = HoverButton(tr("GameDeletionDialog", "Close"))
         self.close_btn.clicked.connect(self.close)
         self.close_btn.setFixedHeight(40)  # Increased height for better touch targets
         self.close_btn.setFont(QFont(Typography.get_font_family(), Typography.H3_SIZE, QFont.Weight.Bold))
@@ -545,7 +552,7 @@ class GameDeletionDialog(QDialog):
         layout.setSpacing(Spacing.SM)  # Spacing adequado
         
         # Progress label
-        self.progress_label = QLabel("Preparing deletion...")
+        self.progress_label = QLabel(tr("GameDeletionDialog", "Preparing deletion..."))
         self.progress_label.setStyleSheet(f"color: {theme.colors.TEXT_PRIMARY}; {Typography.get_font_style(Typography.H3_SIZE)};")
         layout.addWidget(self.progress_label)
         
@@ -651,7 +658,7 @@ class GameDeletionDialog(QDialog):
     def _update_details_panel(self, game: Optional[Dict] = None):
         """Update details panel with game information."""
         if not game:
-            self.game_info_text.setText("Select a game to view details...")
+            self.game_info_text.setText(tr("GameDeletionDialog", "Select a game to view details..."))
             return
         
         try:
@@ -659,28 +666,38 @@ class GameDeletionDialog(QDialog):
             game_dir = game.get('game_dir', '')
             game_dir_exists = os.path.exists(game_dir) if game_dir else False
             
-            details = f"""<b>Display Name:</b> {game.get('display_name', 'N/A')}<br>
-<b>Original Name:</b> {game.get('name', 'N/A')}<br>
-<b>APPID:</b> {game.get('appid', 'N/A')}<br>
-<b>Install Directory:</b> {game.get('installdir', 'N/A')}<br>
-<b>Size:</b> {game.get('size_formatted', 'N/A')}<br>
-<b>Library:</b> {os.path.basename(game.get('library_path', 'N/A'))}<br>
-<b>Game Directory:</b> {'Exists' if game_dir_exists else 'Not found'}<br><br>
+            details = tr("GameDeletionDialog", """<b>Display Name:</b> {0}<br>
+<b>Original Name:</b> {1}<br>
+<b>APPID:</b> {2}<br>
+<b>Install Directory:</b> {3}<br>
+<b>Size:</b> {4}<br>
+<b>Library:</b> {5}<br>
+<b>Game Directory:</b> {6}<br><br>
 
 <b>Files to be deleted:</b><br>
-• {os.path.basename(game.get('acf_path', 'N/A'))}<br>
-• {game.get('installdir', 'N/A')}/ (entire folder)<br><br>
+• {7}<br>
+• {8}/ (entire folder)<br><br>
 
 <b>Save Data (compatdata):</b><br>
-• Path: compatdata/{game.get('appid', 'N/A')}/<br>
+• Path: compatdata/{9}/<br>
 • Action: Will be deleted if checked<br>
-• Tip: Uncheck to preserve save games
-"""
+• Tip: Uncheck to preserve save games""").format(
+                game.get('display_name', 'N/A'),
+                game.get('name', 'N/A'),
+                game.get('appid', 'N/A'),
+                game.get('installdir', 'N/A'),
+                game.get('size_formatted', 'N/A'),
+                os.path.basename(game.get('library_path', 'N/A')),
+                'Exists' if game_dir_exists else 'Not found',
+                os.path.basename(game.get('acf_path', 'N/A')),
+                game.get('installdir', 'N/A'),
+                game.get('appid', 'N/A')
+            )
             
             self.game_info_text.setText(details)
         except Exception as e:
             logger.error(f"Error updating details panel: {e}")
-            self.game_info_text.setText("Error loading game details.")
+            self.game_info_text.setText(tr("GameDeletionDialog", "Error loading game details."))
     
     def _on_selection_changed(self):
         """Update button state when selection changes."""
@@ -696,7 +713,7 @@ class GameDeletionDialog(QDialog):
         
         self.selected_games = selected_games
         self.delete_btn.setEnabled(len(selected_games) > 0)
-        self.delete_btn.setText(f"Delete Selected Games ({len(selected_games)})")
+        self.delete_btn.setText(tr("GameDeletionDialog", "Delete Selected Games ({count})").format(count=len(selected_games)))
     
 
     
@@ -722,26 +739,26 @@ class GameDeletionDialog(QDialog):
                     compatdata_games.append(game['name'])
         
         confirm_msg = QMessageBox(self)
-        confirm_msg.setWindowTitle("Confirm Deletion")
+        confirm_msg.setWindowTitle(tr("GameDeletionDialog", "Confirm Deletion"))
         confirm_msg.setIcon(QMessageBox.Icon.Warning)
         
         # Main message based on compatdata option
         if delete_compatdata:
-            main_text = f"Are you sure you want to delete {len(self.selected_games)} game(s) INCLUDING SAVE DATA?"
-            main_text += f"\n\nWARNING: This will permanently delete all save games and progress!"
+            main_text = tr("GameDeletionDialog", "Are you sure you want to delete {0} game(s) INCLUDING SAVE DATA?").format(len(self.selected_games))
+            main_text += tr("GameDeletionDialog", "\n\nWARNING: This will permanently delete all save games and progress!")
         else:
-            main_text = f"Are you sure you want to delete {len(self.selected_games)} game(s)?"
-            main_text += f"\n\nSave games will be preserved."
+            main_text = tr("GameDeletionDialog", "Are you sure you want to delete {0} game(s)?").format(len(self.selected_games))
+            main_text += tr("GameDeletionDialog", "\n\nSave games will be preserved.")
         
         confirm_msg.setText(main_text)
         
         # Detailed text (without size calculation to avoid freezing)
-        detailed_text = f"Games to delete:\n" + "\n".join(f"• {name}" for name in game_names)
+        detailed_text = tr("GameDeletionDialog", "Games to delete:\n") + "\n".join(f"• {name}" for name in game_names)
         
         if delete_compatdata and compatdata_games:
-            detailed_text += f"\n\nSave data to be deleted:\n" + "\n".join(f"• {name}" for name in compatdata_games)
+            detailed_text += tr("GameDeletionDialog", "\n\nSave data to be deleted:\n") + "\n".join(f"• {name}" for name in compatdata_games)
         
-        detailed_text += "\n\nThis action cannot be undone!"
+        detailed_text += tr("GameDeletionDialog", "\n\nThis action cannot be undone!")
         
         confirm_msg.setDetailedText(detailed_text)
         confirm_msg.setStandardButtons(
@@ -792,8 +809,8 @@ class GameDeletionDialog(QDialog):
         # Mostrar resultado
         QMessageBox.information(
             self, 
-            "Deletion Complete", 
-            "Game deletion process has completed. Check the logs for details."
+            tr("GameDeletionDialog", "Deletion Complete"), 
+            tr("GameDeletionDialog", "Game deletion process has completed. Check the logs for details.")
         )
         
         # Recarregar lista e resetar UI (forçar refresh após deleção)

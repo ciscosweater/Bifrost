@@ -22,6 +22,13 @@ from utils.settings import (
     set_font_setting
 )
 
+# Import i18n
+try:
+    from utils.i18n import tr
+except (ImportError, ModuleNotFoundError):
+    def tr(context, text):
+        return text
+
 logger = logging.getLogger(__name__)
 
 class ImageFetcher(QObject):
@@ -111,7 +118,7 @@ class SettingsDialog(ModernDialog):
     
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Settings")
+        self.setWindowTitle(tr("EnhancedDialogs", "Settings"))
         self.setFixedSize(500, 400)
         self.settings = get_settings()
         self._original_settings = {}
@@ -127,7 +134,7 @@ class SettingsDialog(ModernDialog):
         main_layout.setContentsMargins(Spacing.MD, Spacing.MD, Spacing.MD, Spacing.MD)
         
         # Title
-        title = AnimatedLabel("Application Settings")
+        title = AnimatedLabel(tr("EnhancedDialogs", "Application Settings"))
         from .theme import theme
         title.setStyleSheet(f"{Typography.get_font_style(Typography.H1_SIZE, Typography.WEIGHT_BOLD)}; color: {theme.colors.TEXT_ACCENT};")
         main_layout.addWidget(title)
@@ -158,14 +165,14 @@ class SettingsDialog(ModernDialog):
         sls_frame = ModernFrame()
         sls_layout = QVBoxLayout(sls_frame)
         
-        sls_title = QLabel("SLSsteam Integration")
+        sls_title = QLabel(tr("EnhancedDialogs", "SLSsteam Integration"))
         from .theme import theme
         sls_title.setStyleSheet(f"{Typography.get_font_style(Typography.H3_SIZE, Typography.WEIGHT_BOLD)}; color: {theme.colors.TEXT_ACCENT};")
         sls_layout.addWidget(sls_title)
         
-        self.slssteam_mode_checkbox = CustomCheckBox("SLSsteam Mode")
+        self.slssteam_mode_checkbox = CustomCheckBox(tr("EnhancedDialogs", "SLSsteam Mode"))
         self.slssteam_mode_checkbox.setChecked(self.settings.value("slssteam_mode", True, type=bool))
-        self.slssteam_mode_checkbox.setToolTip("Enable SLSsteam mode to automatically select Steam library folders as destination.")
+        self.slssteam_mode_checkbox.setToolTip(tr("EnhancedDialogs", "Enable SLSsteam mode to automatically select Steam library folders as destination."))
         sls_layout.addWidget(self.slssteam_mode_checkbox)
         
         scroll_layout.addWidget(sls_frame)
@@ -174,38 +181,38 @@ class SettingsDialog(ModernDialog):
         schema_frame = ModernFrame()
         schema_layout = QVBoxLayout(schema_frame)
         
-        schema_title = QLabel("SLScheevo Schema Generator")
+        schema_title = QLabel(tr("EnhancedDialogs", "SLScheevo Schema Generator"))
         from .theme import theme
         schema_title.setStyleSheet(f"{Typography.get_font_style(Typography.H3_SIZE, Typography.WEIGHT_BOLD)}; color: {theme.colors.TEXT_ACCENT};")
         schema_layout.addWidget(schema_title)
         
-        self.steam_schema_enabled_checkbox = CustomCheckBox("Enable SLScheevo Schema Generation")
+        self.steam_schema_enabled_checkbox = CustomCheckBox(tr("EnhancedDialogs", "Enable SLScheevo Schema Generation"))
         self.steam_schema_enabled_checkbox.setChecked(bool(is_steam_schema_enabled()))
-        self.steam_schema_enabled_checkbox.setToolTip("Automatically generate achievement schemas using SLScheevo after downloading games.")
+        self.steam_schema_enabled_checkbox.setToolTip(tr("EnhancedDialogs", "Automatically generate achievement schemas using SLScheevo after downloading games."))
         schema_layout.addWidget(self.steam_schema_enabled_checkbox)
         
-        self.auto_setup_checkbox = CustomCheckBox("Auto-Setup SLScheevo Credentials")
+        self.auto_setup_checkbox = CustomCheckBox(tr("EnhancedDialogs", "Auto-Setup SLScheevo Credentials"))
         self.auto_setup_checkbox.setChecked(bool(should_auto_setup_credentials()))
-        self.auto_setup_checkbox.setToolTip("Automatically configure SLScheevo login credentials for schema generation.")
+        self.auto_setup_checkbox.setToolTip(tr("EnhancedDialogs", "Automatically configure SLScheevo login credentials for schema generation."))
         schema_layout.addWidget(self.auto_setup_checkbox)
         
         # SLScheevo username setting
         username_layout = QHBoxLayout()
-        username_label = QLabel("SLScheevo Username:")
+        username_label = QLabel(tr("EnhancedDialogs", "SLScheevo Username:"))
         from .theme import theme
         username_label.setStyleSheet(f"color: {theme.colors.TEXT_SECONDARY}; {Typography.get_font_style(Typography.BODY_SIZE)};")
         username_layout.addWidget(username_label)
         
         self.slscheevo_username_edit = QLineEdit()
-        self.slscheevo_username_edit.setPlaceholderText("Leave empty to auto-detect")
+        self.slscheevo_username_edit.setPlaceholderText(tr("EnhancedDialogs", "Leave empty to auto-detect"))
         self.slscheevo_username_edit.setText(self.settings.value("slscheevo_username", "", type=str))
-        self.slscheevo_username_edit.setToolTip("SLScheevo username for schema generation. Leave empty to auto-detect from saved accounts.")
+        self.slscheevo_username_edit.setToolTip(tr("EnhancedDialogs", "SLScheevo username for schema generation. Leave empty to auto-detect from saved accounts."))
         username_layout.addWidget(self.slscheevo_username_edit)
         
         # Add refresh button to detect usernames
-        refresh_button = HoverButton("Refresh")
+        refresh_button = HoverButton(tr("EnhancedDialogs", "Refresh"))
         refresh_button.setFixedSize(25, 20)
-        refresh_button.setToolTip("Detect available SLScheevo usernames")
+        refresh_button.setToolTip(tr("EnhancedDialogs", "Detect available SLScheevo usernames"))
         refresh_button.clicked.connect(self._detect_slscheevo_usernames)
         username_layout.addWidget(refresh_button)
         
@@ -217,19 +224,19 @@ class SettingsDialog(ModernDialog):
         logging_frame = ModernFrame()
         logging_layout = QVBoxLayout(logging_frame)
         
-        logging_title = QLabel("Logging Configuration")
+        logging_title = QLabel(tr("EnhancedDialogs", "Logging Configuration"))
         from .theme import theme
         logging_title.setStyleSheet(f"{Typography.get_font_style(Typography.H3_SIZE, Typography.WEIGHT_BOLD)}; color: {theme.colors.TEXT_ACCENT};")
         logging_layout.addWidget(logging_title)
         
-        self.simple_mode_checkbox = CustomCheckBox("Simplified Log Format")
+        self.simple_mode_checkbox = CustomCheckBox(tr("EnhancedDialogs", "Simplified Log Format"))
         self.simple_mode_checkbox.setChecked(bool(get_logging_setting("simple_mode", False)))
-        self.simple_mode_checkbox.setToolTip("Use simplified format: 'LEVEL: message' instead of full timestamp and module info")
+        self.simple_mode_checkbox.setToolTip(tr("EnhancedDialogs", "Use simplified format: 'LEVEL: message' instead of full timestamp and module info"))
         logging_layout.addWidget(self.simple_mode_checkbox)
         
         # Log level setting
         level_layout = QHBoxLayout()
-        level_label = QLabel("Log Level:")
+        level_label = QLabel(tr("EnhancedDialogs", "Log Level:"))
         from .theme import theme
         level_label.setStyleSheet(f"color: {theme.colors.TEXT_SECONDARY}; {Typography.get_font_style(Typography.BODY_SIZE)};")
         level_layout.addWidget(level_label)
@@ -240,13 +247,13 @@ class SettingsDialog(ModernDialog):
         index = self.log_level_combo.findText(current_level.upper())
         if index >= 0:
             self.log_level_combo.setCurrentIndex(index)
-        self.log_level_combo.setToolTip("Minimum log level to display (DEBUG shows everything, CRITICAL shows only errors)")
+        self.log_level_combo.setToolTip(tr("EnhancedDialogs", "Minimum log level to display (DEBUG shows everything, CRITICAL shows only errors)"))
         level_layout.addWidget(self.log_level_combo)
         
         logging_layout.addLayout(level_layout)
         
         # Info label
-        info_label = QLabel("File 'app.log' always saves complete DEBUG logs")
+        info_label = QLabel(tr("EnhancedDialogs", "File 'app.log' always saves complete DEBUG logs"))
         from .theme import theme
         info_label.setStyleSheet(f"color: {theme.colors.TEXT_DISABLED}; {Typography.get_font_style(Typography.CAPTION_SIZE)}; font-style: italic;")
         info_label.setWordWrap(True)
@@ -258,14 +265,14 @@ class SettingsDialog(ModernDialog):
         font_frame = ModernFrame()
         font_layout = QVBoxLayout(font_frame)
         
-        font_title = QLabel("Font Settings")
+        font_title = QLabel(tr("EnhancedDialogs", "Font Settings"))
         from .theme import theme
         font_title.setStyleSheet(f"{Typography.get_font_style(Typography.H3_SIZE, Typography.WEIGHT_BOLD)}; color: {theme.colors.TEXT_ACCENT};")
         font_layout.addWidget(font_title)
         
         # Font selection
         font_selection_layout = QHBoxLayout()
-        font_label = QLabel("Application Font:")
+        font_label = QLabel(tr("EnhancedDialogs", "Application Font:"))
         font_label.setStyleSheet(f"color: {theme.colors.TEXT_SECONDARY}; {Typography.get_font_style(Typography.BODY_SIZE)};")
         font_selection_layout.addWidget(font_label)
         
@@ -279,31 +286,79 @@ class SettingsDialog(ModernDialog):
             self.font_combo.setCurrentIndex(1)
         else:
             self.font_combo.setCurrentIndex(0)
-        self.font_combo.setToolTip("Select the font to use throughout the application")
+        self.font_combo.setToolTip(tr("EnhancedDialogs", "Select font to use throughout the application"))
         font_selection_layout.addWidget(self.font_combo)
         
         font_layout.addLayout(font_selection_layout)
         
         # Info label
-        font_info_label = QLabel("Requires application restart to take effect")
+        font_info_label = QLabel(tr("EnhancedDialogs", "Requires application restart to take effect"))
         font_info_label.setStyleSheet(f"color: {theme.colors.TEXT_DISABLED}; {Typography.get_font_style(Typography.CAPTION_SIZE)}; font-style: italic;")
         font_layout.addWidget(font_info_label)
         
         scroll_layout.addWidget(font_frame)
         
+        # Language Settings Section
+        language_frame = ModernFrame()
+        language_layout = QVBoxLayout(language_frame)
+        
+        language_title = QLabel(tr("EnhancedDialogs", "Language Settings"))
+        from .theme import theme
+        language_title.setStyleSheet(f"{Typography.get_font_style(Typography.H3_SIZE, Typography.WEIGHT_BOLD)}; color: {theme.colors.TEXT_ACCENT};")
+        language_layout.addWidget(language_title)
+        
+        # Language selection
+        language_selection_layout = QHBoxLayout()
+        language_label = QLabel(tr("EnhancedDialogs", "Application Language:"))
+        language_label.setStyleSheet(f"color: {theme.colors.TEXT_SECONDARY}; {Typography.get_font_style(Typography.BODY_SIZE)};")
+        language_selection_layout.addWidget(language_label)
+        
+        self.language_combo = QComboBox()
+        self.language_combo.addItems([
+            "English",
+            "Português (Brasil)",
+            "Español",
+            "Français"
+        ])
+        
+        # Map language codes to indices
+        self.language_codes = ["en", "pt_BR", "es", "fr"]
+        
+        # Set current language from settings
+        current_language = self.settings.value("language", "en", type=str)
+        
+        # Find index for current language
+        try:
+            current_index = self.language_codes.index(current_language)
+            self.language_combo.setCurrentIndex(current_index)
+        except ValueError:
+            self.language_combo.setCurrentIndex(0)  # Default to English
+        
+        self.language_combo.setToolTip(tr("EnhancedDialogs", "Select application language (requires restart)"))
+        language_selection_layout.addWidget(self.language_combo)
+        
+        language_layout.addLayout(language_selection_layout)
+        
+        # Info label
+        language_info_label = QLabel(tr("EnhancedDialogs", "Requires application restart to take effect"))
+        language_info_label.setStyleSheet(f"color: {theme.colors.TEXT_DISABLED}; {Typography.get_font_style(Typography.CAPTION_SIZE)}; font-style: italic;")
+        language_layout.addWidget(language_info_label)
+        
+        scroll_layout.addWidget(language_frame)
+        
         # DRM Removal Section
         drm_frame = ModernFrame()
         drm_layout = QVBoxLayout(drm_frame)
         
-        drm_title = QLabel("DRM Removal")
+        drm_title = QLabel(tr("EnhancedDialogs", "DRM Removal"))
         from .theme import theme
         drm_title.setStyleSheet(f"{Typography.get_font_style(Typography.H3_SIZE, Typography.WEIGHT_BOLD)}; color: {theme.colors.TEXT_ACCENT};")
         drm_layout.addWidget(drm_title)
         
-        self.steamless_enabled_checkbox = CustomCheckBox("Enable Steamless DRM Removal")
+        self.steamless_enabled_checkbox = CustomCheckBox(tr("EnhancedDialogs", "Enable Steamless DRM Removal"))
         is_steamless_enabled = self.settings.value("steamless_enabled", True, type=bool)
         self.steamless_enabled_checkbox.setChecked(is_steamless_enabled)
-        self.steamless_enabled_checkbox.setToolTip("Automatically remove Steam DRM from downloaded executables after download.")
+        self.steamless_enabled_checkbox.setToolTip(tr("EnhancedDialogs", "Automatically remove Steam DRM from downloaded executables after download."))
         drm_layout.addWidget(self.steamless_enabled_checkbox)
         
         scroll_layout.addWidget(drm_frame)
@@ -314,17 +369,17 @@ class SettingsDialog(ModernDialog):
         # Modern buttons
         button_layout = QHBoxLayout()
         
-        help_button = HoverButton("Help (F1)")
+        help_button = HoverButton(tr("EnhancedDialogs", "Help (F1)"))
         help_button.clicked.connect(self._show_help)
         button_layout.addWidget(help_button)
         
         button_layout.addStretch()
         
-        cancel_button = HoverButton("Cancel")
+        cancel_button = HoverButton(tr("EnhancedDialogs", "Cancel"))
         cancel_button.clicked.connect(self.reject)
         button_layout.addWidget(cancel_button)
         
-        save_button = HoverButton("Save Settings")
+        save_button = HoverButton(tr("EnhancedDialogs", "Save Settings"))
         save_button.clicked.connect(self.accept)
         button_layout.addWidget(save_button)
         
@@ -356,30 +411,30 @@ class SettingsDialog(ModernDialog):
             slscheevo_dir = os.path.join(current_dir, "slscheevo_build")
             
             if not os.path.exists(slscheevo_dir):
-                QMessageBox.warning(self, "SLScheevo Not Found", 
-                                  "SLScheevo directory not found. Please install SLScheevo first.")
+                QMessageBox.warning(self, tr("EnhancedDialogs", "SLScheevo Not Found"), 
+                                  tr("EnhancedDialogs", "SLScheevo directory not found. Please install SLScheevo first."))
                 return
             
             # Get available usernames
             usernames = schema_integration._get_available_slscheevo_usernames(slscheevo_dir)
             
             if not usernames:
-                QMessageBox.information(self, "No Accounts Found", 
-                                      "No SLScheevo accounts found. Please run SLScheevo manually first to set up your Steam login.")
+                QMessageBox.information(self, tr("EnhancedDialogs", "No Accounts Found"), 
+                                      tr("EnhancedDialogs", "No SLScheevo accounts found. Please run SLScheevo manually first to set up your Steam login."))
                 return
             
             # Show selection dialog
             msg = QMessageBox(self)
-            msg.setWindowTitle("Select SLScheevo Account")
-            msg.setText("Available SLScheevo accounts found:")
-            msg.setInformativeText("Choose an account to set as default:")
+            msg.setWindowTitle(tr("EnhancedDialogs", "Select SLScheevo Account"))
+            msg.setText(tr("EnhancedDialogs", "Available SLScheevo accounts found:"))
+            msg.setInformativeText(tr("EnhancedDialogs", "Choose an account to set as default:"))
             
             # Add buttons for each username
             for username in usernames:
                 msg.addButton(username, QMessageBox.ButtonRole.AcceptRole)
             
             # Add cancel button
-            cancel_button = msg.addButton("Cancel", QMessageBox.ButtonRole.RejectRole)
+            cancel_button = msg.addButton(tr("EnhancedDialogs", "Cancel"), QMessageBox.ButtonRole.RejectRole)
             
             msg.exec()
             
@@ -388,12 +443,12 @@ class SettingsDialog(ModernDialog):
             if clicked_button and clicked_button != cancel_button:
                 selected_username = clicked_button.text()
                 self.slscheevo_username_edit.setText(selected_username)
-                QMessageBox.information(self, "Username Set", 
-                                      f"SLScheevo username set to: {selected_username}")
+                QMessageBox.information(self, tr("EnhancedDialogs", "Username Set"), 
+                                      tr("EnhancedDialogs", "SLScheevo username set to: {username}").format(username=selected_username))
             
         except Exception as e:
             logger.error(f"Error detecting SLScheevo usernames: {e}")
-            QMessageBox.critical(self, "Error", f"Failed to detect SLScheevo usernames: {e}")
+            QMessageBox.critical(self, tr("EnhancedDialogs", "Error"), tr("EnhancedDialogs", "Failed to detect SLScheevo usernames: {e}").format(e=e))
 
     def _show_help(self):
         """Show settings help dialog."""
@@ -429,7 +484,7 @@ class SettingsDialog(ModernDialog):
   Ctrl+S - Open Settings
   Ctrl+F - Font Settings
         """
-        QMessageBox.information(self, "Settings Help", help_text.strip())
+        QMessageBox.information(self, tr("EnhancedDialogs", "Settings Help"), help_text.strip())
 
     def accept(self):
         """Save settings with enhanced feedback."""
@@ -449,6 +504,10 @@ class SettingsDialog(ModernDialog):
             current_values['selected_font'] = "MotivaSansRegular"
         else:
             current_values['selected_font'] = "TrixieCyrG-Plain Regular"
+        
+        # Get selected language
+        language_index = self.language_combo.currentIndex()
+        current_values['language'] = self.language_codes[language_index]
         
         # Check for changes that require restart
         restart_required = False
@@ -491,6 +550,10 @@ class SettingsDialog(ModernDialog):
         set_font_setting("selected_font", current_values['selected_font'])
         logger.info(f"Font setting updated: selected_font={current_values['selected_font']}")
         
+        # Save language setting
+        self.settings.setValue("language", current_values['language'])
+        logger.info(f"Language setting updated: language={current_values['language']}")
+        
         # Apply logging changes immediately
         from utils.logger import update_logging_mode
         update_logging_mode()
@@ -502,10 +565,10 @@ class SettingsDialog(ModernDialog):
             if restart_required:
                 reply = QMessageBox.question(
                     self,
-                    "Restart Application",
-                    f"The following settings were changed:\n\n" + 
-                    "\n".join([f"• {change}" for change in changes_made]) + 
-                    "\n\nApplication restart is required to apply the changes.\nDo you want to restart now?",
+                    tr("EnhancedDialogs", "Restart Application"),
+                    tr("EnhancedDialogs", "The following settings were changed:\n\n{changes}\n\nApplication restart is required to apply the changes.\nDo you want to restart now?").format(
+                        changes="\n".join([f"• {change}" for change in changes_made])
+                    ),
                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                     QMessageBox.StandardButton.Yes
                 )
@@ -522,10 +585,10 @@ class SettingsDialog(ModernDialog):
             else:
                 QMessageBox.information(
                     self,
-                    "Settings Saved",
-                    f"The following settings were changed:\n\n" + 
-                    "\n".join([f"• {change}" for change in changes_made]) +
-                    "\n\nChanges have been applied successfully!"
+                    tr("EnhancedDialogs", "Settings Saved"),
+                    tr("EnhancedDialogs", "The following settings were changed:\n\n{changes}\n\nChanges have been applied successfully!").format(
+                        changes="\n".join([f"• {change}" for change in changes_made])
+                    )
                 )
         
         super().accept()
@@ -537,7 +600,7 @@ class DepotSelectionDialog(ModernDialog):
     
     def __init__(self, app_id, depots, depot_sizes=None, parent=None, total_game_size=0):
         super().__init__(parent)
-        self.setWindowTitle("Select Depots to Download")
+        self.setWindowTitle(tr("EnhancedDialogs", "Select Depots to Download"))
         self.depots = depots
         self.depot_sizes = depot_sizes or {}
         self.total_game_size = total_game_size
@@ -556,7 +619,7 @@ class DepotSelectionDialog(ModernDialog):
         main_layout.setContentsMargins(Spacing.MD, Spacing.MD, Spacing.MD, Spacing.MD)
         
         # Header with image
-        self.header_label = QLabel("Loading header image...")
+        self.header_label = QLabel(tr("EnhancedDialogs", "Loading header image..."))
         self.header_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.header_label.setMinimumHeight(215)
         self.header_label.setMaximumHeight(215)
@@ -579,9 +642,9 @@ class DepotSelectionDialog(ModernDialog):
             size_mb = self.total_game_size / (1024 ** 2)
             
             if size_gb >= 1:
-                size_text = f"Total Size: {size_gb:.2f} GB"
+                size_text = tr("EnhancedDialogs", "Total Size: {size:.2f} GB").format(size=size_gb)
             else:
-                size_text = f"Total Size: {size_mb:.0f} MB"
+                size_text = tr("EnhancedDialogs", "Total Size: {size:.0f} MB").format(size=size_mb)
             
             self.size_label = QLabel(size_text)
             self.size_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -601,11 +664,11 @@ class DepotSelectionDialog(ModernDialog):
         button_layout = QHBoxLayout()
         button_layout.addStretch()
         
-        select_all_btn = HoverButton("Select All")
+        select_all_btn = HoverButton(tr("EnhancedDialogs", "Select All"))
         select_all_btn.clicked.connect(self._select_all)
         button_layout.addWidget(select_all_btn)
         
-        select_none_btn = HoverButton("Select None")
+        select_none_btn = HoverButton(tr("EnhancedDialogs", "Select None"))
         select_none_btn.clicked.connect(self._select_none)
         button_layout.addWidget(select_none_btn)
         
@@ -675,7 +738,7 @@ class DepotSelectionDialog(ModernDialog):
         main_layout.addWidget(scroll_area)
         
         # Status label
-        self.status_label = QLabel(f"Found {len(self.depots)} depots")
+        self.status_label = QLabel(tr("EnhancedDialogs", "Found {count} depots").format(count=len(self.depots)))
         from .theme import theme
         self.status_label.setStyleSheet(f"color: {theme.colors.TEXT_SECONDARY}; font-style: italic;")
         main_layout.addWidget(self.status_label)
@@ -684,11 +747,11 @@ class DepotSelectionDialog(ModernDialog):
         button_layout = QHBoxLayout()
         button_layout.addStretch()
         
-        cancel_button = HoverButton("Cancel")
+        cancel_button = HoverButton(tr("EnhancedDialogs", "Cancel"))
         cancel_button.clicked.connect(self.reject)
         button_layout.addWidget(cancel_button)
         
-        download_button = HoverButton("Download Selected")
+        download_button = HoverButton(tr("EnhancedDialogs", "Download Selected"))
         download_button.clicked.connect(self.accept)
         button_layout.addWidget(download_button)
         
@@ -748,7 +811,7 @@ class DepotSelectionDialog(ModernDialog):
     def on_image_failed(self, app_id, error_message):
         """Slot to handle image fetch failure."""
         logger.warning(f"Failed to load image for app {app_id}: {error_message}")
-        self.header_label.setText("Header image not available.")
+        self.header_label.setText(tr("EnhancedDialogs", "Header image not available."))
         self.original_pixmap = None
     
     def on_image_fetched(self, image_data):
@@ -785,7 +848,7 @@ class SteamLibraryDialog(ModernDialog):
     """
     def __init__(self, library_paths, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Select Steam Library")
+        self.setWindowTitle(tr("EnhancedDialogs", "Select Steam Library"))
         self.selected_path = None
         self.setMinimumWidth(500)
         self._setup_ui(library_paths)
@@ -797,7 +860,7 @@ class SteamLibraryDialog(ModernDialog):
         main_layout.setContentsMargins(Spacing.MD, Spacing.MD, Spacing.MD, Spacing.MD)
         
         # Title
-        title = AnimatedLabel("Select Steam Library")
+        title = AnimatedLabel(tr("EnhancedDialogs", "Select Steam Library"))
         from .theme import theme
         title.setStyleSheet(f"{Typography.get_font_style(Typography.H2_SIZE, Typography.WEIGHT_BOLD)}; color: {theme.colors.TEXT_ACCENT};")
         main_layout.addWidget(title)
@@ -815,11 +878,11 @@ class SteamLibraryDialog(ModernDialog):
         button_layout = QHBoxLayout()
         button_layout.addStretch()
         
-        cancel_button = HoverButton("Cancel")
+        cancel_button = HoverButton(tr("EnhancedDialogs", "Cancel"))
         cancel_button.clicked.connect(self.reject)
         button_layout.addWidget(cancel_button)
         
-        select_button = HoverButton("Select")
+        select_button = HoverButton(tr("EnhancedDialogs", "Select"))
         select_button.clicked.connect(self.accept)
         button_layout.addWidget(select_button)
         
@@ -832,7 +895,7 @@ class SteamLibraryDialog(ModernDialog):
             logger.info(f"User selected Steam library: {self.selected_path}")
             super().accept()
         else:
-            QMessageBox.warning(self, "No Selection", "Please select a library folder.")
+            QMessageBox.warning(self, tr("EnhancedDialogs", "No Selection"), tr("EnhancedDialogs", "Please select a library folder."))
 
     def get_selected_path(self):
         return self.selected_path
@@ -844,7 +907,7 @@ class DlcSelectionDialog(ModernDialog):
     """
     def __init__(self, dlcs, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Select DLC for SLSsteam Wrapper")
+        self.setWindowTitle(tr("EnhancedDialogs", "Select DLC for SLSsteam Wrapper"))
         self.dlcs = dlcs
         self.setMinimumWidth(600)
         self.setMinimumHeight(400)
@@ -857,7 +920,7 @@ class DlcSelectionDialog(ModernDialog):
         main_layout.setContentsMargins(Spacing.MD, Spacing.MD, Spacing.MD, Spacing.MD)
         
         # Title
-        title = AnimatedLabel("Select DLC")
+        title = AnimatedLabel(tr("EnhancedDialogs", "Select DLC"))
         from .theme import theme
         title.setStyleSheet(f"{Typography.get_font_style(Typography.H2_SIZE, Typography.WEIGHT_BOLD)}; color: {theme.colors.TEXT_ACCENT};")
         main_layout.addWidget(title)
@@ -866,11 +929,11 @@ class DlcSelectionDialog(ModernDialog):
         button_layout = QHBoxLayout()
         button_layout.addStretch()
         
-        select_all_btn = HoverButton("Select All")
+        select_all_btn = HoverButton(tr("EnhancedDialogs", "Select All"))
         select_all_btn.clicked.connect(self._select_all)
         button_layout.addWidget(select_all_btn)
         
-        select_none_btn = HoverButton("Select None")
+        select_none_btn = HoverButton(tr("EnhancedDialogs", "Select None"))
         select_none_btn.clicked.connect(self._select_none)
         button_layout.addWidget(select_none_btn)
         
@@ -940,7 +1003,7 @@ class DlcSelectionDialog(ModernDialog):
         main_layout.addWidget(scroll_area)
         
         # Status label
-        self.status_label = QLabel(f"Found {len(self.dlcs)} DLCs")
+        self.status_label = QLabel(tr("EnhancedDialogs", "Found {count} DLCs").format(count=len(self.dlcs)))
         from .theme import theme
         self.status_label.setStyleSheet(f"color: {theme.colors.TEXT_SECONDARY}; font-style: italic;")
         main_layout.addWidget(self.status_label)
@@ -949,11 +1012,11 @@ class DlcSelectionDialog(ModernDialog):
         button_layout = QHBoxLayout()
         button_layout.addStretch()
         
-        cancel_button = HoverButton("Cancel")
+        cancel_button = HoverButton(tr("EnhancedDialogs", "Cancel"))
         cancel_button.clicked.connect(self.reject)
         button_layout.addWidget(cancel_button)
         
-        add_button = HoverButton("Add Selected")
+        add_button = HoverButton(tr("EnhancedDialogs", "Add Selected"))
         add_button.clicked.connect(self.accept)
         button_layout.addWidget(add_button)
         

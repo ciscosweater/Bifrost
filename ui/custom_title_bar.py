@@ -1,4 +1,5 @@
 import logging
+import logging
 import re
 
 from PyQt6.QtCore import QSize, Qt
@@ -17,6 +18,13 @@ from PyQt6.QtWidgets import (
 
 from .assets import GEAR_SVG, POWER_SVG
 from .theme import theme, Typography, Spacing, BorderRadius
+
+# Import i18n
+try:
+    from utils.i18n import tr
+except (ImportError, ModuleNotFoundError):
+    def tr(context, text):
+        return text
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +71,7 @@ class CustomTitleBar(QFrame):
             )
         left_layout.addWidget(self.slssteam_status)
 
-        self.navi_label = QLabel("SLSsteam")
+        self.navi_label = QLabel(tr("CustomTitleBar", "SLSsteam"))
         from .theme import theme
         
         self.navi_label.setStyleSheet(f"""
@@ -86,36 +94,36 @@ class CustomTitleBar(QFrame):
 
         # Add select file button
         self.select_file_button = self._create_text_button(
-            "ZIP", getattr(parent, "_select_zip_file", lambda: None), "Select ZIP File"
+            "ZIP", getattr(parent, "_select_zip_file", lambda: None), tr("CustomTitleBar", "Select ZIP File")
         )
         right_layout.addWidget(self.select_file_button)
 
         # Add game manager button
         self.game_manager_button = self._create_text_button(
-            "UN", getattr(parent, "_open_game_manager", lambda: None), "Uninstall Games"
+            "UN", getattr(parent, "_open_game_manager", lambda: None), tr("CustomTitleBar", "Uninstall Games")
         )
         right_layout.addWidget(self.game_manager_button)
 
         # Add backup button
         self.backup_button = self._create_text_button(
-            "BK", getattr(parent, "_open_backup_dialog", lambda: None), "Backup/Restore Stats"
+            "BK", getattr(parent, "_open_backup_dialog", lambda: None), tr("CustomTitleBar", "Backup/Restore Stats")
         )
         right_layout.addWidget(self.backup_button)
 
         self.settings_button = self._create_svg_button(
-            GEAR_SVG, getattr(parent, "open_settings", lambda: None), "Open Settings"
+            GEAR_SVG, getattr(parent, "open_settings", lambda: None), tr("CustomTitleBar", "Open Settings")
         )
         right_layout.addWidget(self.settings_button)
 
         self.close_button = self._create_svg_button(
-            POWER_SVG, getattr(parent, "close", lambda: None), "Close Application"
+            POWER_SVG, getattr(parent, "close", lambda: None), tr("CustomTitleBar", "Close Application")
         )
         right_layout.addWidget(self.close_button)
 
         # Main layout assembly
         layout.addWidget(left_widget)
         layout.addStretch(1)
-        self.title_label = QLabel("ACCELA")
+        self.title_label = QLabel(tr("CustomTitleBar", "ACCELA"))
         from .theme import theme
 
         self.title_label.setStyleSheet(f"""
@@ -248,7 +256,7 @@ class CustomTitleBar(QFrame):
             return button
         except Exception as e:
             logger.error(f"Failed to create SVG button: {e}", exc_info=True)
-            fallback_button = QPushButton("X")
+            fallback_button = QPushButton(tr("CustomTitleBar", "✕"))
             fallback_button.setFixedSize(22, 22)
             fallback_button.clicked.connect(on_click)
             return fallback_button
@@ -286,7 +294,7 @@ class CustomTitleBar(QFrame):
             return button
         except Exception as e:
             logger.error(f"Failed to create text button: {e}", exc_info=True)
-            fallback_button = QPushButton("?")
+            fallback_button = QPushButton(tr("CustomTitleBar", "?"))
             fallback_button.setFixedSize(22, 22)
             fallback_button.clicked.connect(on_click)
             return fallback_button

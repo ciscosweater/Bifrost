@@ -19,6 +19,13 @@ if project_root not in sys.path:
 from ui.interactions import ModernFrame, HoverButton, AnimatedLabel
 from ui.theme import theme, BorderRadius, Spacing, Typography
 
+# Import i18n
+try:
+    from utils.i18n import tr
+except (ImportError, ModuleNotFoundError):
+    def tr(context, text):
+        return text
+
 # Import BackupManager after path setup  
 import importlib.util
 backup_manager_path = os.path.join(project_root, "core", "backup_manager.py")
@@ -48,32 +55,32 @@ class BackupWorker(QThread):
     def run(self):
         try:
             if self.operation == "create":
-                self.progress.emit("Creating backup...")
+                self.progress.emit(tr("BackupDialog", "Creating backup..."))
                 backup_path = self.backup_manager.create_backup(self.kwargs.get('backup_name'))
                 if backup_path:
-                    self.finished.emit(True, f"Backup created: {os.path.basename(backup_path)}")
+                    self.finished.emit(True, tr("BackupDialog", "Backup created: {filename}").format(filename=os.path.basename(backup_path)))
                 else:
-                    self.finished.emit(False, "Failed to create backup")
+                    self.finished.emit(False, tr("BackupDialog", "Failed to create backup"))
                     
             elif self.operation == "restore":
-                self.progress.emit("Restoring backup...")
+                self.progress.emit(tr("BackupDialog", "Restoring backup..."))
                 success = self.backup_manager.restore_backup(self.kwargs['backup_path'])
                 if success:
-                    self.finished.emit(True, "Backup restored successfully")
+                    self.finished.emit(True, tr("BackupDialog", "Backup restored successfully"))
                 else:
-                    self.finished.emit(False, "Failed to restore backup")
+                    self.finished.emit(False, tr("BackupDialog", "Failed to restore backup"))
                     
             elif self.operation == "delete":
-                self.progress.emit("Deleting backup...")
+                self.progress.emit(tr("BackupDialog", "Deleting backup..."))
                 success = self.backup_manager.delete_backup(self.kwargs['backup_path'])
                 if success:
-                    self.finished.emit(True, "Backup deleted successfully")
+                    self.finished.emit(True, tr("BackupDialog", "Backup deleted successfully"))
                 else:
-                    self.finished.emit(False, "Failed to delete backup")
+                    self.finished.emit(False, tr("BackupDialog", "Failed to delete backup"))
                     
         except Exception as e:
             logger.error(f"Backup worker error: {e}")
-            self.finished.emit(False, f"Error: {str(e)}")
+            self.finished.emit(False, tr("BackupDialog", "Error: {error}").format(error=str(e)))
 
 
 class BackupDialog(QDialog):
@@ -91,7 +98,7 @@ class BackupDialog(QDialog):
         self.refresh_backup_list()
         
     def setup_ui(self):
-        self.setWindowTitle("Backup/Restore Stats")
+        self.setWindowTitle(tr("BackupDialog", "Backup/Restore Stats"))
         self.setFixedSize(900, 650)
         self.setModal(True)
         
@@ -101,7 +108,7 @@ class BackupDialog(QDialog):
         main_layout.setSpacing(Spacing.MD)
         
         # Title
-        title_label = QLabel("Steam Stats Backup Manager")
+        title_label = QLabel(tr("BackupDialog", "Steam Stats Backup Manager"))
         title_label.setStyleSheet(f"""
             QLabel {{
                 color: {theme.colors.TEXT_ACCENT};
@@ -155,7 +162,7 @@ class BackupDialog(QDialog):
         # Steam stats path
         stats_path = self.backup_manager.get_steam_stats_path()
         if stats_path:
-            path_label = QLabel(f"Stats Path: {stats_path}")
+            path_label = QLabel(tr("BackupDialog", "Stats Path: {path}").format(path=stats_path))
             path_label.setStyleSheet(f"""
                 QLabel {{
                     color: {theme.colors.TEXT_SECONDARY};
@@ -167,7 +174,7 @@ class BackupDialog(QDialog):
             
             # Count files
             files_count = len(self.backup_manager.list_stats_files())
-            count_label = QLabel(f"Stats Files: {files_count}")
+            count_label = QLabel(tr("BackupDialog", "Stats Files: {count}").format(count=files_count))
             count_label.setStyleSheet(f"""
                 QLabel {{
                     color: {theme.colors.TEXT_SECONDARY};
@@ -177,7 +184,7 @@ class BackupDialog(QDialog):
             """)
             status_layout.addWidget(count_label)
         else:
-            error_label = QLabel("❌ Steam installation not found or stats directory missing")
+            error_label = QLabel(tr("BackupDialog", "❌ Steam installation not found or stats directory missing"))
             error_label.setStyleSheet(f"""
                 QLabel {{
                     color: {theme.colors.ERROR};
@@ -200,7 +207,7 @@ class BackupDialog(QDialog):
             panel = None
         
         # Title
-        list_title = QLabel("Available Backups")
+        list_title = QLabel(tr("BackupDialog", "Available Backups"))
         list_title.setStyleSheet(f"""
             QLabel {{
                 color: {theme.colors.TEXT_PRIMARY};
@@ -238,7 +245,7 @@ class BackupDialog(QDialog):
         layout.addWidget(self.backup_list)
         
         # Refresh button
-        refresh_btn = HoverButton("Refresh List")
+        refresh_btn = HoverButton(tr("BackupDialog", "Refresh List"))
         refresh_btn.clicked.connect(self.refresh_backup_list)
         layout.addWidget(refresh_btn)
         
@@ -250,7 +257,7 @@ class BackupDialog(QDialog):
         layout = QVBoxLayout(panel)
         
         # Title
-        actions_title = QLabel("Backup Information")
+        actions_title = QLabel(tr("BackupDialog", "Backup Information"))
         actions_title.setStyleSheet(f"""
             QLabel {{
                 color: {theme.colors.TEXT_PRIMARY};
@@ -275,7 +282,7 @@ class BackupDialog(QDialog):
                 padding: {Spacing.SM}px;
             }}
         """)
-        self.backup_info_text.setText("Select a backup to view details")
+        self.backup_info_text.setText(tr("BackupDialog", "Select a backup to view details"))
         layout.addWidget(self.backup_info_text)
         
         layout.addStretch()
@@ -325,20 +332,20 @@ class BackupDialog(QDialog):
         # Left side - backup actions
         actions_layout = QHBoxLayout()
         
-        self.create_backup_btn = HoverButton("Create New Backup")
+        self.create_backup_btn = HoverButton(tr("BackupDialog", "Create New Backup"))
         self.create_backup_btn.clicked.connect(self.create_backup)
         self.create_backup_btn.setMaximumWidth(150)
         actions_layout.addWidget(self.create_backup_btn)
         
         actions_layout.addSpacing(Spacing.MD)
         
-        self.restore_backup_btn = HoverButton("Restore")
+        self.restore_backup_btn = HoverButton(tr("BackupDialog", "Restore"))
         self.restore_backup_btn.clicked.connect(self.restore_backup)
         self.restore_backup_btn.setEnabled(False)
         self.restore_backup_btn.setMaximumWidth(80)
         actions_layout.addWidget(self.restore_backup_btn)
         
-        self.delete_backup_btn = HoverButton("Delete")
+        self.delete_backup_btn = HoverButton(tr("BackupDialog", "Delete"))
         self.delete_backup_btn.clicked.connect(self.delete_backup)
         self.delete_backup_btn.setEnabled(False)
         self.delete_backup_btn.setMaximumWidth(80)
@@ -348,7 +355,7 @@ class BackupDialog(QDialog):
         button_layout.addStretch()
         
         # Right side - close button
-        close_btn = HoverButton("Close")
+        close_btn = HoverButton(tr("BackupDialog", "Close"))
         close_btn.clicked.connect(self.close)
         button_layout.addWidget(close_btn)
         
@@ -361,7 +368,7 @@ class BackupDialog(QDialog):
             backups = self.backup_manager.list_backups()
             
             if not backups:
-                item = QListWidgetItem("No backups found")
+                item = QListWidgetItem(tr("BackupDialog", "No backups found"))
                 item.setData(Qt.ItemDataRole.UserRole, None)
                 self.backup_list.addItem(item)
                 return
@@ -378,7 +385,7 @@ class BackupDialog(QDialog):
                 
         except Exception as e:
             logger.error(f"Error refreshing backup list: {e}")
-            QMessageBox.critical(self, "Error", f"Failed to refresh backup list: {e}")
+            QMessageBox.critical(self, tr("BackupDialog", "Error"), tr("BackupDialog", "Failed to refresh backup list: {error}").format(error=e))
     
     def on_backup_selected(self):
         """Handle backup selection."""
@@ -393,9 +400,9 @@ class BackupDialog(QDialog):
             if backup:
                 self.show_backup_info(backup)
             else:
-                self.backup_info_text.setText("No backup selected")
+                self.backup_info_text.setText(tr("BackupDialog", "No backup selected"))
         else:
-            self.backup_info_text.setText("Select a backup to view details")
+            self.backup_info_text.setText(tr("BackupDialog", "Select a backup to view details"))
     
     def show_backup_info(self, backup: Dict[str, Any]):
         """Show backup information."""
@@ -403,82 +410,84 @@ class BackupDialog(QDialog):
             info = self.backup_manager.get_backup_info(backup['path'])
             if info:
                 # Header information
-                info_text = f"Backup Name: {backup['name']}\n"
-                info_text += f"Created: {backup['created_date'].strftime('%Y-%m-%d %H:%M:%S') if backup['created_date'] else 'Unknown'}\n"
-                info_text += f"File Path: {backup['path']}\n\n"
+                info_text = tr("BackupDialog", "Backup Name: {name}\n").format(name=backup['name'])
+                created_date = backup['created_date'].strftime('%Y-%m-%d %H:%M:%S') if backup['created_date'] else tr("BackupDialog", "Unknown")
+                info_text += tr("BackupDialog", "Created: {date}\n").format(date=created_date)
+                info_text += tr("BackupDialog", "File Path: {path}\n\n").format(path=backup['path'])
                 
                 # Games information
-                info_text += "Games Information:\n"
+                info_text += tr("BackupDialog", "Games Information:\n")
                 info_text += "-" * 40 + "\n"
-                info_text += f"Total Games: {len(info.get('games', []))}\n"
-                info_text += f"ACCELA Games: {len(info.get('accela_games', []))}\n"
-                info_text += f"Other Games: {len(info.get('non_accela_games', []))}\n\n"
+                info_text += tr("BackupDialog", "Total Games: {count}\n").format(count=len(info.get('games', [])))
+                info_text += tr("BackupDialog", "ACCELA Games: {count}\n").format(count=len(info.get('accela_games', [])))
+                info_text += tr("BackupDialog", "Other Games: {count}\n\n").format(count=len(info.get('non_accela_games', [])))
                 
                 # List ACCELA games
                 if info.get('accela_games'):
-                    info_text += "ACCELA Games in Backup:\n"
+                    info_text += tr("BackupDialog", "ACCELA Games in Backup:\n")
                     for i, game in enumerate(info['accela_games'], 1):
-                        info_text += f"{i:2d}. {game['name']} (ID: {game['app_id']})\n"
+                        info_text += tr("BackupDialog", "{i:2d}. {name} (ID: {app_id})\n").format(i=i, name=game['name'], app_id=game['app_id'])
                     info_text += "\n"
                 
                 # List non-ACCELA games if any
                 if info.get('non_accela_games'):
-                    info_text += "Other Games in Backup:\n"
+                    info_text += tr("BackupDialog", "Other Games in Backup:\n")
                     for i, game in enumerate(info['non_accela_games'], 1):
-                        info_text += f"{i:2d}. {game['name']} (ID: {game['app_id']})\n"
+                        info_text += tr("BackupDialog", "{i:2d}. {name} (ID: {app_id})\n").format(i=i, name=game['name'], app_id=game['app_id'])
                     info_text += "\n"
                 
                 # Size information
-                info_text += "Size Information:\n"
+                info_text += tr("BackupDialog", "Size Information:\n")
                 info_text += "-" * 40 + "\n"
-                info_text += f"Archive Size: {backup['formatted_size']}\n"
-                info_text += f"Uncompressed Size: {self.backup_manager._format_file_size(info['total_size'])}\n"
+                info_text += tr("BackupDialog", "Archive Size: {size}\n").format(size=backup['formatted_size'])
+                info_text += tr("BackupDialog", "Uncompressed Size: {size}\n").format(size=self.backup_manager._format_file_size(info['total_size']))
                 if 'compressed_size' in info:
-                    info_text += f"Compressed Size: {self.backup_manager._format_file_size(info['compressed_size'])}\n"
+                    info_text += tr("BackupDialog", "Compressed Size: {size}\n").format(size=self.backup_manager._format_file_size(info['compressed_size']))
                     if info['total_size'] > 0:
                         compression_ratio = (1 - info['compressed_size'] / info['total_size']) * 100
-                        info_text += f"Compression Ratio: {compression_ratio:.1f}%\n"
-                info_text += f"Total Files: {info['total_files']}\n\n"
+                        info_text += tr("BackupDialog", "Compression Ratio: {ratio:.1f}%\n").format(ratio=compression_ratio)
+                info_text += tr("BackupDialog", "Total Files: {count}\n\n").format(count=info['total_files'])
                 
                 # File details
-                info_text += "File Details:\n"
+                info_text += tr("BackupDialog", "File Details:\n")
                 info_text += "-" * 40 + "\n"
                 
                 for i, file_info in enumerate(info['files'], 1):
-                    info_text += f"{i:2d}. {file_info['name']}\n"
-                    info_text += f"    Game: {file_info.get('game_name', 'Unknown')}\n"
-                    info_text += f"    Type: {file_info['type']}\n"
-                    info_text += f"    Original Size: {self.backup_manager._format_file_size(file_info['size'])}\n"
+                    info_text += tr("BackupDialog", "{i:2d}. {filename}\n").format(i=i, filename=file_info['name'])
+                    game_name = file_info.get('game_name', tr("BackupDialog", "Unknown"))
+                    info_text += tr("BackupDialog", "    Game: {game}\n").format(game=game_name)
+                    info_text += tr("BackupDialog", "    Type: {type}\n").format(type=file_info['type'])
+                    info_text += tr("BackupDialog", "    Original Size: {size}\n").format(size=self.backup_manager._format_file_size(file_info['size']))
                     if 'compressed_size' in file_info:
-                        info_text += f"    Compressed Size: {self.backup_manager._format_file_size(file_info['compressed_size'])}\n"
+                        info_text += tr("BackupDialog", "    Compressed Size: {size}\n").format(size=self.backup_manager._format_file_size(file_info['compressed_size']))
                         if file_info['size'] > 0:
                             file_compression = (1 - file_info['compressed_size'] / file_info['size']) * 100
-                            info_text += f"    Compression: {file_compression:.1f}%\n"
+                            info_text += tr("BackupDialog", "    Compression: {compression:.1f}%\n").format(compression=file_compression)
                     info_text += "\n"
                 
                 # Additional information
-                info_text += "Additional Information:\n"
+                info_text += tr("BackupDialog", "Additional Information:\n")
                 info_text += "-" * 40 + "\n"
-                info_text += f"Backup Directory: {os.path.dirname(backup['path'])}\n"
+                info_text += tr("BackupDialog", "Backup Directory: {directory}\n").format(directory=os.path.dirname(backup['path']))
                 
                 # File type summary
                 schema_files = [f for f in info['files'] if f['type'] == 'Schema']
                 stats_files = [f for f in info['files'] if f['type'] == 'Stats']
-                info_text += f"Schema Files: {len(schema_files)}\n"
-                info_text += f"Stats Files: {len(stats_files)}\n"
+                info_text += tr("BackupDialog", "Schema Files: {0}\n").format(len(schema_files))
+                info_text += tr("BackupDialog", "Stats Files: {0}\n").format(len(stats_files))
                 
                 self.backup_info_text.setText(info_text)
             else:
-                info_text = f"Backup Name: {backup['name']}\n"
-                info_text += f"Created: {backup['created_date'].strftime('%Y-%m-%d %H:%M:%S') if backup['created_date'] else 'Unknown'}\n"
-                info_text += f"Archive Size: {backup['formatted_size']}\n"
-                info_text += f"File Path: {backup['path']}\n\n"
-                info_text += "Unable to read detailed backup information"
+                info_text = tr("BackupDialog", "Backup Name: {0}\n").format(backup['name'])
+                info_text += tr("BackupDialog", "Created: {0}\n").format(backup['created_date'].strftime('%Y-%m-%d %H:%M:%S') if backup['created_date'] else tr("BackupDialog", "Unknown"))
+                info_text += tr("BackupDialog", "Archive Size: {0}\n").format(backup['formatted_size'])
+                info_text += tr("BackupDialog", "File Path: {0}\n\n").format(backup['path'])
+                info_text += tr("BackupDialog", "Unable to read detailed backup information")
                 self.backup_info_text.setText(info_text)
                 
         except Exception as e:
             logger.error(f"Error showing backup info: {e}")
-            self.backup_info_text.setText(f"Error loading backup info: {e}")
+            self.backup_info_text.setText(tr("BackupDialog", "Error loading backup info: {0}").format(e))
     
     def create_backup(self):
         """Create a new backup."""
@@ -487,13 +496,13 @@ class BackupDialog(QDialog):
         
         # Check if Steam stats path exists
         if not self.backup_manager.get_steam_stats_path():
-            QMessageBox.critical(self, "Error", "Steam stats directory not found. Please ensure Steam is installed and has been run at least once.")
+            QMessageBox.critical(self, tr("BackupDialog", "Error"), tr("BackupDialog", "Steam stats directory not found. Please ensure Steam is installed and has been run at least once."))
             return
         
         # Check if there are files to backup
         files = self.backup_manager.list_stats_files()
         if not files:
-            QMessageBox.warning(self, "Warning", "No stats files found to backup. This is normal if you haven't played any games yet.")
+            QMessageBox.warning(self, tr("BackupDialog", "Warning"), tr("BackupDialog", "No stats files found to backup. This is normal if you haven't played any games yet."))
             return
         
         # Start backup worker
@@ -501,7 +510,7 @@ class BackupDialog(QDialog):
         self.worker.progress.connect(self.on_worker_progress)
         self.worker.finished.connect(self.on_worker_finished)
         
-        self.set_ui_busy(True, "Creating backup...")
+        self.set_ui_busy(True, tr("BackupDialog", "Creating backup..."))
         self.worker.start()
     
     def restore_backup(self):
@@ -520,10 +529,10 @@ class BackupDialog(QDialog):
         # Confirm restore
         reply = QMessageBox.question(
             self, 
-            "Confirm Restore",
-            f"Are you sure you want to restore backup '{backup['name']}'?\n\n"
+            tr("BackupDialog", "Confirm Restore"),
+            tr("BackupDialog", "Are you sure you want to restore backup '{0}'?\n\n"
             "This will replace your current stats files.\n"
-            "A backup will be created automatically before restoring.",
+            "A backup will be created automatically before restoring.").format(backup['name']),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
         )
         
@@ -535,7 +544,7 @@ class BackupDialog(QDialog):
         self.worker.progress.connect(self.on_worker_progress)
         self.worker.finished.connect(self.on_worker_finished)
         
-        self.set_ui_busy(True, "Restoring backup...")
+        self.set_ui_busy(True, tr("BackupDialog", "Restoring backup..."))
         self.worker.start()
     
     def delete_backup(self):
@@ -551,9 +560,9 @@ class BackupDialog(QDialog):
         # Confirm delete
         reply = QMessageBox.question(
             self,
-            "Confirm Delete",
-            f"Are you sure you want to delete backup '{backup['name']}'?\n\n"
-            "This action cannot be undone.",
+            tr("BackupDialog", "Confirm Delete"),
+            tr("BackupDialog", "Are you sure you want to delete backup '{0}'?\n\n"
+            "This action cannot be undone.").format(backup['name']),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
         )
         
@@ -565,7 +574,7 @@ class BackupDialog(QDialog):
         self.worker.progress.connect(self.on_worker_progress)
         self.worker.finished.connect(self.on_worker_finished)
         
-        self.set_ui_busy(True, "Deleting backup...")
+        self.set_ui_busy(True, tr("BackupDialog", "Deleting backup..."))
         self.worker.start()
     
     def on_worker_progress(self, message: str):
@@ -578,10 +587,10 @@ class BackupDialog(QDialog):
         self.set_ui_busy(False)
         
         if success:
-            QMessageBox.information(self, "Success", message)
+            QMessageBox.information(self, tr("BackupDialog", "Success"), message)
             self.refresh_backup_list()
         else:
-            QMessageBox.critical(self, "Error", message)
+            QMessageBox.critical(self, tr("BackupDialog", "Error"), message)
     
     def set_ui_busy(self, busy: bool, message: str = ""):
         """Set UI busy state."""

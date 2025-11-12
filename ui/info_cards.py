@@ -19,6 +19,13 @@ from PyQt6.QtWidgets import (
 
 from ui.theme import BorderRadius, Colors, Spacing, Typography, theme
 
+# Import i18n
+try:
+    from utils.i18n import tr
+except (ImportError, ModuleNotFoundError):
+    def tr(context, text):
+        return text
+
 logger = logging.getLogger(__name__)
 
 
@@ -114,7 +121,7 @@ class AccelaInfoCard(InfoCard):
 
     def __init__(self):
         super().__init__(
-            title="ACCELA", value="v1.1.0", icon_text="🚀", color=Colors.PRIMARY
+            title=tr("InfoCards", "ACCELA"), value="v1.1.0", icon_text="🚀", color=Colors.PRIMARY
         )
 
 
@@ -122,7 +129,7 @@ class GamesStatsCard(InfoCard):
     """Card showing installed games statistics"""
 
     def __init__(self):
-        super().__init__(title="Games", value="0 installed", icon_text="[G]", color=Colors.SUCCESS)
+        super().__init__(title=tr("InfoCards", "Games"), value="0 installed", icon_text="[G]", color=Colors.SUCCESS)
 
         self._setup_stats_timer()
 
@@ -145,9 +152,9 @@ class GamesStatsCard(InfoCard):
             count = len(games) if games else 0
 
             if count > 0:
-                self.update_value(f"{count} installed")
+                self.update_value(f"{count} {tr('InfoCards', 'installed')}")
             else:
-                self.update_value("0 installed")
+                self.update_value(f"0 {tr('InfoCards', 'installed')}")
 
         except Exception as e:
             logger.debug(f"Could not update games stats: {e}")
@@ -159,7 +166,7 @@ class StorageCard(InfoCard):
 
     def __init__(self):
         super().__init__(
-            title="Storage", value="0 GB", icon_text="", color=Colors.SECONDARY
+            title=tr("InfoCards", "Storage"), value="0 GB", icon_text="", color=Colors.SECONDARY
         )
 
         self._setup_storage_timer()
@@ -223,7 +230,7 @@ class StatusCard(InfoCard):
 
     def __init__(self):
         super().__init__(
-            title="Achievements", value="Ready", icon_text="", color=Colors.SUCCESS
+            title=tr("InfoCards", "Achievements"), value=tr("InfoCards", "Ready"), icon_text="", color=Colors.SUCCESS
         )
 
         self._setup_status_timer()
@@ -246,10 +253,10 @@ class StatusCard(InfoCard):
             slscheevo_data_path = os.path.join(os.getcwd(), "slscheevo_build", "data", "saved_logins.encrypted")
             
             if os.path.exists(slscheevo_data_path):
-                self.update_value("Ready")
+                self.update_value(tr("InfoCards", "Ready"))
                 self.color = Colors.SUCCESS
             else:
-                self.update_value("Not Ready")
+                self.update_value(tr("InfoCards", "Not Ready"))
                 self.color = Colors.WARNING
 
         except Exception as e:

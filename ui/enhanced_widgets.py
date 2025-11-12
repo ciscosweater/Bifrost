@@ -3,6 +3,13 @@ from PyQt6.QtWidgets import QProgressBar, QLabel, QFrame
 from PyQt6.QtCore import QTimer, pyqtSignal, Qt
 from ui.theme import theme, Typography, BorderRadius
 
+# Import i18n
+try:
+    from utils.i18n import tr
+except (ImportError, ModuleNotFoundError):
+    def tr(context, text):
+        return text
+
 logger = logging.getLogger(__name__)
 
 class EnhancedProgressBar(QProgressBar):
@@ -42,12 +49,12 @@ class EnhancedProgressBar(QProgressBar):
             chunk_color = theme.colors.ERROR
             border_color = theme.colors.ERROR
             glow_color = theme.colors.ERROR + "40"
-            self.setFormat("CANCELLED")
+            self.setFormat(tr("EnhancedWidgets", "CANCELLED"))
         elif state == "completed":
             chunk_color = theme.colors.SUCCESS
             border_color = theme.colors.SUCCESS
             glow_color = theme.colors.SUCCESS + "40"
-            self.setFormat("COMPLETED - %p%")
+            self.setFormat(tr("EnhancedWidgets", "COMPLETED - %p%"))
         elif state == "downloading":
             chunk_color = theme.colors.PRIMARY
             border_color = theme.colors.PRIMARY

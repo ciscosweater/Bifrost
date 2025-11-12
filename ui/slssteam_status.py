@@ -11,6 +11,13 @@ from ui.interactions import HoverButton, ModernFrame
 from ui.slssteam_setup_dialog import SlssteamSetupDialog
 from .theme import theme, BorderRadius, Typography
 
+# Import i18n
+try:
+    from utils.i18n import tr
+except (ImportError, ModuleNotFoundError):
+    def tr(context, text):
+        return text
+
 logger = logging.getLogger(__name__)
 
 class StatusIndicator(QLabel):
@@ -44,13 +51,13 @@ class StatusIndicator(QLabel):
         
         # Set tooltip
         tooltips = {
-            SlssteamStatus.INSTALLED_GOOD_CONFIG: "SLSsteam OK",
-            SlssteamStatus.INSTALLED_BAD_CONFIG: "Configuration needed",
-            SlssteamStatus.NOT_INSTALLED: "Not installed",
-            SlssteamStatus.ERROR: "Verification error"
+            SlssteamStatus.INSTALLED_GOOD_CONFIG: tr("SlssteamStatus", "SLSsteam OK"),
+            SlssteamStatus.INSTALLED_BAD_CONFIG: tr("SlssteamStatus", "Configuration needed"),
+            SlssteamStatus.NOT_INSTALLED: tr("SlssteamStatus", "Not installed"),
+            SlssteamStatus.ERROR: tr("SlssteamStatus", "Verification error")
         }
         
-        tooltip = tooltips.get(status, "Status desconhecido")
+        tooltip = tooltips.get(status, tr("SlssteamStatus", "Status desconhecido"))
         self.setToolTip(tooltip)
     
     def paintEvent(self, a0):
@@ -169,7 +176,7 @@ class SlssteamStatusWidget(ModernFrame):
         layout.addWidget(self.status_indicator)
         
         # Status text - single line for cleaner look
-        self.status_label = QLabel("Checking SLSsteam...")
+        self.status_label = QLabel(tr("SlssteamStatus", "Checking SLSsteam..."))
         self.status_label.setStyleSheet(f"""
             QLabel {{
                 color: {theme.colors.PRIMARY};
@@ -183,7 +190,7 @@ class SlssteamStatusWidget(ModernFrame):
         layout.addWidget(self.status_label, 1)  # Takes available space
         
         # Action button
-        self.action_button = HoverButton("Configure")
+        self.action_button = HoverButton(tr("SlssteamStatus", "Configure"))
         self.action_button.setFixedSize(75, 28)
         self.action_button.setFont(QFont(Typography.get_font_family(), Typography.CAPTION_SIZE - 1))
         self.action_button.clicked.connect(self._on_action_clicked)
@@ -224,10 +231,10 @@ class SlssteamStatusWidget(ModernFrame):
         description = self.checker.get_status_description(self.current_status, self.current_details)
         
         if not self.can_start_operations():
-            status_message += " (BLOCKED)"
-            description += "\n\nClick to configure SLSsteam."
+            status_message += f" ({tr('SlssteamStatus', 'BLOCKED')})"
+            description += f"\n\n{tr('SlssteamStatus', 'Click to configure SLSsteam.')}"
         else:
-            description += "\n\nClick to manage SLSsteam settings."
+            description += f"\n\n{tr('SlssteamStatus', 'Click to manage SLSsteam settings.')}"
         
         self.status_indicator.setToolTip(f"SLSsteam: {status_message}\n\n{description}")
         self.setToolTip(self.status_indicator.toolTip())
@@ -239,7 +246,7 @@ class SlssteamStatusWidget(ModernFrame):
         
         # Add blocking indicator if not ready
         if not self.can_start_operations():
-            status_message += " (BLOCKED)"
+            status_message += f" ({tr('SlssteamStatus', 'BLOCKED')})"
         
         if self.status_label:
             self.status_label.setText(status_message)
@@ -247,7 +254,7 @@ class SlssteamStatusWidget(ModernFrame):
         # Set detailed tooltip
         description = self.checker.get_status_description(self.current_status, self.current_details)
         if not self.can_start_operations():
-            description += "\n\nACCELA operations are blocked until SLSsteam is configured."
+            description += f"\n\n{tr('SlssteamStatus', 'ACCELA operations are blocked until SLSsteam is configured.')}"
         
         self.setToolTip(description)
         
@@ -257,9 +264,9 @@ class SlssteamStatusWidget(ModernFrame):
                 self.action_button.show()
                 
                 if self.current_status == SlssteamStatus.NOT_INSTALLED:
-                    self.action_button.setText("Install")
+                    self.action_button.setText(tr("SlssteamStatus", "Install"))
                 else:
-                    self.action_button.setText("Fix")
+                    self.action_button.setText(tr("SlssteamStatus", "Fix"))
             else:
                 self.action_button.hide()
     
@@ -305,9 +312,9 @@ class SlssteamStatusWidget(ModernFrame):
         from PyQt6.QtWidgets import QMessageBox
         QMessageBox.information(
             self,
-            "SLSsteam Status",
-            "SLSsteam is properly installed and configured.\n\n"
-            "PlayNotOwnedGames is active and ready for use."
+            tr("SlssteamStatus", "SLSsteam Status"),
+            tr("SlssteamStatus", "SLSsteam is properly installed and configured.\n\n"
+                "PlayNotOwnedGames is active and ready for use.")
         )
     
     def _show_install_dialog(self):

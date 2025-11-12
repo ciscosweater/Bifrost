@@ -4,6 +4,13 @@ from PyQt6.QtCore import Qt, QSize, pyqtSignal
 from PyQt6.QtGui import QResizeEvent
 from .theme import theme, Typography, BorderRadius, Spacing
 
+# Import i18n
+try:
+    from utils.i18n import tr
+except (ImportError, ModuleNotFoundError):
+    def tr(context, text):
+        return text
+
 logger = logging.getLogger(__name__)
 
 class ResponsiveLayout:
@@ -106,7 +113,7 @@ class ResponsiveHeader(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         
         # Title
-        self.title_label = QLabel("ACCELA")
+        self.title_label = QLabel(tr("ResponsiveDesign", "ACCELA"))
         from .theme import theme, Typography
         self.title_label.setStyleSheet(f"""
             QLabel {{
@@ -204,7 +211,7 @@ class ResponsiveDropZone(QWidget):
         layout.addWidget(self.animation_label)
         
         # Text label
-        self.text_label = QLabel("Drag and Drop ZIP file here")
+        self.text_label = QLabel(tr("ResponsiveDesign", "Drag and Drop ZIP file here"))
         self.text_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         from .theme import theme, Typography
         self.text_label.setStyleSheet(f"""
@@ -327,7 +334,7 @@ class ResponsiveGameInfo(QWidget):
         info_layout = QVBoxLayout()
         info_layout.setSpacing(Spacing.XS)
         
-        self.game_title = QLabel("Game Title")
+        self.game_title = QLabel(tr("ResponsiveDesign", "Game Title"))
         self.game_title.setStyleSheet(f"""
             QLabel {{
                 color: {theme.colors.PRIMARY};
@@ -336,7 +343,7 @@ class ResponsiveGameInfo(QWidget):
         """)
         info_layout.addWidget(self.game_title)
         
-        self.game_status = QLabel("Status")
+        self.game_status = QLabel(tr("ResponsiveDesign", "Status"))
         self.game_status.setStyleSheet(f"""
             QLabel {{
                 color: {theme.colors.TEXT_SECONDARY};
@@ -394,7 +401,7 @@ class ResponsiveLogArea(QWidget):
         layout.setContentsMargins(20, 10, 20, 10)
         
         # Log display
-        self.log_display = QLabel("Log output will appear here...")
+        self.log_display = QLabel(tr("ResponsiveDesign", "Log output will appear here..."))
         self.log_display.setStyleSheet(f"""
             QLabel {{
                 background: {theme.colors.BACKGROUND};
@@ -452,7 +459,7 @@ class ResponsiveFooter(QWidget):
         layout.setContentsMargins(10, 0, 10, 0)
         
         # Status label
-        self.status_label = QLabel("Ready")
+        self.status_label = QLabel(tr("ResponsiveDesign", "Ready"))
         self.status_label.setStyleSheet(f"""
             QLabel {{
                 color: {theme.colors.TEXT_SECONDARY};
@@ -464,7 +471,7 @@ class ResponsiveFooter(QWidget):
         layout.addStretch()
         
         # Version info
-        self.version_label = QLabel("v1.0")
+        self.version_label = QLabel(tr("ResponsiveDesign", "v1.0"))
         self.version_label.setStyleSheet(f"""
             QLabel {{
                 color: {theme.colors.TEXT_SECONDARY};

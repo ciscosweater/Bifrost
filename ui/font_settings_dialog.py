@@ -8,6 +8,13 @@ from ui.enhanced_dialogs import ModernDialog
 from ui.theme import theme, Typography, Spacing, BorderRadius
 from utils.settings import get_font_setting, set_font_setting
 
+# Import i18n
+try:
+    from utils.i18n import tr
+except (ImportError, ModuleNotFoundError):
+    def tr(context, text):
+        return text
+
 logger = logging.getLogger(__name__)
 
 class FontSettingsDialog(ModernDialog):
@@ -23,7 +30,7 @@ class FontSettingsDialog(ModernDialog):
     
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Font Settings")
+        self.setWindowTitle(tr("FontSettingsDialog", "Font Settings"))
         self.setMinimumWidth(450)
         self._original_font = None
         self._setup_ui()
@@ -34,7 +41,7 @@ class FontSettingsDialog(ModernDialog):
         layout = QVBoxLayout()
         
         # Font selection group
-        font_group = QGroupBox("Select Font")
+        font_group = QGroupBox(tr("FontSettingsDialog", "Select Font"))
         font_layout = QVBoxLayout()
         
         # Create radio buttons for font selection
@@ -49,7 +56,7 @@ class FontSettingsDialog(ModernDialog):
             font_layout.addWidget(radio)
         
         # Add preview area
-        preview_label = QLabel("Preview:")
+        preview_label = QLabel(tr("FontSettingsDialog", "Preview:"))
         preview_label.setStyleSheet(f"font-weight: bold; margin-top: {Spacing.SM}px;")
         font_layout.addWidget(preview_label)
         
@@ -75,9 +82,9 @@ class FontSettingsDialog(ModernDialog):
         
         # Info label
         info_label = QLabel(
-            "• Font change will be applied to the entire application\n"
-            "• Application restart is required to see the changes\n"
-            "• Default font is TrixieCyrG-Plain Regular"
+            tr("FontSettingsDialog", "• Font change will be applied to entire application\n") +
+            tr("FontSettingsDialog", "• Application restart is required to see changes\n") +
+            tr("FontSettingsDialog", "• Default font is TrixieCyrG-Plain Regular")
         )
         info_label.setWordWrap(True)
         info_label.setStyleSheet(f"color: {theme.colors.TEXT_SECONDARY}; {Typography.get_font_style(Typography.CAPTION_SIZE)}; margin: {Spacing.SM}px 0;")
@@ -86,10 +93,10 @@ class FontSettingsDialog(ModernDialog):
         button_layout = QHBoxLayout()
         button_layout.addStretch()
         
-        self.cancel_button = QPushButton("Cancel")
+        self.cancel_button = QPushButton(tr("FontSettingsDialog", "Cancel"))
         self.cancel_button.clicked.connect(self.reject)
         
-        self.save_button = QPushButton("Save")
+        self.save_button = QPushButton(tr("FontSettingsDialog", "Save"))
         self.save_button.clicked.connect(self._save_settings)
         self.save_button.setDefault(True)
         
@@ -136,7 +143,7 @@ class FontSettingsDialog(ModernDialog):
         try:
             selected_button = self.font_button_group.checkedButton()
             if not selected_button:
-                QMessageBox.warning(self, "Warning", "Please select a font.")
+                QMessageBox.warning(self, tr("FontSettingsDialog", "Warning"), tr("FontSettingsDialog", "Please select a font."))
                 return
             
             new_font = selected_button.property("font_key")
@@ -151,10 +158,10 @@ class FontSettingsDialog(ModernDialog):
                 # Ask for restart
                 reply = QMessageBox.question(
                     self,
-                    "Restart Application",
-                    f"Font changed from '{self._original_font}' to '{new_font}'.\n\n"
-                    "Application restart is required to apply the change.\n"
-                    "Do you want to restart now?",
+                    tr("FontSettingsDialog", "Restart Application"),
+                    tr("FontSettingsDialog", "Font changed from '{old_font}' to '{new_font}'.\n\n"
+                        "Application restart is required to apply the change.\n"
+                        "Do you want to restart now?").format(old_font=self._original_font, new_font=new_font),
                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                     QMessageBox.StandardButton.Yes
                 )
@@ -171,15 +178,15 @@ class FontSettingsDialog(ModernDialog):
                 else:
                     QMessageBox.information(
                         self,
-                        "Settings Saved",
-                        "Font settings have been updated!\n\n"
-                        "Restart the application manually to see the changes."
+                        tr("FontSettingsDialog", "Settings Saved"),
+                        tr("FontSettingsDialog", "Font settings have been updated!\n\n"
+                            "Restart the application manually to see the changes.")
                     )
             else:
                 QMessageBox.information(
                     self,
-                    "No Changes",
-                    "No changes were made to font settings."
+                    tr("FontSettingsDialog", "No Changes"),
+                    tr("FontSettingsDialog", "No changes were made to font settings.")
                 )
             
             self.accept()
@@ -188,6 +195,6 @@ class FontSettingsDialog(ModernDialog):
             logger.error(f"Error saving font settings: {e}")
             QMessageBox.critical(
                 self,
-                "Error",
-                f"An error occurred while saving settings: {e}"
+                tr("FontSettingsDialog", "Error"),
+                tr("FontSettingsDialog", "An error occurred while saving settings: {error}").format(error=e)
             )

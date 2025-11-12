@@ -9,6 +9,13 @@ from PyQt6.QtGui import QFont
 
 from ui.theme import theme, Typography, BorderRadius, Spacing
 
+# Import i18n
+try:
+    from utils.i18n import tr
+except (ImportError, ModuleNotFoundError):
+    def tr(context, text):
+        return text
+
 logger = logging.getLogger(__name__)
 
 
@@ -79,7 +86,7 @@ class MinimalDownloadWidget(QWidget):
         self.game_image_label.hide()
 
         # Nome do jogo
-        self.game_name_label = QLabel("Game Name")
+        self.game_name_label = QLabel(tr("MinimalDownloadWidget", "Game Name"))
         self.game_name_label.setStyleSheet(f"""
             QLabel {{
                 color: {theme.colors.PRIMARY};
@@ -91,7 +98,7 @@ class MinimalDownloadWidget(QWidget):
         self.game_name_label.hide()
 
         # Status label
-        self.status_label = QLabel("Ready to download")
+        self.status_label = QLabel(tr("MinimalDownloadWidget", "Ready to download"))
         self.status_label.setStyleSheet(f"""
             QLabel {{
                 color: {theme.colors.TEXT_SECONDARY};
@@ -156,7 +163,7 @@ class MinimalDownloadWidget(QWidget):
         self.speed_label.hide()
 
         # Size label (movido para cá)
-        self.size_label = QLabel("Size: --")
+        self.size_label = QLabel(f"{tr('MinimalDownloadWidget', 'Size')}: --")
         self.size_label.setStyleSheet(f"""
             QLabel {{
                 color: {theme.colors.TEXT_PRIMARY};
@@ -171,9 +178,9 @@ class MinimalDownloadWidget(QWidget):
         info_container.addWidget(self.size_label)
 
         # Minimalist buttons with text
-        self.pause_btn = self._create_control_button("Pause", "pause")
-        self.resume_btn = self._create_control_button("Resume", "resume")
-        self.cancel_btn = self._create_control_button("Cancel", "cancel")
+        self.pause_btn = self._create_control_button(tr("MinimalDownloadWidget", "Pause"), "pause")
+        self.resume_btn = self._create_control_button(tr("MinimalDownloadWidget", "Resume"), "resume")
+        self.cancel_btn = self._create_control_button(tr("MinimalDownloadWidget", "Cancel"), "cancel")
 
         # Hide buttons initially
         self.pause_btn.hide()
@@ -366,7 +373,7 @@ class MinimalDownloadWidget(QWidget):
         self.current_state = "completed"
         
         # Show completion status
-        self.status_label.setText("Download completed!")
+        self.status_label.setText(tr("MinimalDownloadWidget", "Download completed!"))
         self.status_label.show()
         
         self.progress_bar.setStyleSheet(f"""
@@ -409,7 +416,7 @@ class MinimalDownloadWidget(QWidget):
         self.current_state = "idle"
         
         # Show basic elements in idle state
-        self.status_label.setText("Ready to download")
+        self.status_label.setText(tr("MinimalDownloadWidget", "Ready to download"))
         self.status_label.show()
         self.game_image_label.hide()
         self.game_name_label.hide()
@@ -474,25 +481,25 @@ class MinimalDownloadWidget(QWidget):
                 percentage = (self.downloaded_size / self.total_size * 100)
                 text = f"{downloaded_formatted} / {total_formatted} ({percentage:.1f}%)"
             else:
-                text = f"Downloaded: {downloaded_formatted}"
+                text = f"{tr('MinimalDownloadWidget', 'Downloaded')}: {downloaded_formatted}"
             self.size_label.setText(text)
         elif self.current_state == "completed":
             if self.total_size > 0:
-                self.size_label.setText(f"Completed: {total_formatted}")
+                self.size_label.setText(f"{tr('MinimalDownloadWidget', 'Completed')}: {total_formatted}")
             else:
-                self.size_label.setText(f"Completed: {downloaded_formatted}")
+                self.size_label.setText(f"{tr('MinimalDownloadWidget', 'Completed')}: {downloaded_formatted}")
         elif self.current_state == "paused":
             if self.total_size > 0:
                 percentage = (self.downloaded_size / self.total_size * 100)
                 text = f"{downloaded_formatted} / {total_formatted} ({percentage:.1f}%)"
             else:
-                text = f"Paused: {downloaded_formatted}"
+                text = f"{tr('MinimalDownloadWidget', 'Paused')}: {downloaded_formatted}"
             self.size_label.setText(text)
         else:
             if self.total_size > 0:
-                self.size_label.setText(f"Size: {total_formatted}")
+                self.size_label.setText(f"{tr('MinimalDownloadWidget', 'Size')}: {total_formatted}")
             else:
-                self.size_label.setText("Size: --")
+                self.size_label.setText(f"{tr('MinimalDownloadWidget', 'Size')}: --")
         
         self.size_label.show()  # Always show size label
     

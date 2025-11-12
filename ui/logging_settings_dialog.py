@@ -9,6 +9,13 @@ from ui.theme import theme, Typography, Spacing, BorderRadius
 from utils.settings import get_logging_setting, set_logging_setting
 from utils.logger import update_logging_mode
 
+# Import i18n
+try:
+    from utils.i18n import tr
+except (ImportError, ModuleNotFoundError):
+    def tr(context, text):
+        return text
+
 logger = logging.getLogger(__name__)
 
 class LoggingSettingsDialog(ModernDialog):
@@ -18,7 +25,7 @@ class LoggingSettingsDialog(ModernDialog):
     
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Logging Settings")
+        self.setWindowTitle(tr("LoggingSettingsDialog", "Logging Settings"))
         self.setMinimumWidth(400)
         self._setup_ui()
         self._load_settings()
@@ -28,24 +35,24 @@ class LoggingSettingsDialog(ModernDialog):
         layout = QVBoxLayout()
         
         # Log level group
-        level_group = QGroupBox("Log Level")
+        level_group = QGroupBox(tr("LoggingSettingsDialog", "Log Level"))
         level_layout = QVBoxLayout()
         
         self.level_combo = QComboBox()
         self.level_combo.addItems(["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"])
-        self.level_combo.setToolTip("Sets the minimum level of messages that will be displayed")
+        self.level_combo.setToolTip(tr("LoggingSettingsDialog", "Sets the minimum level of messages that will be displayed"))
         
-        level_layout.addWidget(QLabel("Minimum Level:"))
+        level_layout.addWidget(QLabel(tr("LoggingSettingsDialog", "Minimum Level:")))
         level_layout.addWidget(self.level_combo)
         level_group.setLayout(level_layout)
         
         # Display mode group
-        display_group = QGroupBox("Display Mode")
+        display_group = QGroupBox(tr("LoggingSettingsDialog", "Display Mode"))
         display_layout = QVBoxLayout()
         
-        self.simple_mode_checkbox = QCheckBox("Simplified Mode")
+        self.simple_mode_checkbox = QCheckBox(tr("LoggingSettingsDialog", "Simplified Mode"))
         self.simple_mode_checkbox.setToolTip(
-            "Enables simplified format: 'LEVEL: message' instead of 'date - module - level - message'"
+            tr("LoggingSettingsDialog", "Enables simplified format: 'LEVEL: message' instead of 'date - module - level - message'")
         )
         
         display_layout.addWidget(self.simple_mode_checkbox)
@@ -53,9 +60,9 @@ class LoggingSettingsDialog(ModernDialog):
         
         # Info label
         info_label = QLabel(
-            "• app.log file will always contain all logs (complete DEBUG)\n"
-            "• Changes applied immediately to console and interface\n"
-            "• Detailed logs are useful for debugging problems"
+            tr("LoggingSettingsDialog", "• app.log file will always contain all logs (complete DEBUG)\n") +
+            tr("LoggingSettingsDialog", "• Changes applied immediately to console and interface\n") +
+            tr("LoggingSettingsDialog", "• Detailed logs are useful for debugging problems")
         )
         info_label.setWordWrap(True)
         info_label.setStyleSheet(f"color: {theme.colors.TEXT_SECONDARY}; {Typography.get_font_style(Typography.CAPTION_SIZE)}; margin: {Spacing.SM}px 0;")
@@ -64,10 +71,10 @@ class LoggingSettingsDialog(ModernDialog):
         button_layout = QHBoxLayout()
         button_layout.addStretch()
         
-        self.cancel_button = QPushButton("Cancel")
+        self.cancel_button = QPushButton(tr("LoggingSettingsDialog", "Cancel"))
         self.cancel_button.clicked.connect(self.reject)
         
-        self.save_button = QPushButton("Save")
+        self.save_button = QPushButton(tr("LoggingSettingsDialog", "Save"))
         self.save_button.clicked.connect(self._save_settings)
         self.save_button.setDefault(True)
         
@@ -112,8 +119,8 @@ class LoggingSettingsDialog(ModernDialog):
             
             QMessageBox.information(
                 self,
-                "Settings Saved",
-                "Logging settings have been updated successfully!"
+                tr("LoggingSettingsDialog", "Settings Saved"),
+                tr("LoggingSettingsDialog", "Logging settings have been updated successfully!")
             )
             
             self.accept()
@@ -122,6 +129,6 @@ class LoggingSettingsDialog(ModernDialog):
             logger.error(f"Error saving logging settings: {e}")
             QMessageBox.critical(
                 self,
-                "Error",
-                f"An error occurred while saving settings: {e}"
+                tr("LoggingSettingsDialog", "Error"),
+                tr("LoggingSettingsDialog", "An error occurred while saving settings: {error}").format(error=e)
             )

@@ -13,7 +13,17 @@ if project_root not in sys.path:
 from ui.main_window import MainWindow
 from ui.theme import theme, Typography
 from utils.logger import setup_logging
-from utils.settings import get_font_setting
+from utils.settings import get_font_setting, get_settings
+
+# Import i18n after path setup
+try:
+    from utils.i18n import init_i18n, get_i18n_manager
+except (ImportError, ModuleNotFoundError):
+    # Fallback for development
+    def init_i18n(app, language=None):
+        pass
+    def get_i18n_manager():
+        return None
 
 def main():
     """
@@ -27,6 +37,11 @@ def main():
     logger.info("========================================")
 
     app = QApplication(sys.argv)
+
+    # Initialize internationalization with language from settings
+    settings = get_settings()
+    saved_language = settings.value("language", None, type=str)
+    init_i18n(app, saved_language)
 
     # Set a custom dark theme using the new design system
     app.setStyle("Fusion")

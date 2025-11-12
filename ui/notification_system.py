@@ -1,9 +1,17 @@
 import logging
+import logging
 from PyQt6.QtWidgets import QFrame, QLabel, QPushButton, QHBoxLayout, QVBoxLayout
 from PyQt6.QtCore import Qt, QTimer, QPropertyAnimation, QEasingCurve, pyqtSignal, QRect
 from PyQt6.QtGui import QFont
 
 from ui.theme import theme, Typography, Spacing
+
+# Import i18n
+try:
+    from utils.i18n import tr
+except (ImportError, ModuleNotFoundError):
+    def tr(context, text):
+        return text
 
 logger = logging.getLogger(__name__)
 
@@ -102,7 +110,7 @@ class NotificationWidget(QFrame):
         layout.addWidget(message_label)
         
         # Close button
-        close_button = QPushButton("×")
+        close_button = QPushButton(tr("NotificationSystem", "×"))
         close_button.setFixedSize(20, 20)
         close_button.setStyleSheet(f"""
             QPushButton {{
@@ -217,9 +225,9 @@ class ProgressNotification:
     Progress notification with percentage display.
     """
     
-    def __init__(self, parent, title="Processing..."):
+    def __init__(self, parent, title=None):
         self.parent = parent
-        self.title = title
+        self.title = title if title else tr("NotificationSystem", "Processing...")
         self.notification = None
         self.current_progress = 0
         
@@ -243,8 +251,10 @@ class ProgressNotification:
                     child.setText(progress_text)
                     break
                 
-    def complete(self, success_message="Completed!"):
+    def complete(self, success_message=None):
         """Mark progress as complete."""
+        if success_message is None:
+            success_message = tr("NotificationSystem", "Completed!")
         self.update_progress(100, success_message)
         # Auto-dismiss after completion
         if self.notification and hasattr(self.notification, 'dismiss'):

@@ -10,6 +10,13 @@ from PyQt6.QtGui import QFont
 from ui.theme import theme, Typography, Spacing, BorderRadius
 from ui.enhanced_widgets import SecondaryButton
 
+# Import i18n
+try:
+    from utils.i18n import tr
+except (ImportError, ModuleNotFoundError):
+    def tr(context, text):
+        return text
+
 logger = logging.getLogger(__name__)
 
 
@@ -36,7 +43,7 @@ class DownloadControls(QWidget):
         layout.setSpacing(Spacing.SM)
 
         # Status label
-        self.status_label = QLabel("Ready to download")
+        self.status_label = QLabel(tr("DownloadControls", "Ready to download"))
         self.status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.status_label.setWordWrap(True)
         self.status_label.setMinimumHeight(32)
@@ -84,20 +91,20 @@ class DownloadControls(QWidget):
         buttons_layout.setSpacing(Spacing.SM)  # Reduced spacing
 
         # Pause button
-        self.pause_button = QPushButton("Pause")
+        self.pause_button = QPushButton(tr("DownloadControls", "Pause"))
         self.pause_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.pause_button.clicked.connect(self.pause_clicked.emit)
         self._setup_button_style(self.pause_button, "pause")
 
         # Resume button (initially hidden)
-        self.resume_button = QPushButton("Resume")
+        self.resume_button = QPushButton(tr("DownloadControls", "Resume"))
         self.resume_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.resume_button.clicked.connect(self.resume_clicked.emit)
         self.resume_button.hide()
         self._setup_button_style(self.resume_button, "resume")
 
         # Cancel button
-        self.cancel_button = QPushButton("Cancel")
+        self.cancel_button = QPushButton(tr("DownloadControls", "Cancel"))
         self.cancel_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.cancel_button.clicked.connect(self.cancel_clicked.emit)
         self._setup_button_style(self.cancel_button, "cancel")
@@ -190,7 +197,7 @@ class DownloadControls(QWidget):
     def set_downloading_state(self):
         """Configura estado de downloading"""
         self.current_state = "downloading"
-        self.status_label.setText("Downloading in progress...")
+        self.status_label.setText(tr("DownloadControls", "Downloading in progress..."))
         self.status_label.setStyleSheet(f"""
             QLabel {{
                 color: {theme.colors.TEXT_ON_PRIMARY};
@@ -213,7 +220,7 @@ class DownloadControls(QWidget):
     def set_paused_state(self):
         """Configura estado de paused"""
         self.current_state = "paused"
-        self.status_label.setText("Download paused")
+        self.status_label.setText(tr("DownloadControls", "Download paused"))
         self.status_label.setStyleSheet(f"""
             QLabel {{
                 color: {theme.colors.TEXT_ON_PRIMARY};
@@ -236,7 +243,7 @@ class DownloadControls(QWidget):
     def set_completed_state(self):
         """Configura estado de completed"""
         self.current_state = "completed"
-        self.status_label.setText("Download completed successfully!")
+        self.status_label.setText(tr("DownloadControls", "Download completed successfully!"))
         self.status_label.setStyleSheet(f"""
             QLabel {{
                 color: {theme.colors.TEXT_ON_PRIMARY};
@@ -259,7 +266,7 @@ class DownloadControls(QWidget):
     def set_cancelling_state(self):
         """Configura estado de cancelling"""
         self.current_state = "cancelling"
-        self.status_label.setText("Cancelling download...")
+        self.status_label.setText(tr("DownloadControls", "Cancelling download..."))
         self.status_label.setStyleSheet(f"""
             QLabel {{
                 color: {theme.colors.TEXT_ON_PRIMARY};
@@ -284,7 +291,7 @@ class DownloadControls(QWidget):
     def _set_idle_state(self):
         """Configure idle state (internal method)"""
         self.current_state = "idle"
-        self.status_label.setText("Ready to download")
+        self.status_label.setText(tr("DownloadControls", "Ready to download"))
         self.status_label.setStyleSheet(f"""
             QLabel {{
                 color: {theme.colors.TEXT_SECONDARY};
@@ -312,11 +319,11 @@ class DownloadControls(QWidget):
             message = message[: max_length - 3] + "..."
 
         if self.current_state == "downloading":
-            full_text = f"Downloading: {message}"
+            full_text = f"{tr('DownloadControls', 'Downloading')}: {message}"
         elif self.current_state == "paused":
-            full_text = f"Paused: {message}"
+            full_text = f"{tr('DownloadControls', 'Paused')}: {message}"
         elif self.current_state == "cancelling":
-            full_text = f"Cancelling: {message}"
+            full_text = f"{tr('DownloadControls', 'Cancelling')}: {message}"
         else:
             full_text = message
 
@@ -347,14 +354,14 @@ class DownloadControls(QWidget):
             
             if self.current_state == "downloading":
                 percentage = (self.downloaded_size / self.total_size * 100) if self.total_size > 0 else 0
-                self.size_label.setText(f"Progress: {downloaded_formatted} / {total_formatted} ({percentage:.1f}%)")
+                self.size_label.setText(f"{tr('DownloadControls', 'Progress')}: {downloaded_formatted} / {total_formatted} ({percentage:.1f}%)")
             elif self.current_state == "completed":
-                self.size_label.setText(f"Completed: {total_formatted}")
+                self.size_label.setText(f"{tr('DownloadControls', 'Completed')}: {total_formatted}")
             elif self.current_state == "paused":
                 percentage = (self.downloaded_size / self.total_size * 100) if self.total_size > 0 else 0
-                self.size_label.setText(f"Paused: {downloaded_formatted} / {total_formatted} ({percentage:.1f}%)")
+                self.size_label.setText(f"{tr('DownloadControls', 'Paused')}: {downloaded_formatted} / {total_formatted} ({percentage:.1f}%)")
             else:
-                self.size_label.setText(f"Total Size: {total_formatted}")
+                self.size_label.setText(f"{tr('DownloadControls', 'Total Size')}: {total_formatted}")
         else:
             self.size_label.setText("")
     
@@ -390,19 +397,19 @@ class CompactDownloadControls(QWidget):
         layout.setSpacing(Spacing.XS)
 
         # Smaller and more compact buttons
-        self.pause_button = QPushButton("||")
+        self.pause_button = QPushButton(tr("DownloadControls", "❚❚"))
         self.pause_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.pause_button.clicked.connect(self.pause_clicked.emit)
         self.pause_button.setFixedSize(Spacing.XL * 2, Spacing.XL * 2)
         self.pause_button.hide()
 
-        self.resume_button = QPushButton(">")
+        self.resume_button = QPushButton(tr("DownloadControls", "▶"))
         self.resume_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.resume_button.clicked.connect(self.resume_clicked.emit)
         self.resume_button.setFixedSize(Spacing.XL * 2, Spacing.XL * 2)
         self.resume_button.hide()
 
-        self.cancel_button = QPushButton("X")
+        self.cancel_button = QPushButton(tr("DownloadControls", "✕"))
         self.cancel_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.cancel_button.clicked.connect(self.cancel_clicked.emit)
         self.cancel_button.setFixedSize(Spacing.XL * 2, Spacing.XL * 2)

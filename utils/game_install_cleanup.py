@@ -12,6 +12,11 @@ from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
+# Import i18n safely - will be available when app is running
+def tr(context, text):
+    """Fallback translation function - will be replaced by proper i18n"""
+    return text
+
 
 class GameInstallDirectoryCleanup:
     """
@@ -112,12 +117,12 @@ class GameInstallDirectoryCleanup:
         try:
             # EXTREME SAFETY CHECKS
             if not self._verify_ultra_safety_checks(install_dir, game_data, session_id):
-                result['errors'].append("ULTRA SAFETY CHECK FAILED: Directory validation failed - NO FILES DELETED")
+                result['errors'].append(tr("GameInstallCleanup", "ULTRA SAFETY CHECK FAILED: Directory validation failed - NO FILES DELETED"))
                 return result
             
             # MULTIPLE CONFIRMATIONS
             if not self._multiple_confirmations(install_dir, game_data, session_id):
-                result['errors'].append("MULTIPLE CONFIRMATIONS FAILED - NO FILES DELETED")
+                result['errors'].append(tr("GameInstallCleanup", "MULTIPLE CONFIRMATIONS FAILED - NO FILES DELETED"))
                 return result
             
             logger.warning(f"{'[DRY RUN] ' if dry_run else ''}STARTING COMPLETE CLEANUP OF GAME DIRECTORY")
@@ -178,7 +183,7 @@ class GameInstallDirectoryCleanup:
             
             # 2. Cannot be root or system directory
             if install_path.is_absolute() and len(install_path.parts) <= 3:
-                logger.error(f"SAFETY: Directory too close to root: {install_dir}")
+                logger.error(tr("GameInstallCleanup", "SAFETY: Directory too close to root") + f": {install_dir}")
                 return False
             
             # 2.1. ADDITIONAL SECURITY: Verify against allowed base paths
@@ -244,7 +249,7 @@ class GameInstallDirectoryCleanup:
                 logger.error(f"SAFETY: No session ID provided - this should only run during download cancellation")
                 return False
             
-            logger.info(f"[OK] ALL ULTRA SAFETY CHECKS PASSED: {install_dir}")
+            logger.info(tr("GameInstallCleanup", "[OK] ALL ULTRA SAFETY CHECKS PASSED") + f": {install_dir}")
             return True
             
         except Exception as e:
@@ -334,7 +339,7 @@ class GameInstallDirectoryCleanup:
             
             # Confirmation 1: Validate game data
             if not game_data.get('game_name') or not game_data.get('appid'):
-                logger.error("CONFIRMATION 1 FAILED: Invalid game data")
+                logger.error(tr("GameInstallCleanup", "CONFIRMATION 1 FAILED: Invalid game data"))
                 return False
             
             # Confirmation 2: Validate session ID
@@ -365,7 +370,7 @@ class GameInstallDirectoryCleanup:
                     logger.error(f"CONFIRMATION 5 FAILED: Critical system path detected: {critical}")
                     return False
             
-            logger.info("[OK] ALL MULTIPLE CONFIRMATIONS PASSED")
+            logger.info(tr("GameInstallCleanup", "[OK] ALL MULTIPLE CONFIRMATIONS PASSED"))
             return True
             
         except Exception as e:
@@ -473,7 +478,7 @@ class GameInstallDirectoryCleanup:
             
             # 2. Cannot be root or system directory
             if install_path.is_absolute() and len(install_path.parts) <= 3:
-                logger.error(f"SAFETY: Directory too close to root: {install_dir}")
+                logger.error(tr("GameInstallCleanup", "SAFETY: Directory too close to root") + f": {install_dir}")
                 return False
             
             # 3. Must contain 'steamapps/common' in path (Steam library structure)
