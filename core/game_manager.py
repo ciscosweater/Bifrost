@@ -504,13 +504,18 @@ class GameManager:
             if not os.path.exists(library_path):
                 return False, f"Library path does not exist: {library_path}"
             
-            # Path sanitization to prevent path traversal
+            # Enhanced path sanitization to prevent path traversal
             library_path = os.path.normpath(library_path)
             installdir = os.path.normpath(installdir).lstrip('/\\')
             
-            # Additional security validations
-            if '..' in installdir or installdir.startswith('~'):
+            # Strict security validations
+            if '..' in installdir or installdir.startswith('~') or '/' in installdir or '\\' in installdir:
                 return False, f"Invalid installdir format: {installdir}"
+            
+            # Only allow alphanumeric characters, spaces, hyphens, underscores, and dots
+            import re
+            if not re.match(r'^[a-zA-Z0-9\s\-_.]+$', installdir):
+                return False, f"Invalid characters in installdir: {installdir}"
             
             # Build secure paths
             steamapps_path = os.path.join(library_path, 'steamapps')
@@ -518,15 +523,35 @@ class GameManager:
             game_dir = os.path.join(common_path, installdir)
             acf_path = game_info.get('acf_path')
             
-            # Validate we're within expected directories
+            # Enhanced validation: ensure all paths are within expected directories
             try:
-                if common_path and os.path.exists(common_path):
-                    common_real = os.path.realpath(common_path)
-                    game_real = os.path.realpath(game_dir)
-                    if not game_real.startswith(common_real):
-                        return False, f"Security violation: game directory outside expected path: {game_dir}"
-            except Exception:
-                return False, "Failed to validate directory paths"
+                # Validate library path exists and is accessible
+                if not os.path.exists(library_path) or not os.path.isdir(library_path):
+                    return False, f"Invalid library path: {library_path}"
+                
+                # Validate steamapps and common directories
+                if not os.path.exists(steamapps_path):
+                    return False, f"Steamapps directory not found: {steamapps_path}"
+                
+                if not os.path.exists(common_path):
+                    return False, f"Common directory not found: {common_path}"
+                
+                # Validate game directory is within common directory
+                common_real = os.path.realpath(common_path)
+                game_real = os.path.realpath(game_dir)
+                
+                if not game_real.startswith(common_real + os.sep) and game_real != common_real:
+                    return False, f"Security violation: game directory outside expected path: {game_dir}"
+                
+                # Validate ACF file path if provided
+                if acf_path:
+                    acf_real = os.path.realpath(acf_path)
+                    steamapps_real = os.path.realpath(steamapps_path)
+                    if not acf_real.startswith(steamapps_real + os.sep) and acf_real != steamapps_real:
+                        return False, f"Security violation: ACF file outside steamapps directory: {acf_path}"
+                        
+            except (OSError, ValueError) as e:
+                return False, f"Path validation failed: {str(e)}"
             
             # Confirm it's really an ACCELA game before deleting
             if acf_path and os.path.exists(acf_path):
@@ -567,26 +592,33 @@ class GameManager:
             elif acf_path:
                 logger.warning(f"ACF file not found: {acf_path}")
             
-            # Delete compatdata if requested (with validation)
+            # Delete compatdata if requested (with enhanced validation)
             if delete_compatdata:
-                compatdata_path = os.path.join(library_path, 'steamapps', 'compatdata', app_id)
-                if os.path.exists(compatdata_path):
-                    try:
-                        # Validate it's within compatdata
-                        compatdata_base = os.path.join(library_path, 'steamapps', 'compatdata')
-                        compatdata_real = os.path.realpath(compatdata_path)
-                        compatdata_base_real = os.path.realpath(compatdata_base)
-                        
-                        if compatdata_real.startswith(compatdata_base_real):
-                            shutil.rmtree(compatdata_path, ignore_errors=True)
-                            deleted_items.append(f"Compatdata: {compatdata_path}")
-                            logger.info(f"Deleted compatdata directory: {compatdata_path}")
-                        else:
-                            errors.append("Compatdata directory validation failed")
-                    except Exception as e:
-                        errors.append(f"Failed to delete compatdata: {e}")
+                # Validate app_id format to prevent path traversal
+                if not app_id or not app_id.isdigit():
+                    errors.append("Invalid app_id format for compatdata deletion")
                 else:
-                    logger.info(f"Compatdata directory not found: {compatdata_path}")
+                    compatdata_path = os.path.join(library_path, 'steamapps', 'compatdata', app_id)
+                    if os.path.exists(compatdata_path):
+                        try:
+                            # Enhanced validation: ensure it's within compatdata directory
+                            compatdata_base = os.path.join(library_path, 'steamapps', 'compatdata')
+                            compatdata_real = os.path.realpath(compatdata_path)
+                            compatdata_base_real = os.path.realpath(compatdata_base)
+                            
+                            # Strict path validation
+                            if (compatdata_real.startswith(compatdata_base_real + os.sep) or 
+                                compatdata_real == compatdata_base_real) and \
+                               os.path.basename(compatdata_real) == app_id:
+                                shutil.rmtree(compatdata_path, ignore_errors=True)
+                                deleted_items.append(f"Compatdata: {compatdata_path}")
+                                logger.info(f"Deleted compatdata directory: {compatdata_path}")
+                            else:
+                                errors.append("Compatdata directory validation failed - path traversal detected")
+                        except (OSError, ValueError) as e:
+                            errors.append(f"Failed to delete compatdata: {str(e)}")
+                    else:
+                        logger.info(f"Compatdata directory not found: {compatdata_path}")
             
             # Operation result
             if errors:
