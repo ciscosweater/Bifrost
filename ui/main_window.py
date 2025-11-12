@@ -933,6 +933,9 @@ class MainWindow(QMainWindow):
                 # Fix was declined, clear the flag
                 self._fix_available = False
                 
+                # Reset UI reset cancellation flag since dialog is closed
+                self._ui_reset_cancelled = False
+                
                 # Still prompt for Steam restart in case SLSsteam was set up during download
                 # Reset the flag to allow the prompt even though no fix was installed
                 self._steam_restart_prompted = False
@@ -1042,6 +1045,9 @@ class MainWindow(QMainWindow):
                     # Fix installation started successfully - close the fixes dialog
                     dialog.accept()
                     
+                    # Reset UI reset cancellation flag since fix is being applied
+                    self._ui_reset_cancelled = False
+                    
                 except Exception as fix_error:
                     logger.error(f"Error starting fix installation: {fix_error}")
                     self.log_output.append(f"Error starting installation: {fix_error}")
@@ -1064,6 +1070,9 @@ class MainWindow(QMainWindow):
         finally:
             # Always reset the flag when done
             self._fix_dialog_open = False
+            
+            # Reset UI reset cancellation flag since fix operation is complete
+            self._ui_reset_cancelled = False
             
             # Trigger UI reset after a short delay if no other operations are pending
             QTimer.singleShot(2000, self._safe_reset_ui_state)
