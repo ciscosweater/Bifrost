@@ -65,3 +65,8 @@ AGENTS.md
 # Release files
 release/
 ACCELA-RELEASE-*.tar.gz
+
+# Security and review reports
+REVISAO_PREVENTIVA.md
+SECURITY_REPORT_*.md
+AUDIT_*.md
