@@ -250,7 +250,7 @@ class BackupDialog(QDialog):
         layout = QVBoxLayout(panel)
         
         # Title
-        actions_title = QLabel("Backup Details")
+        actions_title = QLabel("Backup Information")
         actions_title.setStyleSheet(f"""
             QLabel {{
                 color: {theme.colors.TEXT_PRIMARY};
@@ -261,26 +261,7 @@ class BackupDialog(QDialog):
         """)
         layout.addWidget(actions_title)
         
-        # Backup info section - more space for details
-        info_group = QGroupBox("Backup Information")
-        info_group.setStyleSheet(f"""
-            QGroupBox {{
-                color: {theme.colors.TEXT_PRIMARY};
-                {Typography.get_font_style(Typography.BODY_SIZE)};
-                font-weight: bold;
-                border: 1px solid {theme.colors.BORDER};
-                {BorderRadius.get_border_radius(BorderRadius.SMALL)};
-                margin-top: {Spacing.SM}px;
-                padding-top: {Spacing.SM}px;
-            }}
-            QGroupBox::title {{
-                subcontrol-origin: margin;
-                left: {Spacing.SM}px;
-                padding: 0 {Spacing.XS}px 0 {Spacing.XS}px;
-            }}
-        """)
-        info_layout = QVBoxLayout(info_group)
-        
+        # Backup info text - more space for details
         self.backup_info_text = QTextEdit()
         self.backup_info_text.setReadOnly(True)
         self.backup_info_text.setMinimumHeight(300)  # Even more space for details
@@ -295,9 +276,7 @@ class BackupDialog(QDialog):
             }}
         """)
         self.backup_info_text.setText("Select a backup to view details")
-        info_layout.addWidget(self.backup_info_text)
-        
-        layout.addWidget(info_group)
+        layout.addWidget(self.backup_info_text)
         
         layout.addStretch()
         
