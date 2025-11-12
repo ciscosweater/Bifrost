@@ -85,6 +85,11 @@ def get_depot_info_from_api(app_id):
         logger.warning(f"steam.client method failed for AppID {app_id}. Falling back to public Web API.")
         api_data = _fetch_with_web_api(app_id)
 
+    # Add depot size information if we have depot data
+    if api_data and api_data.get('depots'):
+        api_data['depot_sizes'] = get_depot_sizes_from_manifests(app_id, api_data['depots'])
+        logger.info(f"Retrieved size information for {len(api_data['depot_sizes'])} depots")
+
     # Cache the successful response
     if api_data and api_data.get('depots'):
         try:
@@ -282,3 +287,108 @@ def _cleanup_cache_if_needed():
             
     except Exception as e:
         logger.error(f"Error during API cache cleanup: {e}")
+
+def get_depot_sizes_from_manifests(app_id, depots):
+    """
+    Attempts to get depot sizes by downloading and analyzing manifests.
+    
+    Args:
+        app_id: Steam App ID
+        depots: Dictionary of depot information
+        
+    Returns:
+        dict: Mapping of depot_id to size in bytes (0 if unavailable)
+    """
+    depot_sizes = {}
+    logger.info(f"Getting depot sizes for AppID {app_id} with {len(depots)} depots")
+    
+    try:
+        from steam.client import SteamClient
+        logger.info("Steam client library available for depot size fetching")
+    except ImportError:
+        logger.warning("`steam[client]` package not found. Cannot fetch depot sizes.")
+        return depot_sizes
+
+    script_content = f'''
+import json, sys, os
+from steam.client import SteamClient
+try:
+    client = SteamClient()
+    client.anonymous_login()
+    if not client.logged_on:
+        sys.stderr.write("Failed to anonymously login to Steam.\\n")
+        sys.exit(1)
+    
+    depot_sizes = {{}}
+    depots_data = {json.dumps(depots)}
+    
+    for depot_id, depot_info in depots_data.items():
+        try:
+            # Get depot manifest info
+            depot_info_result = client.get_depot_info(int(depot_id), appid={app_id})
+            if depot_info_result and hasattr(depot_info_result, 'manifest'):
+                manifest = depot_info_result.manifest
+                if hasattr(manifest, 'size'):
+                    depot_sizes[depot_id] = manifest.size
+                else:
+                    depot_sizes[depot_id] = 0
+            else:
+                depot_sizes[depot_id] = 0
+        except Exception as e:
+            sys.stderr.write(f"Error getting size for depot {{depot_id}}: {{e}}\\n")
+            depot_sizes[depot_id] = 0
+    
+    client.logout()
+    print(json.dumps(depot_sizes))
+    
+except Exception as e:
+    sys.stderr.write(f"Script error: {{e}}\\n")
+    sys.exit(1)
+'''
+
+    logger.info(f"Executing Steam client script to get depot sizes for {len(depots)} depots")
+    try:
+        import tempfile
+        import subprocess
+        
+        # Create temporary script file
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as temp_script:
+            temp_script.write(script_content)
+            temp_script_path = temp_script.name
+
+        try:
+            python_executable = sys.executable
+            result = subprocess.run(
+                [python_executable, temp_script_path],
+                capture_output=True, text=True, timeout=60, check=False, encoding='utf-8'
+            )
+
+            logger.debug(f"Depot size script return code: {result.returncode}")
+            logger.debug(f"Depot size script stdout: {result.stdout}")
+            logger.debug(f"Depot size script stderr: {result.stderr}")
+            
+            if result.returncode == 0:
+                try:
+                    depot_sizes = json.loads(result.stdout.strip())
+                    logger.info(f"Successfully retrieved sizes for {len([s for s in depot_sizes.values() if s > 0])} depots")
+                    logger.debug(f"Depot sizes: {depot_sizes}")
+                except json.JSONDecodeError as e:
+                    logger.error(f"Failed to parse depot sizes JSON: {e}")
+                    logger.debug(f"Raw output: {result.stdout}")
+            else:
+                logger.error(f"Depot size script failed with return code {result.returncode}")
+                logger.error(f"Error output: {result.stderr}")
+        except Exception as e:
+            logger.error(f"Failed to get depot sizes: {e}")
+        finally:
+            # Clean up temporary script
+            try:
+                os.unlink(temp_script_path)
+            except:
+                pass
+                
+    except Exception as e:
+        logger.error(f"Failed to get depot sizes: {e}")
+    
+    logger.info(f"Final depot sizes dict: {depot_sizes}")
+    return depot_sizes

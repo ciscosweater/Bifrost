@@ -282,28 +282,28 @@ class GameImageThread(QThread):
                 self.image_ready.emit(self.app_id, cached_image, f"cache:{self.preferred_format}")
                 return
             
-            # Strategy 2: Try preferred format first
+            # Strategy 2: Try API fallback FIRST (many games only have API URLs)
+            image = self._try_api_fallback()
+            if image:
+                self.image_ready.emit(self.app_id, image, "fallback:api")
+                return
+            
+            # Strategy 3: Try preferred format on CDN
             image = self._try_preferred_format()
             if image:
                 self.image_ready.emit(self.app_id, image, f"preferred:{self.preferred_format}")
                 return
             
-            # Strategy 3: Try all formats on primary CDN
+            # Strategy 4: Try all formats on primary CDN
             image = self._try_all_formats(primary_only=True)
             if image:
                 self.image_ready.emit(self.app_id, image, "fallback:primary_cdn")
                 return
             
-            # Strategy 4: Try all formats on all CDNs
+            # Strategy 5: Try all formats on all CDNs
             image = self._try_all_formats(primary_only=False)
             if image:
                 self.image_ready.emit(self.app_id, image, "fallback:all_cdns")
-                return
-            
-            # Strategy 5: Try API fallback
-            image = self._try_api_fallback()
-            if image:
-                self.image_ready.emit(self.app_id, image, "fallback:api")
                 return
             
             # Strategy 6: Try fallback image
@@ -396,9 +396,12 @@ class GameImageThread(QThread):
     def _try_api_fallback(self) -> Optional[QPixmap]:
         """Try to get images from Steam Store API"""
         try:
+            logger.info(f"Trying API fallback for app {self.app_id}")
             api_urls = self.manager.try_api_fallback(self.app_id)
             if not api_urls:
+                logger.warning(f"No API URLs found for app {self.app_id}")
                 return None
+            logger.info(f"Found {len(api_urls)} API URLs for app {self.app_id}")
             
             for url in api_urls:
                 # Check cache first

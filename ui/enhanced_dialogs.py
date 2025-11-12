@@ -535,10 +535,13 @@ class DepotSelectionDialog(ModernDialog):
     Enhanced depot selection dialog with search and better UX.
     """
     
-    def __init__(self, app_id, depots, parent=None):
+    def __init__(self, app_id, depots, depot_sizes=None, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Select Depots to Download")
         self.depots = depots
+        self.depot_sizes = depot_sizes or {}
+        logger.info(f"DepotSelectionDialog initialized with {len(depots)} depots and {len(self.depot_sizes)} size entries")
+        logger.debug(f"Depot sizes: {self.depot_sizes}")
         self.setMinimumSize(480, 400)
         self.setMaximumSize(500, 900)
         self.resize(480, 700)
@@ -695,36 +698,41 @@ class DepotSelectionDialog(ModernDialog):
         pass
 
     def _fetch_header_image(self, app_id):
-        """Fetches the game's header image from Steam's CDN in a background thread."""
-        url = f"https://cdn.akamai.steamstatic.com/steam/apps/{app_id}/header.jpg"
+        """Fetches the game's header image using GameImageManager with API fallback."""
+        from .game_image_manager import GameImageManager
+        from utils.image_cache import ImageCacheManager
         
-        self.image_thread = QThread()
-        self.image_fetcher = ImageFetcher(url)
-        self.image_fetcher.moveToThread(self.image_thread)
-        
-        self.image_thread.started.connect(self.image_fetcher.run)
-        self.image_fetcher.finished.connect(self.on_image_fetched)
-        
-        self.image_fetcher.finished.connect(self.image_thread.quit)
-        self.image_fetcher.finished.connect(self.image_fetcher.deleteLater)
+        cache_manager = ImageCacheManager()
+        self.image_manager = GameImageManager(cache_manager)
+        self.image_thread = self.image_manager.get_game_image(app_id, "header")
+        self.image_thread.image_ready.connect(self.on_image_ready)
+        self.image_thread.image_failed.connect(self.on_image_failed)
         self.image_thread.finished.connect(self.image_thread.deleteLater)
-        
-        self.image_thread.start()
 
+    def on_image_ready(self, app_id, pixmap, source_info):
+        """Slot to handle successfully fetched image."""
+        logger.info(f"Image loaded for app {app_id} from {source_info}")
+        # Store original pixmap for sharing with main window
+        self.original_pixmap = pixmap
+        # Scale while maintaining aspect ratio, fit within 440x215
+        scaled_pixmap = pixmap.scaled(440, 215, Qt.AspectRatioMode.KeepAspectRatio, 
+                                    Qt.TransformationMode.SmoothTransformation)
+        self.header_label.setPixmap(scaled_pixmap)
+    
+    def on_image_failed(self, app_id, error_message):
+        """Slot to handle image fetch failure."""
+        logger.warning(f"Failed to load image for app {app_id}: {error_message}")
+        self.header_label.setText("Header image not available.")
+        self.original_pixmap = None
+    
     def on_image_fetched(self, image_data):
-        """Slot to handle the fetched image data."""
+        """Legacy method - kept for backward compatibility."""
         if image_data:
             pixmap = QPixmap()
             pixmap.loadFromData(image_data)
-            # Store original pixmap for sharing with main window
-            self.original_pixmap = pixmap
-            # Scale while maintaining aspect ratio, fit within 440x215
-            scaled_pixmap = pixmap.scaled(440, 215, Qt.AspectRatioMode.KeepAspectRatio, 
-                                        Qt.TransformationMode.SmoothTransformation)
-            self.header_label.setPixmap(scaled_pixmap)
+            self.on_image_ready("unknown", pixmap, "legacy")
         else:
-            self.header_label.setText("Header image not available.")
-            self.original_pixmap = None
+            self.on_image_failed("unknown", "Legacy fetch failed")
     
     def get_header_image(self):
         """Return the original header image pixmap for sharing with main window"""

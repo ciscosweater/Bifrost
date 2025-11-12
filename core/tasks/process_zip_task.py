@@ -119,6 +119,15 @@ class ProcessZipTask:
                             logger.info(f"Found game name from Steam API: {game_data['game_name']}")
                         
                         api_details = api_data.get('depots', {})
+                        
+                        # Transfer depot sizes to game_data
+                        depot_sizes = api_data.get('depot_sizes', {})
+                        if depot_sizes:
+                            game_data['depot_sizes'] = depot_sizes
+                            logger.info(f"Transferred {len(game_data['depot_sizes'])} depot size entries to game_data")
+                        else:
+                            logger.warning("Empty depot_sizes in api_data")
+                            game_data['depot_sizes'] = {}
                         # --- MODIFICATION END ---
 
                         if not api_details:

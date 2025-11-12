@@ -1149,7 +1149,8 @@ class MainWindow(QMainWindow):
         if not self.game_data:
             self.log_output.append("Error: No game data available for depot selection")
             return
-        self.depot_dialog = DepotSelectionDialog(self.game_data['appid'], self.game_data['depots'], self)
+        depot_sizes = self.game_data.get('depot_sizes', {})
+        self.depot_dialog = DepotSelectionDialog(self.game_data['appid'], self.game_data['depots'], depot_sizes, self)
         if self.depot_dialog.exec():
             selected_depots = self.depot_dialog.get_selected_depots()
             # Store the header image from dialog for later use in download
@@ -1254,6 +1255,15 @@ class MainWindow(QMainWindow):
         self.minimal_download_widget.pause_clicked.connect(self.download_manager.pause_download)
         self.minimal_download_widget.resume_clicked.connect(self.download_manager.resume_download)
         # Cancel is already connected to _confirm_cancel_download at line 319
+        
+        # Calculate total download size
+        total_size = 0
+        depot_sizes = self.game_data.get('depot_sizes', {})
+        for depot_id in selected_depots:
+            total_size += depot_sizes.get(depot_id, 0)
+        
+        # Set size in download widget
+        self.minimal_download_widget.set_download_size(total_size)
         
         # Start download using NEW DownloadManager
         if self.game_data:
