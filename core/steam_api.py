@@ -85,10 +85,8 @@ def get_depot_info_from_api(app_id):
         logger.warning(f"steam.client method failed for AppID {app_id}. Falling back to public Web API.")
         api_data = _fetch_with_web_api(app_id)
 
-    # Add depot size information if we have depot data
-    if api_data and api_data.get('depots'):
-        api_data['depot_sizes'] = get_depot_sizes_from_manifests(app_id, api_data['depots'])
-        logger.info(f"Retrieved size information for {len(api_data['depot_sizes'])} depots")
+    # Total game size is already calculated in _fetch_with_steam_client()
+    # No need for additional depot size fetching
 
     # Cache the successful response
     if api_data and api_data.get('depots'):
@@ -152,22 +150,39 @@ except Exception as e:
         depot_info = {}
         installdir = None
         game_name = None
+        total_game_size = 0
         
         if app_data:
             installdir = app_data.get('config', {}).get('installdir')
             game_name = app_data.get('name') or app_data.get('common', {}).get('name')
             depots = app_data.get("depots", {})
+            
+            # Calcular tamanho total do jogo a partir dos depots
+            total_game_size = 0
             for depot_id, depot_data in depots.items():
                 if not isinstance(depot_data, dict): continue
                 config = depot_data.get('config', {})
+                
+                # Extrair tamanho do depot se disponível nos manifests
+                depot_size = 0
+                if 'manifests' in depot_data and 'public' in depot_data['manifests']:
+                    depot_size = int(depot_data['manifests']['public'].get('size', 0))
+                    total_game_size += depot_size
+                
                 depot_info[depot_id] = {
                     'name': depot_data.get('name', f"Depot {depot_id}"),
                     'oslist': config.get('oslist'),
                     'language': config.get('language'),
-                    'steamdeck': config.get('steamdeck') == '1'
+                    'steamdeck': config.get('steamdeck') == '1',
+                    'size': depot_size
                 }
         
-        api_data = {'depots': depot_info, 'installdir': installdir, 'game_name': game_name}
+        api_data = {
+            'depots': depot_info, 
+            'installdir': installdir, 
+            'game_name': game_name,
+            'total_game_size': total_game_size
+        }
         
     except Exception as e:
         logger.error(f"An unexpected error occurred in _fetch_with_steam_client: {e}", exc_info=True)
@@ -236,7 +251,7 @@ def _parse_web_api_response(app_id, data):
                 'oslist': None, 'language': None, 'steamdeck': False
             }
             
-    return {'depots': depot_info, 'installdir': installdir, 'game_name': game_name}
+    return {'depots': depot_info, 'installdir': installdir, 'game_name': game_name, 'total_game_size': 0}
 
 def _cleanup_cache_if_needed():
     """Clean up cache if it exceeds size limit"""
@@ -322,21 +337,46 @@ try:
     depot_sizes = {{}}
     depots_data = {json.dumps(depots)}
     
-    for depot_id, depot_info in depots_data.items():
-        try:
-            # Get depot manifest info
-            depot_info_result = client.get_depot_info(int(depot_id), appid={app_id})
-            if depot_info_result and hasattr(depot_info_result, 'manifest'):
-                manifest = depot_info_result.manifest
-                if hasattr(manifest, 'size'):
-                    depot_sizes[depot_id] = manifest.size
-                else:
-                    depot_sizes[depot_id] = 0
+    # Get product info which contains depot manifests
+    app_id = {app_id}
+    product_info = client.get_product_info([app_id])
+    
+    sys.stderr.write(f"Product info structure: {{product_info}}\\n")
+    
+    if product_info and 'apps' in product_info:
+        apps = product_info['apps']
+        sys.stderr.write(f"Available apps: {{list(apps.keys())}}\\n")
+        
+        if str(app_id) in apps:
+            app_data = apps[str(app_id)]
+            
+            if 'depots' in app_data:
+                app_depots = app_data['depots']
+                sys.stderr.write(f"Found {{len(app_depots)}} depots\\n")
+                
+                for depot_id in depots_data.keys():
+                    try:
+                        if depot_id in app_depots:
+                            depot_data = app_depots[depot_id]
+                            if 'manifests' in depot_data and 'public' in depot_data['manifests']:
+                                depot_size = depot_data['manifests']['public'].get('size', 0)
+                                depot_sizes[depot_id] = int(depot_size)
+                                sys.stderr.write(f"Depot {{depot_id}}: {{depot_size}} bytes\\n")
+                            else:
+                                depot_sizes[depot_id] = 0
+                                sys.stderr.write(f"Depot {{depot_id}}: no public manifest\\n")
+                        else:
+                            depot_sizes[depot_id] = 0
+                            sys.stderr.write(f"Depot {{depot_id}}: not found\\n")
+                    except Exception as e:
+                        sys.stderr.write(f"Error getting size for depot {{depot_id}}: {{e}}\\n")
+                        depot_sizes[depot_id] = 0
             else:
-                depot_sizes[depot_id] = 0
-        except Exception as e:
-            sys.stderr.write(f"Error getting size for depot {{depot_id}}: {{e}}\\n")
-            depot_sizes[depot_id] = 0
+                sys.stderr.write("No depots found in app data\\n")
+        else:
+            sys.stderr.write(f"AppID {{app_id}} not found in apps\\n")
+    else:
+        sys.stderr.write("No apps found in product info\\n")
     
     client.logout()
     print(json.dumps(depot_sizes))

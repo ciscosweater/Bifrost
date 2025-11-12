@@ -128,6 +128,15 @@ class ProcessZipTask:
                         else:
                             logger.warning("Empty depot_sizes in api_data")
                             game_data['depot_sizes'] = {}
+                        
+                        # Transfer total game size to game_data
+                        total_game_size = api_data.get('total_game_size', 0)
+                        if total_game_size > 0:
+                            game_data['total_game_size'] = total_game_size
+                            logger.info(f"Transferred total game size: {total_game_size} bytes ({total_game_size/1024/1024/1024:.2f} GB)")
+                        else:
+                            logger.warning("Empty total_game_size in api_data")
+                            game_data['total_game_size'] = 0
                         # --- MODIFICATION END ---
 
                         if not api_details:
