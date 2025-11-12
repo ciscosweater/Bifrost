@@ -178,6 +178,25 @@ class DownloadSession:
         return (self.download_state in [DownloadState.PAUSED, DownloadState.CANCELLED] and
                 len(self.completed_depots) < len(self.selected_depots))
     
+    def calculate_total_size(self, depot_sizes: Dict[str, int]) -> int:
+        """Calcula tamanho total baseado nos tamanhos dos depots selecionados"""
+        total = 0
+        for depot_id in self.selected_depots:
+            total += depot_sizes.get(depot_id, 0)
+        self.total_size = total
+        return total
+    
+    def get_formatted_size(self, size_bytes: int) -> str:
+        """Formata tamanho em bytes para exibição"""
+        if size_bytes < 1024:
+            return f"{size_bytes} B"
+        elif size_bytes < 1024 * 1024:
+            return f"{size_bytes / 1024:.1f} KB"
+        elif size_bytes < 1024 * 1024 * 1024:
+            return f"{size_bytes / (1024 * 1024):.1f} MB"
+        else:
+            return f"{size_bytes / (1024 * 1024 * 1024):.1f} GB"
+    
     def get_summary(self) -> Dict[str, Any]:
         """Retorna resumo da sessão"""
         return {
@@ -189,5 +208,9 @@ class DownloadSession:
             "total_depots": len(self.selected_depots),
             "state": self.download_state.value,
             "timestamp": self.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
-            "can_resume": self.can_resume()
+            "can_resume": self.can_resume(),
+            "total_size": self.total_size,
+            "total_size_formatted": self.get_formatted_size(self.total_size),
+            "downloaded_size": self.downloaded_size,
+            "downloaded_size_formatted": self.get_formatted_size(self.downloaded_size)
         }

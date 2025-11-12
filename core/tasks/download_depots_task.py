@@ -39,6 +39,7 @@ class DownloadDepotsTask(QObject):
     progress = pyqtSignal(str)
     progress_percentage = pyqtSignal(int)
     steamless_progress = pyqtSignal(str)
+    bytes_downloaded = pyqtSignal(int, int)  # downloaded_bytes, total_bytes
     
     # Novos signals para controle de cancelamento
     process_started = pyqtSignal(object)  # subprocess.Popen
@@ -52,6 +53,13 @@ class DownloadDepotsTask(QObject):
         super().__init__()
         self.percentage_regex = re.compile(r"(\d{1,3}\.\d{2})%")
         self.bytes_regex = re.compile(r"Depot (\d+) - Downloaded (\d+) bytes \((\d+) bytes uncompressed\)")
+        # Multiple patterns for different DepotDownloader versions/formats
+        self.alt_bytes_patterns = [
+            re.compile(r"Downloaded\s+(\d+)\s+bytes"),
+            re.compile(r"Downloaded\s+([\d.]+)\s*[KMGT]?B"),
+            re.compile(r"(\d+)\s+bytes\s+downloaded"),
+            re.compile(r"Progress:\s+(\d+\.?\d*)%"),
+        ]
         self.last_percentage = -1
         self.steamless_integration = None
         self.game_data = None
@@ -350,6 +358,8 @@ class DownloadDepotsTask(QObject):
         line = line.strip()
         self.progress.emit(line)
         
+
+        
         # Check for percentage
         match = self.percentage_regex.search(line)
         if match:
@@ -359,8 +369,33 @@ class DownloadDepotsTask(QObject):
             if int_percentage != self.last_percentage:
                 self.progress_percentage.emit(int_percentage)
                 self.last_percentage = int_percentage
+                
+                # Calculate bytes based on percentage and total size
+                if self.game_data:
+                    # Try depot_sizes first, fallback to total_game_size
+                    depot_sizes = self.game_data.get('depot_sizes', {})
+                    if depot_sizes:
+                        total_size = sum(depot_sizes.get(depot_id, 0) for depot_id in depot_sizes.keys())
+                    else:
+                        total_size = self.game_data.get('total_game_size', 0)
+                    
+                    # Also use actual downloaded bytes if available
+                    if self.total_downloaded > 0:
+                        actual_downloaded = self.total_downloaded
+                        # Use actual downloaded bytes as total size if it's larger
+                        if actual_downloaded > total_size:
+                            total_size = actual_downloaded
+                        calculated_bytes = actual_downloaded
+                    else:
+                        if total_size > 0:
+                            calculated_bytes = int((percentage / 100.0) * total_size)
+                            calculated_bytes = max(calculated_bytes, self.total_downloaded)  # Use actual if higher
+                        else:
+                            calculated_bytes = self.total_downloaded
+                    
+                    self.bytes_downloaded.emit(calculated_bytes, total_size)
         
-        # Check for bytes information
+        # Check for bytes information - try multiple patterns
         bytes_match = self.bytes_regex.search(line)
         if bytes_match:
             depot_id = bytes_match.group(1)
@@ -370,8 +405,44 @@ class DownloadDepotsTask(QObject):
             self.total_downloaded += downloaded
             self.total_uncompressed += uncompressed
             
+            # Emit signal with downloaded bytes
+            if self.game_data and self.game_data.get('depot_sizes'):
+                depot_sizes = self.game_data.get('depot_sizes', {})
+                total_size = sum(depot_sizes.get(depot_id, 0) for depot_id in depot_sizes.keys())
+                self.bytes_downloaded.emit(self.total_downloaded, total_size)
+            
             logger.debug(f"Depot {depot_id} - Downloaded {downloaded} bytes ({uncompressed} bytes uncompressed)")
-            logger.debug(f"Total downloaded: {self.total_downloaded} bytes ({self.total_uncompressed} bytes uncompressed) from {len(self.game_data.get('depots', {}))} depots")
+            logger.debug(f"Total downloaded: {self.total_downloaded} bytes ({self.total_uncompressed} bytes uncompressed) from {len(self.game_data.get('depots', {}) if self.game_data else [])} depots")
+        else:
+            # Try alternative patterns for different DepotDownloader versions
+            for pattern in self.alt_bytes_patterns:
+                alt_match = pattern.search(line)
+                if alt_match:
+                    try:
+                        if "bytes" in line.lower():
+                            downloaded = int(alt_match.group(1))
+                        else:
+                            # Handle percentage-based progress
+                            percentage = float(alt_match.group(1))
+                            if self.game_data and self.game_data.get('depot_sizes'):
+                                depot_sizes = self.game_data.get('depot_sizes', {})
+                                total_size = sum(depot_sizes.get(depot_id, 0) for depot_id in depot_sizes.keys())
+                                downloaded = int((percentage / 100.0) * total_size)
+                            else:
+                                downloaded = 0
+                        
+                        self.total_downloaded += downloaded
+                        
+                        # Emit with available total size
+                        if self.game_data and self.game_data.get('depot_sizes'):
+                            depot_sizes = self.game_data.get('depot_sizes', {})
+                            total_size = sum(depot_sizes.get(depot_id, 0) for depot_id in depot_sizes.keys())
+                            self.bytes_downloaded.emit(self.total_downloaded, total_size)
+                        
+                        break  # Stop after first match
+                    except (ValueError, IndexError) as e:
+                        logger.debug(f"Failed to parse alt pattern: {e}")
+                        continue
 
     def _is_steamless_enabled(self):
         """Check if Steamless DRM removal is enabled in settings"""

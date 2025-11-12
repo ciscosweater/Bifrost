@@ -27,6 +27,7 @@ class DownloadManager(QObject):
     # Main signals
     download_started = pyqtSignal(str)  # session_id
     download_progress = pyqtSignal(int, str)  # percentage, current_depot
+    download_bytes = pyqtSignal(int, int)  # downloaded_bytes, total_bytes
     download_paused = pyqtSignal()
     download_resumed = pyqtSignal()
     download_cancelled = pyqtSignal()
@@ -94,6 +95,10 @@ class DownloadManager(QObject):
             # Generate unique ID for session
             session_id = str(uuid.uuid4())
             
+            # Calculate total download size
+            depot_sizes = game_data.get('depot_sizes', {})
+            total_size = sum(depot_sizes.get(depot_id, 0) for depot_id in selected_depots)
+            
             # Create download session
             self.current_session = DownloadSession(
                 session_id=session_id,
@@ -103,7 +108,8 @@ class DownloadManager(QObject):
                 completed_depots=[],
                 download_state=DownloadState.DOWNLOADING,
                 timestamp=datetime.now(),
-                dest_path=dest_path
+                dest_path=dest_path,
+                total_size=total_size
             )
             
             # Salvar estado inicial
@@ -377,6 +383,7 @@ class DownloadManager(QObject):
         if self.download_task:
             self.download_task.progress.connect(self._handle_progress)
             self.download_task.progress_percentage.connect(self._handle_percentage)
+            self.download_task.bytes_downloaded.connect(self._handle_bytes_downloaded)
             self.download_task.process_started.connect(self._on_process_started)
             self.download_task.depot_completed.connect(self._on_depot_completed)
             self.download_task.finished.connect(self._on_task_finished)
@@ -490,6 +497,10 @@ class DownloadManager(QObject):
     def _handle_percentage(self, percentage: int):
         """Handle percentage updates"""
         self.download_progress.emit(percentage, "")
+    
+    def _handle_bytes_downloaded(self, downloaded_bytes: int, total_bytes: int):
+        """Handle bytes downloaded updates"""
+        self.download_bytes.emit(downloaded_bytes, total_bytes)
     
     def _on_process_started(self, process):
         """Handle process start"""

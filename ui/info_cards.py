@@ -135,13 +135,13 @@ class GamesStatsCard(InfoCard):
         # Initial update
         QTimer.singleShot(2000, self._update_stats)
 
-    def _update_stats(self):
+    def _update_stats(self, force_refresh: bool = False):
         """Update games statistics"""
         try:
             # Try to get ACCELA games count
             from core.game_manager import GameManager
 
-            games = GameManager.scan_accela_games()
+            games = GameManager.scan_accela_games(force_refresh=force_refresh)
             count = len(games) if games else 0
 
             if count > 0:
@@ -173,7 +173,7 @@ class StorageCard(InfoCard):
         # Initial update
         QTimer.singleShot(2000, self._update_storage)
 
-    def _update_storage(self):
+    def _update_storage(self, force_refresh: bool = False):
         """Update storage information"""
         try:
             import os
@@ -184,7 +184,7 @@ class StorageCard(InfoCard):
             from core.steam_helpers import get_steam_libraries
 
             libraries = get_steam_libraries()
-            games = GameManager.scan_accela_games()
+            games = GameManager.scan_accela_games(force_refresh=force_refresh)
 
             if not libraries or not games:
                 self.update_value("N/A")

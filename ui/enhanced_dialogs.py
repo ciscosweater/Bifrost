@@ -535,13 +535,15 @@ class DepotSelectionDialog(ModernDialog):
     Enhanced depot selection dialog with search and better UX.
     """
     
-    def __init__(self, app_id, depots, depot_sizes=None, parent=None):
+    def __init__(self, app_id, depots, depot_sizes=None, parent=None, total_game_size=0):
         super().__init__(parent)
         self.setWindowTitle("Select Depots to Download")
         self.depots = depots
         self.depot_sizes = depot_sizes or {}
+        self.total_game_size = total_game_size
         logger.info(f"DepotSelectionDialog initialized with {len(depots)} depots and {len(self.depot_sizes)} size entries")
         logger.debug(f"Depot sizes: {self.depot_sizes}")
+        logger.debug(f"Total game size: {total_game_size} bytes ({total_game_size/1024/1024/1024:.2f} GB)")
         self.setMinimumSize(480, 400)
         self.setMaximumSize(500, 900)
         self.resize(480, 700)
@@ -570,6 +572,30 @@ class DepotSelectionDialog(ModernDialog):
         self._fetch_header_image(app_id)
         
         main_layout.addWidget(self.header_label)
+        
+        # Game size info
+        if self.total_game_size > 0:
+            size_gb = self.total_game_size / (1024 ** 3)
+            size_mb = self.total_game_size / (1024 ** 2)
+            
+            if size_gb >= 1:
+                size_text = f"Total Size: {size_gb:.2f} GB"
+            else:
+                size_text = f"Total Size: {size_mb:.0f} MB"
+            
+            self.size_label = QLabel(size_text)
+            self.size_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.size_label.setStyleSheet(f"""
+                QLabel {{
+                    background: {theme.colors.PRIMARY};
+                    color: {theme.colors.TEXT_ON_PRIMARY};
+                    border-radius: {BorderRadius.SMALL}px;
+                    padding: 8px;
+                    font-weight: bold;
+                    margin: 4px 0px;
+                }}
+            """)
+            main_layout.addWidget(self.size_label)
         
         # Select all/none buttons
         button_layout = QHBoxLayout()
@@ -635,7 +661,7 @@ class DepotSelectionDialog(ModernDialog):
         self.list_widget.setMinimumHeight(optimal_height)
         
         for depot_id, depot_data in self.depots.items():
-            item_text = f"{depot_id} - {depot_data['desc']}"
+            item_text = f"{depot_id} - {depot_data.get('name', depot_data.get('desc', 'Unknown Depot'))}"
             item = QListWidgetItem(item_text)
             item.setData(Qt.ItemDataRole.UserRole, depot_id)
             item.setCheckState(Qt.CheckState.Unchecked)
@@ -748,6 +774,10 @@ class DepotSelectionDialog(ModernDialog):
                     depot_id = item.data(Qt.ItemDataRole.UserRole)
                     selected.append(depot_id)
         return selected
+    
+    def get_total_game_size(self):
+        """Return the total game size that was displayed in the dialog."""
+        return self.total_game_size
 
 class SteamLibraryDialog(ModernDialog):
     """

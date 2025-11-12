@@ -29,10 +29,9 @@ from ui.asset_optimizer import AssetManager
 from ui.theme import theme, Spacing, BorderRadius
 
 from ui.game_deletion_dialog import GameDeletionDialog
-from ui.download_controls import DownloadControls
+
 from ui.minimal_download_widget import MinimalDownloadWidget
 from ui.info_cards import InfoCardsContainer
-from utils.image_cache import ImageCacheManager
 # from ui.responsive_design import ResponsiveMainWindow  # Disabled temporarily
 from utils.task_runner import TaskRunner
 from core.tasks.process_zip_task import ProcessZipTask
@@ -107,7 +106,6 @@ class MainWindow(QMainWindow):
         
         # Online Fixes Manager
         self.online_fixes_manager = OnlineFixesManager()
-        # self.download_controls = DownloadControls()  # Legacy - commented
         
         # Minimalist download widget (new component)
         self.minimal_download_widget = MinimalDownloadWidget()
@@ -177,7 +175,7 @@ class MainWindow(QMainWindow):
         normal_drop_zone_container.setStyleSheet(f"""
             QWidget {{
                 background: transparent;
-                border: 1px solid {theme.colors.PRIMARY};
+                border: none;
                 {BorderRadius.get_border_radius(BorderRadius.LARGE)};
             }}
         """)
@@ -250,7 +248,7 @@ class MainWindow(QMainWindow):
         download_drop_zone_container.setStyleSheet(f"""
             QWidget {{
                 background: transparent;
-                border: 2px dashed {theme.colors.PRIMARY};
+                border: none;
                 {BorderRadius.get_border_radius(BorderRadius.LARGE)};
             }}
         """)
@@ -368,24 +366,12 @@ class MainWindow(QMainWindow):
         game_info_layout.addStretch()
         game_image_layout.addLayout(game_info_layout)
         
-        # game_image_container is now integrated in the minimal widget
-        # main_layout.addWidget(self.game_image_container, 0, Qt.AlignmentFlag.AlignCenter)
-        
         # Hide old container to avoid duplication
         self.game_image_container.hide()
 
 
         
-        # Enhanced progress bar (legacy - completely removed)
-        # self.progress_bar = EnhancedProgressBar()
-        # self.progress_bar.setVisible(False)
-        
-        # Download controls (legacy - completely removed)
-        # self.download_controls = DownloadControls()
-        # self.download_controls.setVisible(False)
-        # self.download_controls.setMaximumWidth(350)
-        # self.download_controls.setMaximumHeight(80)
-        # self.download_controls.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+
 
         # Initialize notification system
         self.notification_manager = NotificationManager(self)
@@ -454,6 +440,7 @@ class MainWindow(QMainWindow):
         """Configure DownloadManager and UI controls connections"""
         # Connect DownloadManager signals
         self.download_manager.download_progress.connect(self._on_download_progress)
+        self.download_manager.download_bytes.connect(self._on_download_bytes)
         self.download_manager.download_paused.connect(self._on_download_paused)
         self.download_manager.download_resumed.connect(self._on_download_resumed)
         self.download_manager.download_cancelled.connect(self._on_download_cancelled)
@@ -487,6 +474,8 @@ class MainWindow(QMainWindow):
         if file_path:
             self.log_output.clear()
             self._start_zip_processing(file_path)
+        
+
 
     def _start_zip_processing(self, zip_path):
         """Start processing a ZIP file that was provided as argument or drag & drop"""
@@ -506,7 +495,34 @@ class MainWindow(QMainWindow):
         self._steam_restart_prompted = False
         
         # Reset UI state for new processing
-        self._reset_ui_state_for_new_processing()
+        try:
+            # Reset drop zone
+            self.drop_text_label.setText("Drop game files here or click to browse")
+            self.drop_text_label.setVisible(True)
+            
+            # Reset title bar button
+            self.title_bar.select_file_button.setVisible(True)
+            
+            # Reset minimal download widget
+            if hasattr(self, 'minimal_download_widget'):
+                self.minimal_download_widget.set_idle_state()
+                self.minimal_download_widget.setVisible(False)
+            
+            # Reset game title
+            if hasattr(self, 'game_title_label'):
+                self.game_title_label.setText("ACCELA")
+            
+            # Reset current data - preserve dest_path only if fix might be needed
+            self.game_data = None
+            # Only clear dest_path if it's from a completed download that won't need fixes
+            if not hasattr(self, '_fix_available') or not self._fix_available:
+                self.current_dest_path = None
+            self.current_session = None
+            
+            logger.debug("UI state reset for new processing")
+            
+        except Exception as e:
+            logger.warning(f"Error resetting UI state: {e}")
 
         self.log_output.append(f"Processing ZIP file: {zip_path}")
 
@@ -555,36 +571,7 @@ class MainWindow(QMainWindow):
             self.zip_task = None
             self.task_runner = None
     
-    def _reset_ui_state_for_new_processing(self):
-        """Reset UI state for new ZIP processing"""
-        try:
-            # Reset drop zone
-            self.drop_text_label.setText("Drop game files here or click to browse")
-            self.drop_text_label.setVisible(True)
-            
-            # Reset title bar button
-            self.title_bar.select_file_button.setVisible(True)
-            
-            # Reset minimal download widget
-            if hasattr(self, 'minimal_download_widget'):
-                self.minimal_download_widget.set_idle_state()
-                self.minimal_download_widget.setVisible(False)
-            
-            # Reset game title
-            if hasattr(self, 'game_title_label'):
-                self.game_title_label.setText("ACCELA")
-            
-            # Reset current data - preserve dest_path only if fix might be needed
-            self.game_data = None
-            # Only clear dest_path if it's from a completed download that won't need fixes
-            if not hasattr(self, '_fix_available') or not self._fix_available:
-                self.current_dest_path = None
-            self.current_session = None
-            
-            logger.debug("UI state reset for new processing")
-            
-        except Exception as e:
-            logger.warning(f"Error resetting UI state: {e}")
+
 
     def _on_download_progress(self, percentage, message):
         """Handle download progress updates"""
@@ -594,16 +581,20 @@ class MainWindow(QMainWindow):
             # Don't append to log_output here - the logging system already handles it
             # This prevents duplicate log messages
             self.minimal_download_widget.update_status(message)
+    
+    def _on_download_bytes(self, downloaded_bytes, total_bytes):
+        """Handle download bytes updates"""
+        self.minimal_download_widget.update_downloaded_size(downloaded_bytes)
             
     def _on_download_paused(self):
         """Handle download pause"""
         self.minimal_download_widget.set_paused_state()
-        self.log_output.append("⏸ Download pausado")
+        self.log_output.append("Download paused")
         
     def _on_download_resumed(self):
         """Handle download resume"""
         self.minimal_download_widget.set_downloading_state()
-        self.log_output.append("▶ Download retomado")
+        self.log_output.append("Download resumed")
         
     def _on_download_cancelled(self):
         """Handle download cancellation"""
@@ -619,9 +610,6 @@ class MainWindow(QMainWindow):
         try:
             logger.debug("Download completion handler started")
             self._stop_speed_monitor()
-            # self.progress_bar.setValue(100)  # Legacy - commented
-            # self.progress_bar.set_download_state("completed")  # Legacy - commented
-            # self.download_controls.set_completed_state()  # Legacy - commented
             self.minimal_download_widget.set_completed_state()
             self.log_output.append("Download completed successfully!")
             
@@ -641,7 +629,23 @@ class MainWindow(QMainWindow):
                 self._check_for_online_fixes(install_path)
             else:
                 # If no Online-Fixes check needed, show completion message now
-                self._show_download_completion_message()
+                if hasattr(self, '_completion_message_shown') and self._completion_message_shown:
+                    return
+                    
+                self._completion_message_shown = True
+                
+                if self.game_data:
+                    game_name = self.game_data.get('game_name', 'Game')
+                    self.notification_manager.show_notification(f"{game_name} download completed!", "success")
+                
+                # Show completion dialog
+                completion_msg = QMessageBox(self)
+                completion_msg.setIcon(QMessageBox.Icon.Information)
+                completion_msg.setWindowTitle("Download Complete")
+                completion_msg.setText("Game download completed successfully!")
+                completion_msg.setInformativeText("You can now play game or install Online-Fixes if available.")
+                completion_msg.setStandardButtons(QMessageBox.StandardButton.Ok)
+                completion_msg.exec()
             
             game_name = self.game_data.get('game_name', 'Game') if self.game_data else 'Game'
             self.notification_manager.show_notification(f"Successfully downloaded {game_name}!", "success")
@@ -652,7 +656,7 @@ class MainWindow(QMainWindow):
             self.log_output.append(f"Error during completion: {e}")
         
         # Hide controls after a short delay
-        QTimer.singleShot(2000, self._hide_download_controls)
+        QTimer.singleShot(2000, lambda: self.minimal_download_widget.setVisible(False))
         
         # Store UI reset timer reference so we can cancel it if fixes are needed
         self._ui_reset_timer = QTimer.singleShot(8000, self._safe_reset_ui_state)  # 8 seconds, only if no fixes
@@ -986,25 +990,7 @@ class MainWindow(QMainWindow):
         if reply == QMessageBox.StandardButton.Yes:
             self.download_manager.cancel_download()
     
-    def _show_download_completion_message(self):
-        """Show download completion message"""
-        if hasattr(self, '_completion_message_shown') and self._completion_message_shown:
-            return
-            
-        self._completion_message_shown = True
-        
-        if self.game_data:
-            game_name = self.game_data.get('game_name', 'Game')
-            self.notification_manager.show_notification(f"{game_name} download completed!", "success")
-        
-        # Show completion dialog
-        completion_msg = QMessageBox(self)
-        completion_msg.setIcon(QMessageBox.Icon.Information)
-        completion_msg.setWindowTitle("Download Complete")
-        completion_msg.setText("Game download completed successfully!")
-        completion_msg.setInformativeText("You can now play the game or install Online-Fixes if available.")
-        completion_msg.setStandardButtons(QMessageBox.StandardButton.Ok)
-        completion_msg.exec()
+
     
     def _apply_fix_from_dialog(self, dialog: QDialog, appid: int, fix_url: str, 
                               fix_type: str, fix_name: str, game_name: str):
@@ -1129,13 +1115,9 @@ class MainWindow(QMainWindow):
             logger.error(f"Error getting install path: {e}")
             return ""
 
-    def _hide_download_controls(self):
-        """Hide download controls after completion"""
-        self.minimal_download_widget.setVisible(False)
+
         
     def _on_zip_processed(self, game_data):
-        # self.progress_bar.setRange(0, 100)  # Legacy - commented
-        # self.progress_bar.setValue(100)  # Legacy - commented
         
         # Don't clear current_dest_path - preserve it for potential fix installation
         self.game_data = game_data
@@ -1159,9 +1141,12 @@ class MainWindow(QMainWindow):
             self.log_output.append("Error: No game data available for depot selection")
             return
         depot_sizes = self.game_data.get('depot_sizes', {})
-        self.depot_dialog = DepotSelectionDialog(self.game_data['appid'], self.game_data['depots'], depot_sizes, self)
+        total_game_size = self.game_data.get('total_game_size', 0)
+        self.depot_dialog = DepotSelectionDialog(self.game_data['appid'], self.game_data['depots'], depot_sizes, self, total_game_size)
         if self.depot_dialog.exec():
             selected_depots = self.depot_dialog.get_selected_depots()
+            # Get total game size from dialog
+            total_game_size = self.depot_dialog.get_total_game_size()
             # Store the header image from dialog for later use in download
             dialog_image = self.depot_dialog.get_header_image()
             if dialog_image and not dialog_image.isNull():
@@ -1197,13 +1182,13 @@ class MainWindow(QMainWindow):
                 dest_path = QFileDialog.getExistingDirectory(self, "Select Destination Folder")
 
             if dest_path:
-                self._start_download(selected_depots, dest_path, slssteam_mode)
+                self._start_download(selected_depots, dest_path, slssteam_mode, total_game_size)
             else:
                 self._reset_ui_state()
         else:
             self._reset_ui_state()
 
-    def _start_download(self, selected_depots, dest_path, slssteam_mode):
+    def _start_download(self, selected_depots, dest_path, slssteam_mode, total_game_size=0):
         # Check SLSsteam prerequisite before starting download
         if not self._check_slssteam_prerequisite():
             return
@@ -1229,7 +1214,6 @@ class MainWindow(QMainWindow):
         # Show game image display (integrado no widget minimalista)
         if self.game_data:
             self.game_title_label.setText(self.game_data.get('game_name', 'Unknown Game'))
-            # self.game_image_container.setVisible(True)  # Escondido - integrado no widget
             # Load game header image asynchronously
             self._load_game_image()
         
@@ -1263,13 +1247,17 @@ class MainWindow(QMainWindow):
         # Connect minimalist widget signals to download manager
         self.minimal_download_widget.pause_clicked.connect(self.download_manager.pause_download)
         self.minimal_download_widget.resume_clicked.connect(self.download_manager.resume_download)
-        # Cancel is already connected to _confirm_cancel_download at line 319
+        # Cancel is already connected to _confirm_cancel_download
         
         # Calculate total download size
-        total_size = 0
-        depot_sizes = self.game_data.get('depot_sizes', {})
-        for depot_id in selected_depots:
-            total_size += depot_sizes.get(depot_id, 0)
+        # Use total_game_size from dialog if available, otherwise calculate from selected depots
+        if total_game_size > 0:
+            total_size = total_game_size
+        else:
+            total_size = 0
+            depot_sizes = self.game_data.get('depot_sizes', {})
+            for depot_id in selected_depots:
+                total_size += depot_sizes.get(depot_id, 0)
         
         # Set size in download widget
         self.minimal_download_widget.set_download_size(total_size)
@@ -1370,8 +1358,7 @@ class MainWindow(QMainWindow):
                 game_name = self.game_data.get('game_name', 'Unknown Game')
                 self.game_title_label.setText(game_name)
                 
-                # Show the game image container (now integrated in minimalist widget)
-                # self.game_image_container.setVisible(True)
+
                 
                 # Fetch header image
                 app_id = self.game_data.get('appid') if self.game_data else None
@@ -1421,6 +1408,17 @@ class MainWindow(QMainWindow):
             with open(acf_path, 'w', encoding='utf-8') as f:
                 f.write(acf_content)
             self.log_output.append(f"Created .acf file at {acf_path}")
+            
+            # Limpar cache para que o novo jogo apareça na lista
+            from core.game_manager import GameManager
+            GameManager.clear_games_cache()
+            self.log_output.append("Cleared games cache - new game will be visible")
+            
+            # Forçar atualização dos cards de informação na UI
+            if hasattr(self, 'games_card'):
+                self.games_card._update_stats(force_refresh=True)
+            if hasattr(self, 'storage_card'):
+                self.storage_card._update_storage(force_refresh=True)
         except IOError as e:
             self.log_output.append(f"Error creating .acf file: {e}")
 
@@ -1592,17 +1590,7 @@ class MainWindow(QMainWindow):
         self.image_thread.image_ready.connect(self._on_enhanced_game_image_ready)
         self.image_thread.image_failed.connect(self._on_enhanced_game_image_error)
     
-    def _on_game_image_ready(self, app_id, pixmap):
-        """Handle successfully fetched game image"""
-        if pixmap and not pixmap.isNull():
-            self._display_game_image(pixmap)
-        else:
-            self._display_no_image()
-    
-    def _on_game_image_error(self, app_id, error_message):
-        """Handle game image fetch error"""
-        logger.warning(f"Failed to fetch image for app {app_id}: {error_message}")
-        self._display_no_image()
+
     
     def _display_game_image(self, pixmap):
         """Display game image with proper scaling"""
@@ -1686,26 +1674,7 @@ class MainWindow(QMainWindow):
         
         return pixmap
 
-    def on_game_image_fetched(self, image_data):
-        """Handle fetched game header image."""
-        if image_data:
-            pixmap = QPixmap()
-            pixmap.loadFromData(image_data)
-            self.game_header_image = pixmap
-            
-            # Calculate size maintaining maximum aspect ratio of 184x69
-            scaled_pixmap = pixmap.scaled(
-                184, 69, 
-                Qt.AspectRatioMode.KeepAspectRatio, 
-                Qt.TransformationMode.SmoothTransformation
-            )
-            
-            # Ajusta o tamanho do label para exatamente o tamanho da imagem redimensionada
-            self.game_header_label.setFixedSize(scaled_pixmap.width(), scaled_pixmap.height())
-            self.game_header_label.setPixmap(scaled_pixmap)
-        else:
-            self.game_header_label.setText("📷\nNo Image")
-            self.game_header_label.setFixedSize(184, 69)  # Restore default size
+
 
     def _handle_steam_schema_generation(self):
         """Handle Steam Schema generation with proper error handling"""
@@ -1739,9 +1708,7 @@ class MainWindow(QMainWindow):
             logger.warning(f"Failed to generate Steam achievements: {e}")
             self.log_output.append(f"Steam Schema generation failed: {e}")
 
-    def _generate_steam_achievements(self):
-        """Legacy method - use _handle_steam_schema_generation instead"""
-        self._handle_steam_schema_generation()
+
 
     def show_notification(self, message, notification_type="info"):
         """Show a notification using the notification manager"""

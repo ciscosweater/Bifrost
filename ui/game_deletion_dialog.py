@@ -512,7 +512,7 @@ class GameDeletionDialog(QDialog):
         
         # Refresh button
         self.refresh_btn = HoverButton("Refresh List")
-        self.refresh_btn.clicked.connect(self._load_games)
+        self.refresh_btn.clicked.connect(lambda: self._load_games(force_refresh=True))
         self.refresh_btn.setFixedHeight(40)  # Increased height for better touch targets
         self.refresh_btn.setFont(QFont(Typography.get_font_family(), Typography.H3_SIZE, QFont.Weight.Bold))
         layout.addWidget(self.refresh_btn)
@@ -556,9 +556,9 @@ class GameDeletionDialog(QDialog):
         
         return frame
     
-    def _load_games(self):
+    def _load_games(self, force_refresh: bool = False):
         """Carrega a lista de jogos ACCELA."""
-        self.games_list = GameManager.scan_accela_games()
+        self.games_list = GameManager.scan_accela_games(force_refresh=force_refresh)
         self._populate_games_table()
         self._update_details_panel()
         
@@ -796,8 +796,8 @@ class GameDeletionDialog(QDialog):
             "Game deletion process has completed. Check the logs for details."
         )
         
-        # Recarregar lista e resetar UI
-        self._load_games()
+        # Recarregar lista e resetar UI (forçar refresh após deleção)
+        self._load_games(force_refresh=True)
         self.games_table.setEnabled(True)
         self.refresh_btn.setEnabled(True)
         self.progress_frame.setVisible(False)

@@ -24,6 +24,8 @@ class DownloadControls(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.current_state = "idle"  # idle, downloading, paused, completed
+        self.total_size = 0
+        self.downloaded_size = 0
         self._setup_ui()
         self._set_idle_state()
 
@@ -54,6 +56,27 @@ class DownloadControls(QWidget):
             }}
         """)
         layout.addWidget(self.status_label)
+        
+        # Size information label
+        self.size_label = QLabel("")
+        self.size_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.size_label.setWordWrap(True)
+        self.size_label.setMinimumHeight(24)
+        self.size_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.size_label.setMinimumWidth(250)
+        self.size_label.setStyleSheet(f"""
+            QLabel {{
+                color: {theme.colors.TEXT_PRIMARY};
+                {Typography.get_font_style(Typography.BODY_SIZE)};
+                font-weight: 600;
+                background: {theme.colors.SURFACE_LIGHT};
+                border: 1px solid {theme.colors.BORDER};
+                border-radius: {BorderRadius.SMALL}px;
+                padding: {Spacing.XS}px {Spacing.SM}px;
+                {theme.animations.get_transition("all", theme.animations.DURATION_NORMAL)};
+            }}
+        """)
+        layout.addWidget(self.size_label)
 
         # Control buttons
         buttons_layout = QHBoxLayout()
@@ -185,6 +208,7 @@ class DownloadControls(QWidget):
         self.pause_button.show()
         self.resume_button.hide()
         self.cancel_button.setEnabled(True)
+        self._update_size_display()
 
     def set_paused_state(self):
         """Configura estado de paused"""
@@ -207,6 +231,7 @@ class DownloadControls(QWidget):
         self.resume_button.setEnabled(True)
         self.resume_button.show()
         self.cancel_button.setEnabled(True)
+        self._update_size_display()
 
     def set_completed_state(self):
         """Configura estado de completed"""
@@ -303,6 +328,46 @@ class DownloadControls(QWidget):
 
         # Update geometry so layout respects configured minimum size
         self.status_label.updateGeometry()
+    
+    def set_download_size(self, total_size: int):
+        """Define o tamanho total do download"""
+        self.total_size = total_size
+        self._update_size_display()
+    
+    def update_downloaded_size(self, downloaded_size: int):
+        """Atualiza o tamanho baixado"""
+        self.downloaded_size = downloaded_size
+        self._update_size_display()
+    
+    def _update_size_display(self):
+        """Atualiza exibição das informações de tamanho"""
+        if self.total_size > 0:
+            total_formatted = self._format_size(self.total_size)
+            downloaded_formatted = self._format_size(self.downloaded_size)
+            
+            if self.current_state == "downloading":
+                percentage = (self.downloaded_size / self.total_size * 100) if self.total_size > 0 else 0
+                self.size_label.setText(f"Progress: {downloaded_formatted} / {total_formatted} ({percentage:.1f}%)")
+            elif self.current_state == "completed":
+                self.size_label.setText(f"Completed: {total_formatted}")
+            elif self.current_state == "paused":
+                percentage = (self.downloaded_size / self.total_size * 100) if self.total_size > 0 else 0
+                self.size_label.setText(f"Paused: {downloaded_formatted} / {total_formatted} ({percentage:.1f}%)")
+            else:
+                self.size_label.setText(f"Total Size: {total_formatted}")
+        else:
+            self.size_label.setText("")
+    
+    def _format_size(self, size_bytes: int) -> str:
+        """Formata tamanho em bytes para exibição"""
+        if size_bytes < 1024:
+            return f"{size_bytes} B"
+        elif size_bytes < 1024 * 1024:
+            return f"{size_bytes / 1024:.1f} KB"
+        elif size_bytes < 1024 * 1024 * 1024:
+            return f"{size_bytes / (1024 * 1024):.1f} MB"
+        else:
+            return f"{size_bytes / (1024 * 1024 * 1024):.1f} GB"
 
 
 class CompactDownloadControls(QWidget):

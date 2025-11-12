@@ -4,15 +4,19 @@
       "name": "Depot 764791",
       "oslist": "windows",
       "language": "",
-      "steamdeck": false
+      "steamdeck": false,
+      "size": 1699473999
     },
     "branches": {
       "name": "Depot branches",
       "oslist": null,
       "language": null,
-      "steamdeck": false
+      "steamdeck": false,
+      "size": 0
     }
   },
   "installdir": "The Messenger",
-  "game_name": "The Messenger"
+  "game_name": "The Messenger",
+  "total_game_size": 1699473999,
+  "depot_sizes": {}
 }
