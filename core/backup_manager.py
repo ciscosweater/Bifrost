@@ -7,6 +7,7 @@ from typing import List, Optional, Dict, Any
 from pathlib import Path
 
 from core.steam_helpers import find_steam_install
+from core.game_manager import GameManager
 
 logger = logging.getLogger(__name__)
 
@@ -48,10 +49,13 @@ class BackupManager:
         
         return stats_path
     
-    def list_stats_files(self) -> List[str]:
+    def list_stats_files(self, accela_only: bool = True) -> List[str]:
         """
-        Lista todos os arquivos de stats na pasta appcache/stats.
+        Lista os arquivos de stats na pasta appcache/stats.
         
+        Args:
+            accela_only: Se True, inclui apenas stats de jogos ACCELA
+            
         Returns:
             Lista de caminhos completos dos arquivos .bin
         """
@@ -60,21 +64,57 @@ class BackupManager:
             return []
         
         try:
-            files = []
+            all_files = []
             for file in os.listdir(stats_path):
                 if file.endswith('.bin'):
-                    files.append(os.path.join(stats_path, file))
-            return sorted(files)
+                    all_files.append(os.path.join(stats_path, file))
+            
+            if not accela_only:
+                return sorted(all_files)
+            
+            # Filter for ACCELA games only
+            accela_files = []
+            accela_games = GameManager.scan_accela_games()
+            accela_app_ids = {str(game.get('appid', '')) for game in accela_games}
+            
+            for file_path in all_files:
+                filename = os.path.basename(file_path)
+                # Stats files have patterns like:
+                # UserGameStatsSchema_{appID}.bin
+                # UserGameStats_{userID}_{appID}.bin
+                app_id = ''
+                
+                if 'UserGameStatsSchema_' in filename:
+                    # Extract from UserGameStatsSchema_{appID}.bin
+                    parts = filename.replace('UserGameStatsSchema_', '').replace('.bin', '')
+                    app_id = parts
+                elif 'UserGameStats_' in filename:
+                    # Extract from UserGameStats_{userID}_{appID}.bin
+                    parts = filename.replace('UserGameStats_', '').replace('.bin', '')
+                    parts = parts.split('_')
+                    if len(parts) >= 2:
+                        app_id = parts[-1]  # Last part is the appID
+                
+                if app_id in accela_app_ids:
+                    accela_files.append(file_path)
+                    logger.debug(f"ACCELA stats file found: {filename} (AppID: {app_id})")
+                else:
+                    logger.debug(f"Skipping non-ACCELA stats file: {filename} (AppID: {app_id})")
+            
+            logger.info(f"Found {len(accela_files)} ACCELA stats files out of {len(all_files)} total")
+            return sorted(accela_files)
+            
         except Exception as e:
             logger.error(f"Error listing stats files: {e}")
             return []
     
-    def create_backup(self, backup_name: Optional[str] = None) -> Optional[str]:
+    def create_backup(self, backup_name: Optional[str] = None, accela_only: bool = True) -> Optional[str]:
         """
         Cria um backup compactado dos arquivos de stats.
         
         Args:
             backup_name: Nome opcional para o backup (gerado automaticamente se None)
+            accela_only: Se True, inclui apenas stats de jogos ACCELA
             
         Returns:
             Caminho completo do arquivo ZIP criado ou None em caso de erro
@@ -86,7 +126,8 @@ class BackupManager:
         # Gerar nome do backup se não fornecido
         if not backup_name:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            backup_name = f"steam_stats_backup_{timestamp}"
+            prefix = "accela_stats_backup" if accela_only else "steam_stats_backup"
+            backup_name = f"{prefix}_{timestamp}"
         
         # Garantir extensão .zip
         if not backup_name.endswith('.zip'):
@@ -102,10 +143,11 @@ class BackupManager:
             
             # Criar backup ZIP
             with zipfile.ZipFile(backup_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-                stats_files = self.list_stats_files()
+                stats_files = self.list_stats_files(accela_only=accela_only)
                 
                 if not stats_files:
-                    logger.warning("No stats files found to backup")
+                    game_type = "ACCELA" if accela_only else "Steam"
+                    logger.warning(f"No {game_type.lower()} stats files found to backup")
                     return None
                 
                 for file_path in stats_files:
@@ -114,7 +156,8 @@ class BackupManager:
                     zipf.write(file_path, arcname)
                     logger.debug(f"Added to backup: {arcname}")
             
-            logger.info(f"Backup created successfully: {backup_path}")
+            game_type = "ACCELA" if accela_only else "Steam"
+            logger.info(f"{game_type} backup created successfully: {backup_path}")
             logger.info(f"Backed up {len(stats_files)} files")
             return backup_path
             
@@ -141,7 +184,7 @@ class BackupManager:
                     stat = os.stat(file_path)
                     
                     # Extrair timestamp do nome do arquivo
-                    timestamp_str = file.replace('steam_stats_backup_', '').replace('.zip', '')
+                    timestamp_str = file.replace('steam_stats_backup_', '').replace('accela_stats_backup_', '').replace('pre_restore_', '').replace('.zip', '')
                     created_date = None
                     
                     try:
@@ -304,22 +347,73 @@ class BackupManager:
                 file_list = zipf.namelist()
                 bin_files = [f for f in file_list if f.endswith('.bin')]
                 
+                # Get ACCELA games for reference
+                accela_games = GameManager.scan_accela_games()
+                accela_game_dict = {str(game.get('appid', '')): game for game in accela_games}
+                
                 # Extrair informações dos arquivos
                 file_info = []
+                game_app_ids = set()
+                
                 for file_name in bin_files:
                     info = zipf.getinfo(file_name)
+                    filename = os.path.basename(file_name)
+                    
+                    # Extract AppID using the same logic as list_stats_files
+                    app_id = ''
+                    if 'UserGameStatsSchema_' in filename:
+                        parts = filename.replace('UserGameStatsSchema_', '').replace('.bin', '')
+                        app_id = parts
+                    elif 'UserGameStats_' in filename:
+                        parts = filename.replace('UserGameStats_', '').replace('.bin', '')
+                        parts = parts.split('_')
+                        if len(parts) >= 2:
+                            app_id = parts[-1]
+                    
+                    if app_id:
+                        game_app_ids.add(app_id)
+                    
+                    # Determine file type and game info
+                    file_type = 'Schema' if 'schema' in filename.lower() else 'Stats'
+                    game_name = "Unknown"
+                    
+                    if app_id in accela_game_dict:
+                        game_name = accela_game_dict[app_id].get('name', 'Unknown')
+                    
                     file_info.append({
-                        'name': os.path.basename(file_name),
+                        'name': filename,
                         'size': info.file_size,
                         'compressed_size': info.compress_size,
-                        'type': 'Schema' if 'Schema' in file_name else 'Stats'
+                        'type': file_type,
+                        'app_id': app_id,
+                        'game_name': game_name,
+                        'is_accela': app_id in accela_game_dict
                     })
+                
+                # Get unique games in backup
+                games_in_backup = []
+                for app_id in game_app_ids:
+                    if app_id in accela_game_dict:
+                        games_in_backup.append({
+                            'app_id': app_id,
+                            'name': accela_game_dict[app_id].get('name', 'Unknown'),
+                            'is_accela': True
+                        })
+                    else:
+                        games_in_backup.append({
+                            'app_id': app_id,
+                            'name': f'Game {app_id}',
+                            'is_accela': False
+                        })
                 
                 return {
                     'total_files': len(bin_files),
                     'files': file_info,
                     'total_size': sum(f['size'] for f in file_info),
-                    'compressed_size': sum(f['compressed_size'] for f in file_info)
+                    'compressed_size': sum(f['compressed_size'] for f in file_info),
+                    'games': games_in_backup,
+                    'accela_games': [g for g in games_in_backup if g['is_accela']],
+                    'non_accela_games': [g for g in games_in_backup if not g['is_accela']]
                 }
                 
         except Exception as e:

@@ -92,7 +92,7 @@ class BackupDialog(QDialog):
         
     def setup_ui(self):
         self.setWindowTitle("Backup/Restore Stats")
-        self.setFixedSize(800, 600)
+        self.setFixedSize(900, 650)
         self.setModal(True)
         
         # Main layout
@@ -127,7 +127,7 @@ class BackupDialog(QDialog):
         right_panel = self.setup_actions_panel()
         splitter.addWidget(right_panel)
         
-        splitter.setSizes([400, 400])
+        splitter.setSizes([300, 600])  # More space for details
         main_layout.addWidget(splitter)
         
         # Progress section
@@ -250,7 +250,7 @@ class BackupDialog(QDialog):
         layout = QVBoxLayout(panel)
         
         # Title
-        actions_title = QLabel("Actions")
+        actions_title = QLabel("Backup Details")
         actions_title.setStyleSheet(f"""
             QLabel {{
                 color: {theme.colors.TEXT_PRIMARY};
@@ -261,87 +261,7 @@ class BackupDialog(QDialog):
         """)
         layout.addWidget(actions_title)
         
-        # Create backup section
-        create_group = QGroupBox("Create Backup")
-        create_group.setStyleSheet(f"""
-            QGroupBox {{
-                color: {theme.colors.TEXT_PRIMARY};
-                {Typography.get_font_style(Typography.BODY_SIZE)};
-                font-weight: bold;
-                border: 1px solid {theme.colors.BORDER};
-                {BorderRadius.get_border_radius(BorderRadius.SMALL)};
-                margin-top: {Spacing.SM}px;
-                padding-top: {Spacing.SM}px;
-            }}
-            QGroupBox::title {{
-                subcontrol-origin: margin;
-                left: {Spacing.SM}px;
-                padding: 0 {Spacing.XS}px 0 {Spacing.XS}px;
-            }}
-        """)
-        create_layout = QVBoxLayout(create_group)
-        
-        self.create_backup_btn = HoverButton("Create New Backup")
-        self.create_backup_btn.clicked.connect(self.create_backup)
-        create_layout.addWidget(self.create_backup_btn)
-        
-        layout.addWidget(create_group)
-        
-        # Restore backup section
-        restore_group = QGroupBox("Restore Backup")
-        restore_group.setStyleSheet(f"""
-            QGroupBox {{
-                color: {theme.colors.TEXT_PRIMARY};
-                {Typography.get_font_style(Typography.BODY_SIZE)};
-                font-weight: bold;
-                border: 1px solid {theme.colors.BORDER};
-                {BorderRadius.get_border_radius(BorderRadius.SMALL)};
-                margin-top: {Spacing.SM}px;
-                padding-top: {Spacing.SM}px;
-            }}
-            QGroupBox::title {{
-                subcontrol-origin: margin;
-                left: {Spacing.SM}px;
-                padding: 0 {Spacing.XS}px 0 {Spacing.XS}px;
-            }}
-        """)
-        restore_layout = QVBoxLayout(restore_group)
-        
-        self.restore_backup_btn = HoverButton("Restore Selected Backup")
-        self.restore_backup_btn.clicked.connect(self.restore_backup)
-        self.restore_backup_btn.setEnabled(False)
-        restore_layout.addWidget(self.restore_backup_btn)
-        
-        layout.addWidget(restore_group)
-        
-        # Delete backup section
-        delete_group = QGroupBox("Delete Backup")
-        delete_group.setStyleSheet(f"""
-            QGroupBox {{
-                color: {theme.colors.TEXT_PRIMARY};
-                {Typography.get_font_style(Typography.BODY_SIZE)};
-                font-weight: bold;
-                border: 1px solid {theme.colors.BORDER};
-                {BorderRadius.get_border_radius(BorderRadius.SMALL)};
-                margin-top: {Spacing.SM}px;
-                padding-top: {Spacing.SM}px;
-            }}
-            QGroupBox::title {{
-                subcontrol-origin: margin;
-                left: {Spacing.SM}px;
-                padding: 0 {Spacing.XS}px 0 {Spacing.XS}px;
-            }}
-        """)
-        delete_layout = QVBoxLayout(delete_group)
-        
-        self.delete_backup_btn = HoverButton("Delete Selected Backup")
-        self.delete_backup_btn.clicked.connect(self.delete_backup)
-        self.delete_backup_btn.setEnabled(False)
-        delete_layout.addWidget(self.delete_backup_btn)
-        
-        layout.addWidget(delete_group)
-        
-        # Backup info section
+        # Backup info section - more space for details
         info_group = QGroupBox("Backup Information")
         info_group.setStyleSheet(f"""
             QGroupBox {{
@@ -363,15 +283,15 @@ class BackupDialog(QDialog):
         
         self.backup_info_text = QTextEdit()
         self.backup_info_text.setReadOnly(True)
-        self.backup_info_text.setMaximumHeight(150)
+        self.backup_info_text.setMinimumHeight(300)  # Even more space for details
         self.backup_info_text.setStyleSheet(f"""
             QTextEdit {{
                 background: {theme.colors.SURFACE};
                 border: 1px solid {theme.colors.BORDER};
                 {BorderRadius.get_border_radius(BorderRadius.SMALL)};
-                {Typography.get_font_style(Typography.CAPTION_SIZE)};
-                color: {theme.colors.TEXT_SECONDARY};
-                padding: {Spacing.XS}px;
+                {Typography.get_font_style(Typography.BODY_SIZE)};
+                color: {theme.colors.TEXT_PRIMARY};
+                padding: {Spacing.SM}px;
             }}
         """)
         self.backup_info_text.setText("Select a backup to view details")
@@ -422,8 +342,33 @@ class BackupDialog(QDialog):
     def setup_buttons(self, parent_layout):
         """Setup dialog buttons."""
         button_layout = QHBoxLayout()
+        
+        # Left side - backup actions
+        actions_layout = QHBoxLayout()
+        
+        self.create_backup_btn = HoverButton("Create New Backup")
+        self.create_backup_btn.clicked.connect(self.create_backup)
+        self.create_backup_btn.setMaximumWidth(150)
+        actions_layout.addWidget(self.create_backup_btn)
+        
+        actions_layout.addSpacing(Spacing.MD)
+        
+        self.restore_backup_btn = HoverButton("Restore")
+        self.restore_backup_btn.clicked.connect(self.restore_backup)
+        self.restore_backup_btn.setEnabled(False)
+        self.restore_backup_btn.setMaximumWidth(80)
+        actions_layout.addWidget(self.restore_backup_btn)
+        
+        self.delete_backup_btn = HoverButton("Delete")
+        self.delete_backup_btn.clicked.connect(self.delete_backup)
+        self.delete_backup_btn.setEnabled(False)
+        self.delete_backup_btn.setMaximumWidth(80)
+        actions_layout.addWidget(self.delete_backup_btn)
+        
+        button_layout.addLayout(actions_layout)
         button_layout.addStretch()
         
+        # Right side - close button
         close_btn = HoverButton("Close")
         close_btn.clicked.connect(self.close)
         button_layout.addWidget(close_btn)
@@ -478,18 +423,79 @@ class BackupDialog(QDialog):
         try:
             info = self.backup_manager.get_backup_info(backup['path'])
             if info:
-                info_text = f"Name: {backup['name']}\n"
-                info_text += f"Size: {backup['formatted_size']}\n"
-                info_text += f"Files: {info['total_files']}\n"
-                info_text += f"Total Size: {self.backup_manager._format_file_size(info['total_size'])}\n\n"
-                info_text += "Files:\n"
+                # Header information
+                info_text = f"Backup Name: {backup['name']}\n"
+                info_text += f"Created: {backup['created_date'].strftime('%Y-%m-%d %H:%M:%S') if backup['created_date'] else 'Unknown'}\n"
+                info_text += f"File Path: {backup['path']}\n\n"
                 
-                for file_info in info['files']:
-                    info_text += f"  • {file_info['name']} ({file_info['type']})\n"
+                # Games information
+                info_text += "Games Information:\n"
+                info_text += "-" * 40 + "\n"
+                info_text += f"Total Games: {len(info.get('games', []))}\n"
+                info_text += f"ACCELA Games: {len(info.get('accela_games', []))}\n"
+                info_text += f"Other Games: {len(info.get('non_accela_games', []))}\n\n"
+                
+                # List ACCELA games
+                if info.get('accela_games'):
+                    info_text += "ACCELA Games in Backup:\n"
+                    for i, game in enumerate(info['accela_games'], 1):
+                        info_text += f"{i:2d}. {game['name']} (ID: {game['app_id']})\n"
+                    info_text += "\n"
+                
+                # List non-ACCELA games if any
+                if info.get('non_accela_games'):
+                    info_text += "Other Games in Backup:\n"
+                    for i, game in enumerate(info['non_accela_games'], 1):
+                        info_text += f"{i:2d}. {game['name']} (ID: {game['app_id']})\n"
+                    info_text += "\n"
+                
+                # Size information
+                info_text += "Size Information:\n"
+                info_text += "-" * 40 + "\n"
+                info_text += f"Archive Size: {backup['formatted_size']}\n"
+                info_text += f"Uncompressed Size: {self.backup_manager._format_file_size(info['total_size'])}\n"
+                if 'compressed_size' in info:
+                    info_text += f"Compressed Size: {self.backup_manager._format_file_size(info['compressed_size'])}\n"
+                    if info['total_size'] > 0:
+                        compression_ratio = (1 - info['compressed_size'] / info['total_size']) * 100
+                        info_text += f"Compression Ratio: {compression_ratio:.1f}%\n"
+                info_text += f"Total Files: {info['total_files']}\n\n"
+                
+                # File details
+                info_text += "File Details:\n"
+                info_text += "-" * 40 + "\n"
+                
+                for i, file_info in enumerate(info['files'], 1):
+                    info_text += f"{i:2d}. {file_info['name']}\n"
+                    info_text += f"    Game: {file_info.get('game_name', 'Unknown')}\n"
+                    info_text += f"    Type: {file_info['type']}\n"
+                    info_text += f"    Original Size: {self.backup_manager._format_file_size(file_info['size'])}\n"
+                    if 'compressed_size' in file_info:
+                        info_text += f"    Compressed Size: {self.backup_manager._format_file_size(file_info['compressed_size'])}\n"
+                        if file_info['size'] > 0:
+                            file_compression = (1 - file_info['compressed_size'] / file_info['size']) * 100
+                            info_text += f"    Compression: {file_compression:.1f}%\n"
+                    info_text += "\n"
+                
+                # Additional information
+                info_text += "Additional Information:\n"
+                info_text += "-" * 40 + "\n"
+                info_text += f"Backup Directory: {os.path.dirname(backup['path'])}\n"
+                
+                # File type summary
+                schema_files = [f for f in info['files'] if f['type'] == 'Schema']
+                stats_files = [f for f in info['files'] if f['type'] == 'Stats']
+                info_text += f"Schema Files: {len(schema_files)}\n"
+                info_text += f"Stats Files: {len(stats_files)}\n"
                 
                 self.backup_info_text.setText(info_text)
             else:
-                self.backup_info_text.setText(f"Name: {backup['name']}\nSize: {backup['formatted_size']}\n\nUnable to read detailed information")
+                info_text = f"Backup Name: {backup['name']}\n"
+                info_text += f"Created: {backup['created_date'].strftime('%Y-%m-%d %H:%M:%S') if backup['created_date'] else 'Unknown'}\n"
+                info_text += f"Archive Size: {backup['formatted_size']}\n"
+                info_text += f"File Path: {backup['path']}\n\n"
+                info_text += "Unable to read detailed backup information"
+                self.backup_info_text.setText(info_text)
                 
         except Exception as e:
             logger.error(f"Error showing backup info: {e}")
