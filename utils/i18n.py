@@ -60,6 +60,14 @@ class I18nManager:
                     logger.warning("No QApplication instance found")
                     return False
             else:
+                # Se não encontrar .qm no formato Qt, tentar nosso formato personalizado
+                qm_file = f"{translation_file}.qm"
+                if os.path.exists(qm_file):
+                    logger.debug(f"Loading custom QM format: {qm_file}")
+                    if self._load_custom_qm(qm_file):
+                        self.current_language = language_code
+                        return True
+                
                 # Se não encontrar .qm, tentar usar .ts diretamente
                 ts_file = f"{translation_file}.ts"
                 if os.path.exists(ts_file):
@@ -114,6 +122,66 @@ class I18nManager:
         except Exception as e:
             logger.error(f"Error loading .ts file {ts_file}: {e}")
             self.translations = {}
+
+    def _load_custom_qm(self, qm_file: str) -> bool:
+        """
+        Carrega traduções de arquivo .qm personalizado
+
+        Args:
+            qm_file: Caminho do arquivo .qm
+
+        Returns:
+            bool: True se carregado com sucesso
+        """
+        try:
+            import struct
+            
+            with open(qm_file, 'rb') as f:
+                # Ler magic number
+                magic = f.read(4)
+                if magic != b'\x3c\xb8\x64\x18':
+                    logger.warning(f"Invalid QM magic number in {qm_file}")
+                    return False
+                
+                # Ler mensagens
+                self.translations = {}
+                
+                while True:
+                    try:
+                        # Ler contexto
+                        context_len_bytes = f.read(4)
+                        if not context_len_bytes:
+                            break
+                        
+                        context_len = struct.unpack('<I', context_len_bytes)[0]
+                        context = f.read(context_len).decode('utf-8')
+                        
+                        # Ler source
+                        source_len_bytes = f.read(4)
+                        source_len = struct.unpack('<I', source_len_bytes)[0]
+                        source = f.read(source_len).decode('utf-8')
+                        
+                        # Ler translation
+                        trans_len_bytes = f.read(4)
+                        trans_len = struct.unpack('<I', trans_len_bytes)[0]
+                        translation = f.read(trans_len).decode('utf-8')
+                        
+                        # Adicionar ao dicionário
+                        if context not in self.translations:
+                            self.translations[context] = {}
+                        self.translations[context][source] = translation
+                        
+                    except struct.error:
+                        break
+                    except UnicodeDecodeError:
+                        continue
+                
+                logger.info(f"Loaded custom QM with {len(self.translations)} contexts from {qm_file}")
+                return True
+                
+        except Exception as e:
+            logger.error(f"Error loading custom QM file {qm_file}: {e}")
+            return False
 
     def get_available_languages(self) -> dict:
         """Retorna idiomas disponíveis"""

@@ -36,18 +36,15 @@ class HoverButton(QPushButton):
                 text-transform: none;
                 letter-spacing: 0.5px;
                 {theme.border_radius.get_border_radius(theme.border_radius.MEDIUM)};
-                {theme.shadows.get_shadow(theme.shadows.SUBTLE)};
             }}
             QPushButton:hover {{
                 background: {theme.colors.PRIMARY};
                 border: 1px solid {theme.colors.PRIMARY_LIGHT};
                 color: {theme.colors.TEXT_ON_PRIMARY};
-                {theme.shadows.get_shadow(theme.shadows.MEDIUM)};
             }}
             QPushButton:pressed {{
                 background: {theme.colors.PRIMARY_DARK};
                 border: 1px solid {theme.colors.PRIMARY_DARK};
-                {theme.shadows.get_shadow(theme.shadows.NONE)};
             }}
         """)
 
@@ -70,7 +67,7 @@ class ModernFrame(QFrame):
                 background: {theme.colors.SURFACE};
                 border: 1px solid {theme.colors.GLASS_BORDER};
                 {theme.border_radius.get_border_radius(theme.border_radius.LARGE)};
-                {theme.shadows.get_shadow(theme.shadows.SUBTLE)};
+                box-shadow: {theme.shadows.SUBTLE};
             }}
 
         """)
@@ -102,7 +99,6 @@ class AnimatedLabel(QLabel):
                 font-weight: 500;
                 letter-spacing: 0.3px;
                 padding: 4px;
-                {theme.animations.get_transition("color", theme.animations.DURATION_NORMAL)};
             }}
         """)
 
@@ -142,7 +138,7 @@ class NotificationWidget(QFrame):
             "error": ("#C06C84", "#A05C74"),
         }
 
-        primary, secondary = colors.get(self.notification_type, colors["info"])
+        primary = colors.get(self.notification_type, colors["info"])
 
         self.setStyleSheet(f"""
             QFrame {{

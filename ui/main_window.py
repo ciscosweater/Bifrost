@@ -78,7 +78,7 @@ class ScaledLabel(QLabel):
         if self._movie:
             self._movie.frameChanged.connect(self.on_frame_changed)
 
-    def on_frame_changed(self):
+    def on_frame_changed(self, frame_number=None):
         if self.size().width() > 0 and self.size().height() > 0 and self._movie:
             pixmap = self._movie.currentPixmap()
             scaled_pixmap = pixmap.scaled(

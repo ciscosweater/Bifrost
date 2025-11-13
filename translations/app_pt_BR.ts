@@ -1,9 +1,4 @@
-// translations/app_pt_BR.ts
-// Export the XML translation content as a string so the TypeScript compiler does not try to parse raw XML.
-// If you prefer translation tooling to read a pure XML file, rename this file to app_pt_BR.ts.xml (or .xml)
-// and restore the original XML content there.
-
-export const APP_PT_BR_TS = `<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
 <TS version="2.1" language="pt_BR">
 <context>
@@ -550,5 +545,3 @@ PlayNotOwnedGames está ativo e pronto para uso.</translation>
     </message>
 </context>
 </TS>
-`;
-export default APP_PT_BR_TS;
