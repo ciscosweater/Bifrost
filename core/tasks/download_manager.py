@@ -61,7 +61,7 @@ class DownloadManager(QObject):
         # Active threads control for memory leak prevention
         self._active_threads: Set[QThread] = set()
         
-        logger.info("DownloadManager initialized")
+        logger.debug("DownloadManager initialized")
     
     def start_download(self, game_data: Dict[str, Any], selected_depots: list, dest_path: str) -> str:
         """
@@ -134,7 +134,7 @@ class DownloadManager(QObject):
             # Emitir signal
             self.download_started.emit(session_id)
             
-            logger.info(f"Download started with session_id: {session_id}")
+            logger.debug(f"Download started with session_id: {session_id}")
             return session_id
             
         except Exception as e:
@@ -146,7 +146,7 @@ class DownloadManager(QObject):
         """Pausa download atual"""
         try:
             if self.download_state == DownloadState.DOWNLOADING and self.current_process:
-                logger.info("Pausing download...")
+                logger.debug("Pausing download...")
                 
                 # Pausar processo baseado no SO
                 if sys.platform in ["linux", "darwin"]:  # Linux/Mac
@@ -161,7 +161,7 @@ class DownloadManager(QObject):
                     self.current_session.save()
                 
                 self.download_paused.emit()
-                logger.info("Download paused successfully")
+                logger.debug("Download paused successfully")
                 
         except Exception as e:
             logger.error(f"Failed to pause download: {e}")
@@ -171,7 +171,7 @@ class DownloadManager(QObject):
         """Retoma download pausado"""
         try:
             if self.download_state == DownloadState.PAUSED and self.current_process:
-                logger.info("Resuming download...")
+                logger.debug("Resuming download...")
                 
                 # Retomar processo baseado no SO
                 if sys.platform in ["linux", "darwin"]:  # Linux/Mac
@@ -186,7 +186,7 @@ class DownloadManager(QObject):
                     self.current_session.save()
                 
                 self.download_resumed.emit()
-                logger.info("Download resumed successfully")
+                logger.debug("Download resumed successfully")
                 
         except Exception as e:
             logger.error(f"Failed to resume download: {e}")
@@ -203,7 +203,7 @@ class DownloadManager(QObject):
         - Session is marked as cancelled
         """
         try:
-            logger.info("Cancelling download...")
+            logger.debug("Cancelling download...")
             
             # Change state to cancelling
             self._set_state(DownloadState.CANCELLING)
@@ -229,7 +229,7 @@ class DownloadManager(QObject):
                 )
                 
                 if install_dir and os.path.exists(install_dir):
-                    logger.info(f"Starting ENHANCED cleanup of game install directory: {install_dir}")
+                    logger.debug(f"Starting ENHANCED cleanup of game install directory: {install_dir}")
                     
                     # Usar limpeza agressiva mas segura
                     cleanup_result = self.enhanced_cleanup_manager.safe_cancel_cleanup(
@@ -241,12 +241,12 @@ class DownloadManager(QObject):
                     if cleanup_result.get('success', False):
                         files_removed = cleanup_result.get('total_files_removed', 0)
                         space_freed = cleanup_result.get('total_space_freed_mb', 0)
-                        logger.info(f"Enhanced cleanup completed: {files_removed} files, {space_freed}MB freed")
+                        logger.debug(f"Enhanced cleanup completed: {files_removed} files, {space_freed}MB freed")
                     else:
                         logger.error(f"Enhanced cleanup failed: {cleanup_result.get('errors', [])}")
                         
                         # Fallback para limpeza legada em caso de erro
-                        logger.info("Falling back to legacy cleanup")
+                        logger.debug("Falling back to legacy cleanup")
                         self.cleanup_manager.cleanup_session(self.current_session.session_id)
                 else:
                     logger.warning(f"Game install directory not found or doesn't exist: {install_dir}")
@@ -506,7 +506,7 @@ class DownloadManager(QObject):
         """Handle process start"""
         try:
             self.current_process = psutil.Process(process.pid)
-            logger.info(f"Process started with PID: {process.pid}")
+            logger.debug(f"Process started with PID: {process.pid}")
         except Exception as e:
             logger.error(f"Error tracking process: {e}")
     
@@ -520,10 +520,10 @@ class DownloadManager(QObject):
             if len(self.current_session.completed_depots) == len(self.current_session.selected_depots):
                 # All depots completed - stop monitoring to avoid false positives during Steamless
                 self.monitor_timer.stop()
-                logger.info("All depots completed, stopping process monitoring")
+                logger.debug("All depots completed, stopping process monitoring")
         
         self.depot_completed.emit(depot_id)
-        logger.info(f"Depot completed: {depot_id}")
+        logger.debug(f"Depot completed: {depot_id}")
     
     def _on_task_finished(self):
         """Handle task completion - novo método simplificado"""
@@ -605,7 +605,7 @@ class DownloadManager(QObject):
         - Process handles sejam fechados
         """
         try:
-            logger.info("Cleaning up DownloadManager resources...")
+            logger.debug("Cleaning up DownloadManager resources...")
             
             # Parar timer de monitoramento
             if hasattr(self, 'monitor_timer'):
@@ -675,7 +675,7 @@ class DownloadManager(QObject):
             self.current_process = None
             self.current_session = None
             
-            logger.info("DownloadManager cleanup completed")
+            logger.debug("DownloadManager cleanup completed")
             
         except Exception as e:
             logger.error(f"Error during cleanup: {e}")

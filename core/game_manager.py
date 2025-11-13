@@ -571,7 +571,7 @@ class GameManager:
                     else:
                         shutil.rmtree(game_dir, ignore_errors=True)
                         deleted_items.append(f"Game directory: {game_dir}")
-                        logger.info(f"Deleted game directory: {game_dir}")
+                        logger.debug(f"Deleted game directory: {game_dir}")
                 except Exception as e:
                     errors.append(f"Failed to delete game directory: {e}")
             elif game_dir:

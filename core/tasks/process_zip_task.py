@@ -90,7 +90,7 @@ class ProcessZipTask:
                 if not unfiltered_depots:
                     logger.warning("LUA parsing did not identify any depots with keys.")
                 else:
-                    logger.info(f"LUA parsing found {len(unfiltered_depots)} depots before filtering.")
+                    logger.debug(f"LUA parsing found {len(unfiltered_depots)} depots before filtering.")
                     
                     string_blacklist = {str(item) for item in DEPOT_BLACKLIST}
                     filtered_depots = {
@@ -99,7 +99,7 @@ class ProcessZipTask:
                         if depot_id not in string_blacklist
                     }
                     if len(unfiltered_depots) > len(filtered_depots):
-                        logger.info(f"Removed {len(unfiltered_depots) - len(filtered_depots)} depots based on blacklist.")
+                        logger.debug(f"Removed {len(unfiltered_depots) - len(filtered_depots)} depots based on blacklist.")
                     
                     game_data['depots'] = filtered_depots
                     
@@ -111,12 +111,12 @@ class ProcessZipTask:
                         # --- MODIFICATION START ---
                         if api_data.get('installdir'):
                             game_data['installdir'] = api_data['installdir']
-                            logger.info(f"Found official install directory: {game_data['installdir']}")
+                            logger.debug(f"Found official install directory: {game_data['installdir']}")
                         
                         # Update game name from Steam API if available
                         if api_data.get('game_name'):
                             game_data['game_name'] = api_data['game_name']
-                            logger.info(f"Found game name from Steam API: {game_data['game_name']}")
+                            logger.debug(f"Found game name from Steam API: {game_data['game_name']}")
                         
                         api_details = api_data.get('depots', {})
                         
@@ -124,7 +124,7 @@ class ProcessZipTask:
                         depot_sizes = api_data.get('depot_sizes', {})
                         if depot_sizes:
                             game_data['depot_sizes'] = depot_sizes
-                            logger.info(f"Transferred {len(game_data['depot_sizes'])} depot size entries to game_data")
+                            logger.debug(f"Transferred {len(game_data['depot_sizes'])} depot size entries to game_data")
                         else:
                             logger.warning("Empty depot_sizes in api_data")
                             game_data['depot_sizes'] = {}
@@ -133,7 +133,7 @@ class ProcessZipTask:
                         total_game_size = api_data.get('total_game_size', 0)
                         if total_game_size > 0:
                             game_data['total_game_size'] = total_game_size
-                            logger.info(f"Transferred total game size: {total_game_size} bytes ({total_game_size/1024/1024/1024:.2f} GB)")
+                            logger.debug(f"Transferred total game size: {total_game_size} bytes ({total_game_size/1024/1024/1024:.2f} GB)")
                         else:
                             logger.warning("Empty total_game_size in api_data")
                             game_data['total_game_size'] = 0
@@ -159,7 +159,7 @@ class ProcessZipTask:
 
                             lower_desc = final_description.lower()
                             if "soundtrack" in lower_desc or re.search(r'\bost\b', lower_desc):
-                                logger.info(f"Filtering out soundtrack depot {depot_id} ('{final_description}').")
+                                logger.debug(f"Filtering out soundtrack depot {depot_id} ('{final_description}').")
                                 continue
 
                             final_depot_data['desc'] = final_description

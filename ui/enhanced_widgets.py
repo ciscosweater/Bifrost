@@ -119,15 +119,9 @@ class EnhancedProgressBar(QProgressBar):
                 else:
                     self.setFormat(f"%p% - {speed_text}{time_text}")
             else:
-                if self.download_state == "downloading":
-                    self.setFormat(f"%p% - {speed_text}")
-                else:
-                    self.setFormat(f"%p% - {speed_text}")
+                self.setFormat(f"%p% - {speed_text}")
         else:
-            if self.download_state == "downloading":
-                self.setFormat(f"%p%")
-            else:
-                self.setFormat(f"%p%")
+            self.setFormat("%p%")
             
     def _update_time_estimation(self):
         """Calculate estimated time remaining based on progress rate."""

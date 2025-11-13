@@ -91,23 +91,10 @@ play_sound() {
     fi
 }
 
-# Function to display startup banner
-show_banner() {
-    echo -e "${BLUE}"
-    echo "╔════════════════════════════════════════════════════════════╗"
-    echo "║                    ACCELA - Steam Depot Downloader                ║"
-    echo "║                      Enhanced Fork v2.0                        ║"
-    echo "║                                                              ║"
-    echo "║  🎮 Download Steam depots with advanced management          ║"
-    echo "║  🚀 Enhanced UI and features                              ║"
-    echo "║  🔧 Automatic setup and dependency checking                ║"
-    echo "╚════════════════════════════════════════════════════════════╝"
-    echo -e "${NC}"
-}
+
 
 # Main execution
 main() {
-    show_banner
     print_info "Initializing ACCELA..."
 
     # Setup virtual environment and check dependencies

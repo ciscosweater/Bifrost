@@ -91,7 +91,7 @@ class SteamSchemaIntegration:
             
             if out and has_schema and out.body.schema:
                 if len(out.body.schema) > 0:
-                    logger.info(f"SUCCESS: Valid schema found for owner {owner_id} with {len(out.body.schema)} bytes")
+                    logger.debug(f"SUCCESS: Valid schema found for owner {owner_id} with {len(out.body.schema)} bytes")
                     return out.body.schema
                 else:
                     logger.debug(f"Empty schema for owner {owner_id}")
@@ -116,7 +116,7 @@ class SteamSchemaIntegration:
         return None
 
     def setup_credentials(self, api_key=None, steam_id=None):
-        logger.info(f"setup_credentials called with api_key={bool(api_key)}, steam_id={bool(steam_id)}")
+        logger.debug(f"setup_credentials called with api_key={bool(api_key)}, steam_id={bool(steam_id)}")
         
         if api_key:
             self.api_key = api_key
@@ -125,13 +125,13 @@ class SteamSchemaIntegration:
             steam_id = steam_id.strip()
             if steam_id and len(steam_id) > 0:
                 self.steam_id = steam_id
-                logger.info(f"Steam ID set to: {self.steam_id}")
+                logger.debug(f"Steam ID set to: {self.steam_id}")
         
         # Save credentials to .env file
         try:
             env_vars = {}
             if os.path.exists(self.dotenv_path):
-                logger.info(f"Loading existing .env file: {self.dotenv_path}")
+                logger.debug(f"Loading existing .env file: {self.dotenv_path}")
                 with open(self.dotenv_path, 'r') as f:
                     for line in f:
                         line = line.strip()
@@ -139,7 +139,7 @@ class SteamSchemaIntegration:
                             key, value = line.split('=', 1)
                             env_vars[key] = value
             else:
-                logger.info(f"Creating new .env file: {self.dotenv_path}")
+                logger.debug(f"Creating new .env file: {self.dotenv_path}")
                 # Create .env file with default content if it doesn't exist
                 with open(self.dotenv_path, 'w') as f:
                     f.write("# Steam API Configuration\n")
@@ -153,10 +153,10 @@ class SteamSchemaIntegration:
             # Update with new values
             if api_key:
                 env_vars['STEAM_API_KEY'] = api_key
-                logger.info(f"Setting STEAM_API_KEY in .env")
+                logger.debug(f"Setting STEAM_API_KEY in .env")
             if steam_id and steam_id.strip():
                 env_vars['STEAM_USER_ID'] = steam_id.strip()  # Changed from STEAM_ID to STEAM_USER_ID
-                logger.info(f"Setting STEAM_USER_ID in .env: {steam_id.strip()}")
+                logger.debug(f"Setting STEAM_USER_ID in .env: {steam_id.strip()}")
             
             # Write back to .env file
             with open(self.dotenv_path, 'w') as f:

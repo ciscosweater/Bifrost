@@ -81,7 +81,7 @@ class OnlineFixesManager(QObject):
             'raw.githubusercontent.com'
         ]
         
-        logger.info("OnlineFixesManager initialized")
+        logger.debug("OnlineFixesManager initialized")
     
     def check_for_fixes(self, appid: int, game_name: str = '') -> Dict[str, Any]:
         """
@@ -111,7 +111,7 @@ class OnlineFixesManager(QObject):
                 if not isinstance(appid, int) or appid <= 0 or appid > 99999999:
                     raise ValueError(f"Invalid AppID: {appid} (type: {type(appid)}, must be between 1 and 99999999)")
                 
-                logger.info(f"Checking for fixes for AppID: {appid}")
+                logger.debug(f"Checking for fixes for AppID: {appid}")
                 self.fix_check_started.emit(appid)
                 
                 # Estrutura do resultado
@@ -146,7 +146,7 @@ class OnlineFixesManager(QObject):
                 self.fix_check_progress.emit(f"Checking online-fix for {game_name}...")
                 result['onlineFix'] = self._check_online_fix(appid)
                 
-                logger.info(f"Fix check completed for {appid}: Generic={result['genericFix']['available']}, Online={result['onlineFix']['available']}")
+                logger.debug(f"Fix check completed for {appid}: Generic={result['genericFix']['available']}, Online={result['onlineFix']['available']}")
                 self.fix_check_completed.emit(result)
                 
                 return result
@@ -333,7 +333,7 @@ class OnlineFixesManager(QObject):
             worker = FixWorkerThread(self, appid, download_url, install_path, fix_type, game_name)
             worker.start()
             
-            logger.info(f"Started fix download for AppID {appid}: {fix_type}")
+            logger.debug(f"Started fix download for AppID {appid}: {fix_type}")
             return True
             
         except Exception as e:

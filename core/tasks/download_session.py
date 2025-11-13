@@ -144,7 +144,7 @@ class DownloadSession:
                 cls.delete_session(session_id)
             
             if to_delete:
-                logger.info(f"Cleaned up {len(to_delete)} old sessions")
+                logger.debug(f"Cleaned up {len(to_delete)} old sessions")
                 
         except Exception as e:
             logger.error(f"Failed to cleanup old sessions: {e}")

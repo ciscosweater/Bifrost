@@ -4,10 +4,8 @@ Provides clean, modern cards for displaying ACCELA info and game statistics
 """
 
 import logging
-from typing import Any, Dict, Optional
 
-from PyQt6.QtCore import Qt, QTimer, pyqtSignal
-from PyQt6.QtGui import QColor, QFont, QPainter, QPixmap
+from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtWidgets import (
     QFrame,
     QHBoxLayout,
@@ -17,14 +15,16 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from ui.theme import BorderRadius, Colors, Spacing, Typography, theme
+from ui.theme import BorderRadius, Colors, Spacing, Typography
 
 # Import i18n
 try:
     from utils.i18n import tr
 except (ImportError, ModuleNotFoundError):
+
     def tr(context, text):
         return text
+
 
 logger = logging.getLogger(__name__)
 
@@ -121,7 +121,10 @@ class AccelaInfoCard(InfoCard):
 
     def __init__(self):
         super().__init__(
-            title=tr("InfoCards", "ACCELA"), value="v1.1.0", icon_text="🚀", color=Colors.PRIMARY
+            title=tr("InfoCards", "ACCELA"),
+            value="v1.1.0",
+            icon_text="",
+            color=Colors.PRIMARY,
         )
 
 
@@ -129,7 +132,12 @@ class GamesStatsCard(InfoCard):
     """Card showing installed games statistics"""
 
     def __init__(self):
-        super().__init__(title=tr("InfoCards", "Games"), value="0 installed", icon_text="[G]", color=Colors.SUCCESS)
+        super().__init__(
+            title=tr("InfoCards", "Games"),
+            value=(f"0 {tr('InfoCards', 'installed')}"),
+            icon_text="[G]",
+            color=Colors.SUCCESS,
+        )
 
         self._setup_stats_timer()
 
@@ -166,7 +174,10 @@ class StorageCard(InfoCard):
 
     def __init__(self):
         super().__init__(
-            title=tr("InfoCards", "Storage"), value="0 GB", icon_text="", color=Colors.SECONDARY
+            title=tr("InfoCards", "Storage"),
+            value="0 GB",
+            icon_text="",
+            color=Colors.SECONDARY,
         )
 
         self._setup_storage_timer()
@@ -230,7 +241,10 @@ class StatusCard(InfoCard):
 
     def __init__(self):
         super().__init__(
-            title=tr("InfoCards", "Achievements"), value=tr("InfoCards", "Ready"), icon_text="", color=Colors.SUCCESS
+            title=tr("InfoCards", "Achievements"),
+            value=tr("InfoCards", "Ready"),
+            icon_text="",
+            color=Colors.SUCCESS,
         )
 
         self._setup_status_timer()
@@ -248,10 +262,12 @@ class StatusCard(InfoCard):
         """Update ACCELA status"""
         try:
             import os
-            
+
             # Check if saved_logins.encrypted exists for achievements
-            slscheevo_data_path = os.path.join(os.getcwd(), "slscheevo_build", "data", "saved_logins.encrypted")
-            
+            slscheevo_data_path = os.path.join(
+                os.getcwd(), "slscheevo_build", "data", "saved_logins.encrypted"
+            )
+
             if os.path.exists(slscheevo_data_path):
                 self.update_value(tr("InfoCards", "Ready"))
                 self.color = Colors.SUCCESS

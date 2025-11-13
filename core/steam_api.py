@@ -72,13 +72,13 @@ def get_depot_info_from_api(app_id):
         try:
             file_age = time.time() - os.path.getmtime(cache_file)
             if file_age < SteamAPIConfig.CACHE_EXPIRATION_SECONDS:
-                logger.info(f"Loading app details for AppID: {app_id} from local cache.")
+                logger.debug(f"Loading app details for AppID: {app_id} from local cache.")
                 with open(cache_file, 'r', encoding='utf-8') as f:
                     return json.load(f)
         except (json.JSONDecodeError, IOError) as e:
             logger.warning(f"Could not read cache file {cache_file}. Fetching fresh data. Error: {e}")
 
-    logger.info(f"Attempting to fetch app info for AppID {app_id} using steam.client (priority)...")
+    logger.debug(f"Attempting to fetch app info for AppID {app_id} using steam.client (priority)...")
     api_data = _fetch_with_steam_client(app_id)
 
     if not api_data or not api_data.get('depots'):
@@ -315,11 +315,11 @@ def get_depot_sizes_from_manifests(app_id, depots):
         dict: Mapping of depot_id to size in bytes (0 if unavailable)
     """
     depot_sizes = {}
-    logger.info(f"Getting depot sizes for AppID {app_id} with {len(depots)} depots")
+    logger.debug(f"Getting depot sizes for AppID {app_id} with {len(depots)} depots")
     
     try:
         from steam.client import SteamClient
-        logger.info("Steam client library available for depot size fetching")
+        logger.debug("Steam client library available for depot size fetching")
     except ImportError:
         logger.warning("`steam[client]` package not found. Cannot fetch depot sizes.")
         return depot_sizes
@@ -386,7 +386,7 @@ except Exception as e:
     sys.exit(1)
 '''
 
-    logger.info(f"Executing Steam client script to get depot sizes for {len(depots)} depots")
+    logger.debug(f"Executing Steam client script to get depot sizes for {len(depots)} depots")
     try:
         import tempfile
         import subprocess
@@ -410,7 +410,7 @@ except Exception as e:
             if result.returncode == 0:
                 try:
                     depot_sizes = json.loads(result.stdout.strip())
-                    logger.info(f"Successfully retrieved sizes for {len([s for s in depot_sizes.values() if s > 0])} depots")
+                    logger.debug(f"Successfully retrieved sizes for {len([s for s in depot_sizes.values() if s > 0])} depots")
                     logger.debug(f"Depot sizes: {depot_sizes}")
                 except json.JSONDecodeError as e:
                     logger.error(f"Failed to parse depot sizes JSON: {e}")
@@ -430,5 +430,5 @@ except Exception as e:
     except Exception as e:
         logger.error(f"Failed to get depot sizes: {e}")
     
-    logger.info(f"Final depot sizes dict: {depot_sizes}")
+    logger.debug(f"Final depot sizes dict: {depot_sizes}")
     return depot_sizes

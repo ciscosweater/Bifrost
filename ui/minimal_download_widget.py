@@ -3,18 +3,20 @@ Minimal Download Widget - Unified and elegant component for download control
 """
 
 import logging
-from PyQt6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QLabel, QPushButton
-from PyQt6.QtCore import Qt, pyqtSignal, QTimer, QPropertyAnimation, QEasingCurve
-from PyQt6.QtGui import QFont
 
-from ui.theme import theme, Typography, BorderRadius, Spacing
+from PyQt6.QtCore import QEasingCurve, QPropertyAnimation, Qt, QTimer, pyqtSignal
+from PyQt6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
+
+from ui.theme import BorderRadius, Spacing, Typography, theme
 
 # Import i18n
 try:
     from utils.i18n import tr
 except (ImportError, ModuleNotFoundError):
+
     def tr(context, text):
         return text
+
 
 logger = logging.getLogger(__name__)
 
@@ -40,16 +42,16 @@ class MinimalDownloadWidget(QWidget):
         self.progress = 0
         self.total_size = 0
         self.downloaded_size = 0
-        
+
         # Debouncing timers for performance
         self._progress_timer = QTimer()
         self._progress_timer.setSingleShot(True)
         self._pending_progress = 0
-        
+
         self._speed_timer = QTimer()
         self._speed_timer.setSingleShot(True)
         self._pending_speed = ""
-        
+
         self._setup_ui()
         self._set_idle_state()
 
@@ -108,8 +110,6 @@ class MinimalDownloadWidget(QWidget):
             }}
         """)
         self.status_label.hide()
-
-
 
         header_layout.addWidget(self.game_image_label)
         header_layout.addWidget(self.game_name_label)
@@ -178,9 +178,15 @@ class MinimalDownloadWidget(QWidget):
         info_container.addWidget(self.size_label)
 
         # Minimalist buttons with text
-        self.pause_btn = self._create_control_button(tr("MinimalDownloadWidget", "Pause"), "pause")
-        self.resume_btn = self._create_control_button(tr("MinimalDownloadWidget", "Resume"), "resume")
-        self.cancel_btn = self._create_control_button(tr("MinimalDownloadWidget", "Cancel"), "cancel")
+        self.pause_btn = self._create_control_button(
+            tr("MinimalDownloadWidget", "Pause"), "pause"
+        )
+        self.resume_btn = self._create_control_button(
+            tr("MinimalDownloadWidget", "Resume"), "resume"
+        )
+        self.cancel_btn = self._create_control_button(
+            tr("MinimalDownloadWidget", "Cancel"), "cancel"
+        )
 
         # Hide buttons initially
         self.pause_btn.hide()
@@ -204,32 +210,31 @@ class MinimalDownloadWidget(QWidget):
         self.pause_btn.clicked.connect(self.pause_clicked.emit)
         self.resume_btn.clicked.connect(self.resume_clicked.emit)
         self.cancel_btn.clicked.connect(self.cancel_clicked.emit)
-        
+
         # Connect debouncing timers
         self._progress_timer.timeout.connect(self._apply_progress_update)
         self._speed_timer.timeout.connect(self._apply_speed_update)
 
     def _create_fallback_image(self):
         """Create a fallback placeholder image when no game image is available"""
-        from PyQt6.QtGui import QPixmap, QPainter, QColor, QFont, QPen
-        from PyQt6.QtCore import Qt, QSize
-        
+        from PyQt6.QtGui import QColor, QPainter, QPen, QPixmap
+
         # Create a 120x56 pixmap (same size as game_image_label)
         pixmap = QPixmap(120, 56)
         pixmap.fill(QColor(theme.colors.SURFACE))
-        
+
         painter = QPainter(pixmap)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        
+
         # Draw game controller icon
         painter.setPen(QPen(QColor(theme.colors.TEXT_SECONDARY), 2))
         painter.setBrush(QColor(theme.colors.BACKGROUND))
-        
+
         # Simple controller shape
         painter.drawRoundedRect(35, 18, 50, 20, 8, 8)
         painter.drawRoundedRect(25, 22, 15, 12, 4, 4)
         painter.drawRoundedRect(80, 22, 15, 12, 4, 4)
-        
+
         # Draw dots for buttons
         painter.setPen(QPen(QColor(theme.colors.TEXT_SECONDARY), 1))
         painter.setBrush(QColor(theme.colors.TEXT_SECONDARY))
@@ -237,9 +242,9 @@ class MinimalDownloadWidget(QWidget):
         painter.drawEllipse(90, 25, 3, 3)
         painter.drawEllipse(87, 28, 3, 3)
         painter.drawEllipse(87, 22, 3, 3)
-        
+
         painter.end()
-        
+
         return pixmap
 
     def _create_control_button(self, text, button_type):
@@ -276,14 +281,26 @@ class MinimalDownloadWidget(QWidget):
 
         # Specific colors by type
         if button_type == "pause":
-            colors = (theme.colors.WARNING, theme.colors.WARNING, 
-                     theme.colors.WARNING_DARK, theme.colors.WARNING_DARK)
+            colors = (
+                theme.colors.WARNING,
+                theme.colors.WARNING,
+                theme.colors.WARNING_DARK,
+                theme.colors.WARNING_DARK,
+            )
         elif button_type == "resume":
-            colors = (theme.colors.SUCCESS, theme.colors.SUCCESS,
-                     theme.colors.SUCCESS_DARK, theme.colors.SUCCESS_DARK)
+            colors = (
+                theme.colors.SUCCESS,
+                theme.colors.SUCCESS,
+                theme.colors.SUCCESS_DARK,
+                theme.colors.SUCCESS_DARK,
+            )
         else:  # cancel
-            colors = (theme.colors.ERROR, theme.colors.ERROR,
-                     theme.colors.ERROR_DARK, theme.colors.ERROR_DARK)
+            colors = (
+                theme.colors.ERROR,
+                theme.colors.ERROR,
+                theme.colors.ERROR_DARK,
+                theme.colors.ERROR_DARK,
+            )
 
         btn.setStyleSheet(base_style % colors)
         return btn
@@ -311,13 +328,18 @@ class MinimalDownloadWidget(QWidget):
     def set_downloading_state(self, game_name=None, game_image=None):
         """Configure downloading state"""
         self.current_state = "downloading"
-        
+
         # Hide status label when downloading
         self.status_label.hide()
-        
+
         # Enhanced image handling with fallback
         if game_image and not game_image.isNull():
-            scaled_pixmap = game_image.scaled(120, 56, Qt.AspectRatioMode.KeepAspectRatioByExpanding, Qt.TransformationMode.SmoothTransformation)
+            scaled_pixmap = game_image.scaled(
+                120,
+                56,
+                Qt.AspectRatioMode.KeepAspectRatioByExpanding,
+                Qt.TransformationMode.SmoothTransformation,
+            )
             self.game_image_label.setPixmap(scaled_pixmap)
             self.game_image_label.show()
         else:
@@ -325,21 +347,21 @@ class MinimalDownloadWidget(QWidget):
             fallback_pixmap = self._create_fallback_image()
             self.game_image_label.setPixmap(fallback_pixmap)
             self.game_image_label.show()
-        
+
         # Mostrar nome do jogo se fornecido
         if game_name:
             self.game_name_label.setText(game_name)
             self.game_name_label.show()
         else:
             self.game_name_label.hide()
-            
+
         self.progress_bar.setStyleSheet(f"""
             QWidget {{
                 background: {theme.colors.PRIMARY};
                 border-radius: {BorderRadius.SMALL}px;
             }}
         """)
-        
+
         self.speed_label.show()
         self._update_size_display()  # This will show size_label
         self.pause_btn.show()
@@ -351,17 +373,17 @@ class MinimalDownloadWidget(QWidget):
     def set_paused_state(self):
         """Configure paused state"""
         self.current_state = "paused"
-        
+
         # Hide status label when paused
         self.status_label.hide()
-        
+
         self.progress_bar.setStyleSheet(f"""
             QWidget {{
                 background: {theme.colors.WARNING};
                 border-radius: {BorderRadius.SMALL}px;
             }}
         """)
-        
+
         self.pause_btn.hide()
         self.resume_btn.show()
         self.resume_btn.setEnabled(True)
@@ -371,18 +393,18 @@ class MinimalDownloadWidget(QWidget):
     def set_completed_state(self):
         """Configure completed state"""
         self.current_state = "completed"
-        
+
         # Show completion status
         self.status_label.setText(tr("MinimalDownloadWidget", "Download completed!"))
         self.status_label.show()
-        
+
         self.progress_bar.setStyleSheet(f"""
             QWidget {{
                 background: {theme.colors.SUCCESS};
                 border-radius: {BorderRadius.SMALL}px;
             }}
         """)
-        
+
         self.speed_label.hide()
         self._update_size_display()
         self.pause_btn.hide()
@@ -394,18 +416,18 @@ class MinimalDownloadWidget(QWidget):
         self.current_state = "error"
         self.game_image_label.hide()
         self.game_name_label.hide()
-        
+
         # Show error message
         self.status_label.setText(message)
         self.status_label.show()
-        
+
         self.progress_bar.setStyleSheet(f"""
             QWidget {{
                 background: {theme.colors.ERROR};
                 border-radius: {BorderRadius.SMALL}px;
             }}
         """)
-        
+
         self.speed_label.hide()
         self.pause_btn.hide()
         self.resume_btn.hide()
@@ -414,7 +436,7 @@ class MinimalDownloadWidget(QWidget):
     def _set_idle_state(self):
         """Configure idle state"""
         self.current_state = "idle"
-        
+
         # Show basic elements in idle state
         self.status_label.setText(tr("MinimalDownloadWidget", "Ready to download"))
         self.status_label.show()
@@ -425,7 +447,7 @@ class MinimalDownloadWidget(QWidget):
         self.pause_btn.hide()
         self.resume_btn.hide()
         self.cancel_btn.hide()
-        
+
         # Reset progress bar
         self.progress_bar.setStyleSheet(f"""
             QWidget {{
@@ -434,7 +456,7 @@ class MinimalDownloadWidget(QWidget):
             }}
         """)
         self._update_progress_bar(0)
-    
+
     def set_idle_state(self):
         """Public method to set idle state"""
         self._set_idle_state()
@@ -444,10 +466,10 @@ class MinimalDownloadWidget(QWidget):
         self.progress = value
         self._pending_progress = value
         self._progress_timer.start(50)  # 50ms debounce
-        
+
     def _apply_progress_update(self):
         """Actually apply the progress update"""
-        if hasattr(self, '_pending_progress'):
+        if hasattr(self, "_pending_progress"):
             self._update_progress_bar(self._pending_progress)
 
     def update_speed(self, speed_text):
@@ -455,54 +477,62 @@ class MinimalDownloadWidget(QWidget):
         self.current_speed = speed_text
         self._pending_speed = speed_text
         self._speed_timer.start(100)  # 100ms debounce for speed updates
-        
+
     def _apply_speed_update(self):
         """Actually apply speed update"""
-        if hasattr(self, '_pending_speed') and hasattr(self, 'speed_label'):
+        if hasattr(self, "_pending_speed") and hasattr(self, "speed_label"):
             self.speed_label.setText(self._pending_speed)
 
     def set_download_size(self, total_size: int):
         """Define o tamanho total do download"""
         self.total_size = total_size
         self._update_size_display()
-    
+
     def update_downloaded_size(self, downloaded_size: int):
         """Atualiza o tamanho baixado"""
         self.downloaded_size = downloaded_size
         self._update_size_display()
-    
+
     def _update_size_display(self):
         """Atualiza exibição das informações de tamanho"""
         total_formatted = self._format_size(self.total_size)
         downloaded_formatted = self._format_size(self.downloaded_size)
-        
+
         if self.current_state == "downloading":
             if self.total_size > 0:
-                percentage = (self.downloaded_size / self.total_size * 100)
+                percentage = self.downloaded_size / self.total_size * 100
                 text = f"{downloaded_formatted} / {total_formatted} ({percentage:.1f}%)"
             else:
                 text = f"{tr('MinimalDownloadWidget', 'Downloaded')}: {downloaded_formatted}"
             self.size_label.setText(text)
         elif self.current_state == "completed":
             if self.total_size > 0:
-                self.size_label.setText(f"{tr('MinimalDownloadWidget', 'Completed')}: {total_formatted}")
+                self.size_label.setText(
+                    f"{tr('MinimalDownloadWidget', 'Completed')}: {total_formatted}"
+                )
             else:
-                self.size_label.setText(f"{tr('MinimalDownloadWidget', 'Completed')}: {downloaded_formatted}")
+                self.size_label.setText(
+                    f"{tr('MinimalDownloadWidget', 'Completed')}: {downloaded_formatted}"
+                )
         elif self.current_state == "paused":
             if self.total_size > 0:
-                percentage = (self.downloaded_size / self.total_size * 100)
+                percentage = self.downloaded_size / self.total_size * 100
                 text = f"{downloaded_formatted} / {total_formatted} ({percentage:.1f}%)"
             else:
-                text = f"{tr('MinimalDownloadWidget', 'Paused')}: {downloaded_formatted}"
+                text = (
+                    f"{tr('MinimalDownloadWidget', 'Paused')}: {downloaded_formatted}"
+                )
             self.size_label.setText(text)
         else:
             if self.total_size > 0:
-                self.size_label.setText(f"{tr('MinimalDownloadWidget', 'Size')}: {total_formatted}")
+                self.size_label.setText(
+                    f"{tr('MinimalDownloadWidget', 'Size')}: {total_formatted}"
+                )
             else:
                 self.size_label.setText(f"{tr('MinimalDownloadWidget', 'Size')}: --")
-        
+
         self.size_label.show()  # Always show size label
-    
+
     def _format_size(self, size_bytes: int) -> str:
         """Formata tamanho em bytes para exibição"""
         if size_bytes < 1024:
@@ -513,10 +543,6 @@ class MinimalDownloadWidget(QWidget):
             return f"{size_bytes / (1024 * 1024):.1f} MB"
         else:
             return f"{size_bytes / (1024 * 1024 * 1024):.1f} GB"
-
-    def update_status(self, message):
-        """Update detailed status message - removed"""
-        pass
 
     def reset(self):
         """Reset widget to initial state"""

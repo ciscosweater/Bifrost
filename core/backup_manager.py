@@ -28,7 +28,7 @@ class BackupManager:
         """Garante que o diretório de backups exista."""
         if not os.path.exists(self.backup_dir):
             os.makedirs(self.backup_dir)
-            logger.info(f"Created backup directory: {self.backup_dir}")
+            logger.debug(f"Created backup directory: {self.backup_dir}")
     
     def get_steam_stats_path(self) -> Optional[str]:
         """
@@ -101,7 +101,7 @@ class BackupManager:
                 else:
                     logger.debug(f"Skipping non-ACCELA stats file: {filename} (AppID: {app_id})")
             
-            logger.info(f"Found {len(accela_files)} ACCELA stats files out of {len(all_files)} total")
+            logger.debug(f"Found {len(accela_files)} ACCELA stats files out of {len(all_files)} total")
             return sorted(accela_files)
             
         except Exception as e:

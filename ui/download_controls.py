@@ -3,19 +3,27 @@ Download Controls - Componentes UI para controle de downloads (pause/resume/canc
 """
 
 import logging
-from PyQt6.QtWidgets import QWidget, QHBoxLayout, QPushButton, QVBoxLayout, QLabel, QSizePolicy
-from PyQt6.QtCore import Qt, pyqtSignal, QSize
-from PyQt6.QtGui import QFont
 
-from ui.theme import theme, Typography, Spacing, BorderRadius
-from ui.enhanced_widgets import SecondaryButton
+from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtWidgets import (
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QSizePolicy,
+    QVBoxLayout,
+    QWidget,
+)
+
+from ui.theme import BorderRadius, Spacing, Typography, theme
 
 # Import i18n
 try:
     from utils.i18n import tr
 except (ImportError, ModuleNotFoundError):
+
     def tr(context, text):
         return text
+
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +56,9 @@ class DownloadControls(QWidget):
         self.status_label.setWordWrap(True)
         self.status_label.setMinimumHeight(32)
         # Allow the status label to expand horizontally and enforce a minimum width
-        self.status_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.status_label.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
+        )
         self.status_label.setMinimumWidth(250)
         self.status_label.setStyleSheet(f"""
             QLabel {{
@@ -63,13 +73,15 @@ class DownloadControls(QWidget):
             }}
         """)
         layout.addWidget(self.status_label)
-        
+
         # Size information label
         self.size_label = QLabel("")
         self.size_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.size_label.setWordWrap(True)
         self.size_label.setMinimumHeight(24)
-        self.size_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.size_label.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
+        )
         self.size_label.setMinimumWidth(250)
         self.size_label.setStyleSheet(f"""
             QLabel {{
@@ -243,7 +255,9 @@ class DownloadControls(QWidget):
     def set_completed_state(self):
         """Configura estado de completed"""
         self.current_state = "completed"
-        self.status_label.setText(tr("DownloadControls", "Download completed successfully!"))
+        self.status_label.setText(
+            tr("DownloadControls", "Download completed successfully!")
+        )
         self.status_label.setStyleSheet(f"""
             QLabel {{
                 color: {theme.colors.TEXT_ON_PRIMARY};
@@ -335,36 +349,52 @@ class DownloadControls(QWidget):
 
         # Update geometry so layout respects configured minimum size
         self.status_label.updateGeometry()
-    
+
     def set_download_size(self, total_size: int):
         """Define o tamanho total do download"""
         self.total_size = total_size
         self._update_size_display()
-    
+
     def update_downloaded_size(self, downloaded_size: int):
         """Atualiza o tamanho baixado"""
         self.downloaded_size = downloaded_size
         self._update_size_display()
-    
+
     def _update_size_display(self):
         """Atualiza exibição das informações de tamanho"""
         if self.total_size > 0:
             total_formatted = self._format_size(self.total_size)
             downloaded_formatted = self._format_size(self.downloaded_size)
-            
+
             if self.current_state == "downloading":
-                percentage = (self.downloaded_size / self.total_size * 100) if self.total_size > 0 else 0
-                self.size_label.setText(f"{tr('DownloadControls', 'Progress')}: {downloaded_formatted} / {total_formatted} ({percentage:.1f}%)")
+                percentage = (
+                    (self.downloaded_size / self.total_size * 100)
+                    if self.total_size > 0
+                    else 0
+                )
+                self.size_label.setText(
+                    f"{tr('DownloadControls', 'Progress')}: {downloaded_formatted} / {total_formatted} ({percentage:.1f}%)"
+                )
             elif self.current_state == "completed":
-                self.size_label.setText(f"{tr('DownloadControls', 'Completed')}: {total_formatted}")
+                self.size_label.setText(
+                    f"{tr('DownloadControls', 'Completed')}: {total_formatted}"
+                )
             elif self.current_state == "paused":
-                percentage = (self.downloaded_size / self.total_size * 100) if self.total_size > 0 else 0
-                self.size_label.setText(f"{tr('DownloadControls', 'Paused')}: {downloaded_formatted} / {total_formatted} ({percentage:.1f}%)")
+                percentage = (
+                    (self.downloaded_size / self.total_size * 100)
+                    if self.total_size > 0
+                    else 0
+                )
+                self.size_label.setText(
+                    f"{tr('DownloadControls', 'Paused')}: {downloaded_formatted} / {total_formatted} ({percentage:.1f}%)"
+                )
             else:
-                self.size_label.setText(f"{tr('DownloadControls', 'Total Size')}: {total_formatted}")
+                self.size_label.setText(
+                    f"{tr('DownloadControls', 'Total Size')}: {total_formatted}"
+                )
         else:
             self.size_label.setText("")
-    
+
     def _format_size(self, size_bytes: int) -> str:
         """Formata tamanho em bytes para exibição"""
         if size_bytes < 1024:
