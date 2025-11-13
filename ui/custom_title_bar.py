@@ -11,7 +11,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from .assets import GEAR_SVG, POWER_SVG
+from .assets import GEAR_SVG
 from .theme import BorderRadius, Spacing, Typography
 
 # Import i18n
@@ -122,31 +122,8 @@ class CustomTitleBar(QFrame):
         )
         right_layout.addWidget(self.settings_button)
 
-        self.close_button = self._create_svg_button(
-            POWER_SVG,
-            getattr(parent, "close", lambda: None),
-            tr("CustomTitleBar", "Close Application"),
-        )
-        right_layout.addWidget(self.close_button)
-
         # Main layout assembly
         layout.addWidget(left_widget)
-        layout.addStretch(1)
-        self.title_label = QLabel(tr("CustomTitleBar", "ACCELA"))
-        from .theme import theme
-
-        self.title_label.setStyleSheet(f"""
-            QLabel {{
-                color: {theme.colors.TEXT_ACCENT};
-                {Typography.get_font_style(Typography.H1_SIZE)};
-                font-weight: bold;
-                letter-spacing: 1px;
-                padding: 4px 12px;
-                border: none;
-                background: transparent;
-            }}
-        """)
-        layout.addWidget(self.title_label)
         layout.addStretch(1)
         layout.addWidget(right_widget)
 
@@ -169,7 +146,7 @@ class CustomTitleBar(QFrame):
                 try:
                     self.drag_pos = (
                         a0.globalPosition().toPoint()
-                        - self.parent.frameGeometry().topLeft()  # type: ignore
+                        - self.parent.frameGeometry().topLeft()  # type: ignore[attr-defined]
                     )
                 except (AttributeError, TypeError):
                     pass
@@ -187,7 +164,7 @@ class CustomTitleBar(QFrame):
         ):
             if hasattr(self.parent, "move"):
                 try:
-                    self.parent.move(a0.globalPosition().toPoint() - self.drag_pos)  # type: ignore
+                    self.parent.move(a0.globalPosition().toPoint() - self.drag_pos)  # type: ignore[attr-defined]
                 except (AttributeError, TypeError):
                     pass
             a0.accept()

@@ -43,6 +43,10 @@ def main():
 
     app = QApplication(sys.argv)
 
+    # Set application name for proper desktop integration
+    app.setApplicationName("ACCELA")
+    app.setApplicationDisplayName("ACCELA")
+
     # Set application icon
     try:
         from PyQt6.QtGui import QIcon
