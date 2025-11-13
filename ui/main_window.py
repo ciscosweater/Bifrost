@@ -110,8 +110,7 @@ class ScaledFontLabel(QLabel):
 class MainWindow(QMainWindow):
     def __init__(self, zip_file=None):
         super().__init__()
-        self.setWindowTitle(tr("MainWindow", "Depot Downloader GUI"))
-        self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
+        self.setWindowTitle(tr("MainWindow", "ACCELA"))
         self.setGeometry(100, 100, 800, 600)
         self.settings = get_settings()
         self.game_data = None
@@ -165,12 +164,8 @@ class MainWindow(QMainWindow):
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
         self.main_layout = QVBoxLayout(self.central_widget)
-        self.main_layout.setContentsMargins(0, 0, 0, 5)
+        self.main_layout.setContentsMargins(5, 5, 5, 5)
         self.main_layout.setSpacing(0)
-
-        # Add title bar at the top of the window
-        self.title_bar = CustomTitleBar(self)
-        self.main_layout.addWidget(self.title_bar)
 
         main_content_frame = QFrame()
         from .theme import BorderRadius, theme
