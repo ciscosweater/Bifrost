@@ -338,8 +338,14 @@ class MinimalDownloadWidget(QWidget):
         self.status_label.hide()
 
         # Enhanced image handling with fallback
+        # Always clear previous image first to ensure update
+        self.game_image_label.clear()
+
         if game_image and not game_image.isNull():
-            scaled_pixmap = game_image.scaled(
+            # Create a copy to avoid reference issues
+            from PyQt6.QtGui import QPixmap
+            image_copy = QPixmap(game_image)
+            scaled_pixmap = image_copy.scaled(
                 120,
                 56,
                 Qt.AspectRatioMode.KeepAspectRatioByExpanding,
@@ -394,6 +400,7 @@ class MinimalDownloadWidget(QWidget):
         self.resume_btn.setEnabled(True)
         self.cancel_btn.setEnabled(True)
         self._update_size_display()
+        # Note: Keep the game image visible in paused state
 
     def set_completed_state(self):
         """Configure completed state"""
@@ -415,11 +422,13 @@ class MinimalDownloadWidget(QWidget):
         self.pause_btn.hide()
         self.resume_btn.hide()
         self.cancel_btn.hide()
+        # Note: Keep the game image visible in completed state
 
     def set_error_state(self, message=tr("MinimalDownloadWidget", "Error")):
         """Configure error state"""
         self.current_state = "error"
         self.game_image_label.hide()
+        self.game_image_label.clear()  # Clear image to prevent stale references
         self.game_name_label.hide()
 
         # Show error message
@@ -446,6 +455,7 @@ class MinimalDownloadWidget(QWidget):
         self.status_label.setText(tr("MinimalDownloadWidget", "Ready to download"))
         self.status_label.show()
         self.game_image_label.hide()
+        self.game_image_label.clear()  # Clear image to prevent stale references
         self.game_name_label.hide()
         self.size_label.hide()
         self.speed_label.hide()
@@ -562,3 +572,5 @@ class MinimalDownloadWidget(QWidget):
         self.speed_label.setText("")
         self.downloaded_size = 0
         self.total_size = 0
+        # Clear image to ensure fresh state for next use
+        self.game_image_label.clear()

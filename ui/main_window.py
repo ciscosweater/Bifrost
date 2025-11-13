@@ -44,7 +44,7 @@ from ui.game_image_manager import GameImageManager
 from ui.info_cards import InfoCardsContainer
 from ui.interactions import ModernFrame
 from ui.minimal_download_widget import MinimalDownloadWidget
-from ui.notification_system import NotificationManager
+
 from ui.shortcuts import KeyboardShortcuts
 from ui.theme import Spacing
 from utils.image_cache import ImageCacheManager
@@ -435,9 +435,6 @@ class MainWindow(QMainWindow):
         # Hide old container to avoid duplication
         self.game_image_container.hide()
 
-        # Initialize notification system
-        self.notification_manager = NotificationManager(self)
-
         self.log_output = QTextEdit()
         self.log_output.setReadOnly(True)
         from .theme import Typography
@@ -521,7 +518,7 @@ class MainWindow(QMainWindow):
         self.online_fixes_manager.fix_download_progress.connect(
             self._on_fix_download_progress
         )
-        self.online_fixes_manager.fix_applied.connect(self._on_fix_applied)
+        self.online_fixes_manager.fix_applied.connect(lambda appid, fix_type: self._on_fix_applied(fix_type))
         self.online_fixes_manager.fix_error.connect(self._on_fix_error)
         self.download_manager.download_error.connect(self._on_download_error)
         self.download_manager.state_changed.connect(self._on_download_state_changed)
@@ -716,10 +713,6 @@ class MainWindow(QMainWindow):
 
             game_name = (
                 self.game_data.get("game_name", tr("MainWindow", "Game")) if self.game_data else tr("MainWindow", "Game")
-            )
-            self.notification_manager.show_notification(
-                tr("MainWindow", "Successfully downloaded {0}!").format(game_name),
-                tr("MainWindow", "success"),
             )
 
             logger.debug("Download completion handler finished")
@@ -1104,9 +1097,6 @@ class MainWindow(QMainWindow):
     def _on_fix_applied(self, fix_type: str):
         """Handle successful Online-Fixes application"""
         self.log_output.append(f"✓ {fix_type.title()} Fix successfully applied!")
-        self.notification_manager.show_notification(
-            f"{fix_type.title()} Fix applied successfully!", "success"
-        )
         # Fix was applied, clear the flag
         self._fix_available = False
         # Mark that fix processing is complete
@@ -1115,16 +1105,20 @@ class MainWindow(QMainWindow):
         self._fix_applied_recently = True
         # Reset steam restart prompt flag to allow new prompt after fix
         self._steam_restart_prompted = False
+        # Clear any existing timers to avoid multiple calls
+        if hasattr(self, "_steam_restart_timer"):
+            self._steam_restart_timer.stop()
+            self._steam_restart_timer.deleteLater()
+        
         # Trigger Steam restart prompt after fix is fully applied
-        QTimer.singleShot(1000, self._prompt_for_steam_restart)
+        self._steam_restart_timer = QTimer()
+        self._steam_restart_timer.setSingleShot(True)
+        self._steam_restart_timer.timeout.connect(self._prompt_for_steam_restart)
+        self._steam_restart_timer.start(1000)
 
     def _on_fix_error(self, error_message: str):
         """Handle Online-Fixes errors"""
         self.log_output.append(tr("MainWindow", "Fix error: {0}").format(error_message))
-        self.notification_manager.show_notification(
-            tr("MainWindow", "Fix installation failed: {0}").format(error_message),
-            "error",
-        )
         # Clear fix processing flag on error
         self._fix_processing = False
 
@@ -1333,15 +1327,8 @@ class MainWindow(QMainWindow):
         self.title_bar.select_file_button.setVisible(False)
 
         if self.game_data and self.game_data.get("depots"):
-            self.notification_manager.show_notification(
-                f"Loaded {self.game_data.get('game_name', 'Game')} with {len(self.game_data.get('depots', []))} depots",
-                "success",
-            )
             self._show_depot_selection_dialog()
         else:
-            self.notification_manager.show_notification(
-                "No downloadable depots found in ZIP file", "error"
-            )
             QMessageBox.warning(
                 self,
                 tr("MainWindow", "No Depots Found"),
@@ -1812,7 +1799,7 @@ class MainWindow(QMainWindow):
         """Prompt user to restart Steam after SLSsteam setup"""
         # Allow multiple prompts if they come from different operations (like after fixes)
         # But avoid spamming in the same operation
-        if self._steam_restart_prompted and not hasattr(self, "_fix_applied_recently"):
+        if self._steam_restart_prompted:
             logger.debug("Steam restart already prompted for this operation, skipping")
             return
 
@@ -2054,17 +2041,9 @@ class MainWindow(QMainWindow):
                 self.log_output.append(
                     tr("MainWindow", "Steam Schema generated successfully!")
                 )
-                self.show_notification(
-                    tr("MainWindow", "Steam achievements generated successfully!"),
-                    "success",
-                )
             else:
                 self.log_output.append(
                     tr("MainWindow", "Steam Schema generation completed with warnings")
-                )
-                self.show_notification(
-                    tr("MainWindow", "Steam Schema generation completed with warnings"),
-                    "warning",
                 )
 
         except ImportError:
@@ -2072,11 +2051,6 @@ class MainWindow(QMainWindow):
         except Exception as e:
             logger.warning(f"Failed to generate Steam achievements: {e}")
             self.log_output.append(f"Steam Schema generation failed: {e}")
-
-    def show_notification(self, message, notification_type="info"):
-        """Show a notification using the notification manager"""
-        if hasattr(self, "notification_manager"):
-            self.notification_manager.show_notification(message, notification_type)
 
     def open_steam_login(self):
         """Steam login is now handled by SLScheevo - no dialog needed"""
@@ -2134,13 +2108,8 @@ class MainWindow(QMainWindow):
             and self.title_bar.slssteam_status
             and self.title_bar.slssteam_status.is_slssteam_ready()
         ):
-            self.show_notification("SLSsteam is ready for use!", "success")
             # Auto-enable slssteam_mode when SLSsteam becomes ready
             self.settings.setValue("slssteam_mode", True)
-        else:
-            self.show_notification(
-                "SLSsteam setup completed. Please check status.", "info"
-            )
 
     def _open_game_manager(self):
         """Open the Game Manager dialog for deleting ACCELA games"""

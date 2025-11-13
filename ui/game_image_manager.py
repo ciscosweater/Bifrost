@@ -75,18 +75,19 @@ class GameImageManager(QObject):
             "https://store.steampowered.com/api/appdetails?cc=US",
         ]
 
-    def get_game_image(self, app_id: str, preferred_format: str = "header") -> QThread:
+    def get_game_image(self, app_id: str, preferred_format: str = "header", force_refresh: bool = False) -> QThread:
         """
         Get game image with multiple fallback strategies
 
         Args:
             app_id: Steam App ID
             preferred_format: Preferred image format name
+            force_refresh: If True, bypass cache and fetch fresh image
 
         Returns:
             QThread for async operation
         """
-        thread = GameImageThread(app_id, preferred_format, self)
+        thread = GameImageThread(app_id, preferred_format, self, force_refresh)
         thread.image_ready.connect(self.image_ready.emit)
         thread.image_failed.connect(self.image_failed.emit)
         thread.finished.connect(thread.deleteLater)  # Clean up thread when finished
@@ -305,22 +306,24 @@ class GameImageThread(QThread):
     image_failed = pyqtSignal(str, str)  # app_id, error_message
     finished = pyqtSignal()  # Thread completion signal
 
-    def __init__(self, app_id: str, preferred_format: str, manager: GameImageManager):
+    def __init__(self, app_id: str, preferred_format: str, manager: GameImageManager, force_refresh: bool = False):
         super().__init__()
         self.app_id = app_id
         self.preferred_format = preferred_format
         self.manager = manager
+        self.force_refresh = force_refresh
 
     def run(self):
         """Execute image fetching with fallback strategies"""
         try:
-            # Strategy 1: Try cache first
-            cached_image = self._try_cache()
-            if cached_image:
-                self.image_ready.emit(
-                    self.app_id, cached_image, f"cache:{self.preferred_format}"
-                )
-                return
+            # Strategy 1: Try cache first (unless force_refresh is True)
+            if not self.force_refresh:
+                cached_image = self._try_cache()
+                if cached_image:
+                    self.image_ready.emit(
+                        self.app_id, cached_image, f"cache:{self.preferred_format}"
+                    )
+                    return
 
             # Strategy 2: Try API fallback FIRST (many games only have API URLs)
             image = self._try_api_fallback()
@@ -398,12 +401,13 @@ class GameImageThread(QThread):
                 if format_info:
                     url = endpoint + format_info["path"].format(app_id=self.app_id)
 
-                    # Check cache first
-                    cached = self.manager.cache_manager.get_cached_image(
-                        self.app_id, url
-                    )
-                    if cached and not cached.isNull():
-                        return cached
+                    # Check cache first (unless force_refresh)
+                    if not self.force_refresh:
+                        cached = self.manager.cache_manager.get_cached_image(
+                            self.app_id, url
+                        )
+                        if cached and not cached.isNull():
+                            return cached
 
                     # Download
                     image_data = self.manager.download_image(url)
@@ -475,11 +479,12 @@ class GameImageThread(QThread):
             logger.debug(f"Found {len(api_urls)} API URLs for app {self.app_id}")
 
             for url in api_urls:
-                # Check cache first
-                cached = self.manager.cache_manager.get_cached_image(self.app_id, url)
-                if cached and not cached.isNull():
-                    logger.debug(f"Found API cached image for app {self.app_id}")
-                    return cached
+                # Check cache first (unless force_refresh)
+                if not self.force_refresh:
+                    cached = self.manager.cache_manager.get_cached_image(self.app_id, url)
+                    if cached and not cached.isNull():
+                        logger.debug(f"Found API cached image for app {self.app_id}")
+                        return cached
 
                 # Download
                 image_data = self.manager.download_image(url)

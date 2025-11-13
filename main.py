@@ -43,6 +43,13 @@ def main():
 
     app = QApplication(sys.argv)
 
+    # Set application icon
+    try:
+        from PyQt6.QtGui import QIcon
+        app.setWindowIcon(QIcon("accela.png"))
+    except Exception as e:
+        print(f"Warning: Could not set application icon: {e}")
+
     # Initialize internationalization with language from settings
     settings = get_settings()
     saved_language = settings.value("language", None, type=str)

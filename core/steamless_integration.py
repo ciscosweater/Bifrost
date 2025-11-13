@@ -100,7 +100,7 @@ class SteamlessIntegration(QObject):
 
                     # Skip system/uninstaller files
                     if self._should_skip_exe(file, file_path):
-                        logger.debug(f"Skipping executable (name filtered): {file}")
+                        logger.info(f"Skipping executable (system/utility): {file}")
                         continue
 
                     # Get file size for priority calculation
@@ -111,8 +111,8 @@ class SteamlessIntegration(QObject):
 
                     # Skip very small files (likely utilities) - but allow main game executables
                     if file_size < 100 * 1024:  # < 100KB
-                        logger.debug(
-                            f"Skipping executable (size filtered): {file} ({file_size} bytes)"
+                        logger.info(
+                            f"Skipping executable (too small, likely utility): {file} ({file_size} bytes)"
                         )
                         continue
 
@@ -180,6 +180,10 @@ class SteamlessIntegration(QObject):
             r"^vcredist.*\.exe$",  # Visual C++ redistributables
             r"^dxsetup.*\.exe$",  # DirectX setup
             r"^physx.*\.exe$",  # PhysX installers
+            r".*crash.*\.exe$",  # crash handlers
+            r".*handler.*\.exe$",  # handlers
+            r"^unity.*\.exe$",  # Unity crash handlers and utilities
+            r".*unity.*\.exe$",  # Unity-related utilities
         ]
 
         filename_lower = filename.lower()
@@ -254,6 +258,13 @@ class SteamlessIntegration(QObject):
         ):
             priority -= 50
 
+        # Very high penalty for Unity system files (extra safety)
+        if any(
+            word in filename_lower
+            for word in ["unityplayer", "unity crash", "crash handler"]
+        ):
+            priority -= 100  # Effectively exclude these files
+
         return max(0, priority)
 
     def process_game_with_steamless(self, game_directory: str) -> bool:
@@ -298,6 +309,12 @@ class SteamlessIntegration(QObject):
 
         # Try executables in order of priority until one works
         max_attempts = min(3, len(exe_files))  # Try up to 3 executables
+
+        self.progress.emit(f"Found {len(exe_files)} executable(s) to evaluate")
+        
+        # Log all candidates for user transparency
+        for i, exe_info in enumerate(exe_files[:5]):  # Show top 5 candidates
+            self.progress.emit(f"  Candidate {i+1}: {exe_info['name']} (priority: {exe_info['priority']}, size: {exe_info['size']:,} bytes)")
 
         for i in range(max_attempts):
             exe_info = exe_files[i]

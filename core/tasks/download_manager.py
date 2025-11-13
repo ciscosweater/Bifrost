@@ -154,26 +154,36 @@ class DownloadManager(QObject):
     def pause_download(self):
         """Pausa download atual"""
         try:
-            if (
-                self.download_state == DownloadState.DOWNLOADING
-                and self.current_process
-            ):
-                logger.debug("Pausing download...")
+            if self.download_state != DownloadState.DOWNLOADING:
+                logger.warning(f"Cannot pause: download state is {self.download_state.value}")
+                return
 
-                # Pausar processo baseado no SO
-                if sys.platform in ["linux", "darwin"]:  # Linux/Mac
-                    os.kill(self.current_process.pid, signal.SIGSTOP)
-                elif sys.platform == "win32":  # Windows
-                    self.current_process.suspend()
+            if not self.current_process:
+                logger.warning("Cannot pause: no active process")
+                return
 
-                # Atualizar estado
-                self._set_state(DownloadState.PAUSED)
-                if self.current_session:
-                    self.current_session.download_state = DownloadState.PAUSED
-                    self.current_session.save()
+            try:
+                if not self.current_process.is_running():
+                    logger.warning("Cannot pause: process is not running")
+                    return
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                logger.warning("Cannot pause: process no longer exists")
+                return
 
-                self.download_paused.emit()
-                logger.debug("Download paused successfully")
+            logger.debug("Pausing download...")
+
+            if sys.platform in ["linux", "darwin"]:
+                os.kill(self.current_process.pid, signal.SIGSTOP)
+            elif sys.platform == "win32":
+                self.current_process.suspend()
+
+            self._set_state(DownloadState.PAUSED)
+            if self.current_session:
+                self.current_session.download_state = DownloadState.PAUSED
+                self.current_session.save()
+
+            self.download_paused.emit()
+            logger.debug("Download paused successfully")
 
         except Exception as e:
             logger.error(f"Failed to pause download: {e}")
@@ -182,23 +192,36 @@ class DownloadManager(QObject):
     def resume_download(self):
         """Retoma download pausado"""
         try:
-            if self.download_state == DownloadState.PAUSED and self.current_process:
-                logger.debug("Resuming download...")
+            if self.download_state != DownloadState.PAUSED:
+                logger.warning(f"Cannot resume: download state is {self.download_state.value}")
+                return
 
-                # Retomar processo baseado no SO
-                if sys.platform in ["linux", "darwin"]:  # Linux/Mac
-                    os.kill(self.current_process.pid, signal.SIGCONT)
-                elif sys.platform == "win32":  # Windows
-                    self.current_process.resume()
+            if not self.current_process:
+                logger.warning("Cannot resume: no active process")
+                return
 
-                # Atualizar estado
-                self._set_state(DownloadState.DOWNLOADING)
-                if self.current_session:
-                    self.current_session.download_state = DownloadState.DOWNLOADING
-                    self.current_session.save()
+            try:
+                if not self.current_process.is_running():
+                    logger.warning("Cannot resume: process is not running")
+                    return
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                logger.warning("Cannot resume: process no longer exists")
+                return
 
-                self.download_resumed.emit()
-                logger.debug("Download resumed successfully")
+            logger.debug("Resuming download...")
+
+            if sys.platform in ["linux", "darwin"]:
+                os.kill(self.current_process.pid, signal.SIGCONT)
+            elif sys.platform == "win32":
+                self.current_process.resume()
+
+            self._set_state(DownloadState.DOWNLOADING)
+            if self.current_session:
+                self.current_session.download_state = DownloadState.DOWNLOADING
+                self.current_session.save()
+
+            self.download_resumed.emit()
+            logger.debug("Download resumed successfully")
 
         except Exception as e:
             logger.error(f"Failed to resume download: {e}")
@@ -227,9 +250,14 @@ class DownloadManager(QObject):
             if self.download_task:
                 self.download_task.request_cancellation()
 
-            # Terminate process
+            # Terminate process with validation
             if self.current_process:
-                self._terminate_process()
+                try:
+                    if self.current_process.is_running():
+                        self._terminate_process()
+                except (psutil.NoSuchProcess, psutil.AccessDenied):
+                    logger.warning("Process already terminated or inaccessible")
+                    self.current_process = None
 
             # ENHANCED CLEANUP: Aggressive but Steam-safe cleanup
             if self.current_session and self.current_session.dest_path:
@@ -240,33 +268,43 @@ class DownloadManager(QObject):
                 )
 
                 if install_dir and os.path.exists(install_dir):
-                    logger.debug(
-                        f"Starting ENHANCED cleanup of game install directory: {install_dir}"
-                    )
-
-                    # Usar limpeza agressiva mas segura
-                    cleanup_result = self.enhanced_cleanup_manager.safe_cancel_cleanup(
-                        install_dir=install_dir,
-                        game_data=game_data,
-                        session_id=self.current_session.session_id,
-                    )
-
-                    if cleanup_result.get("success", False):
-                        files_removed = cleanup_result.get("total_files_removed", 0)
-                        space_freed = cleanup_result.get("total_space_freed_mb", 0)
-                        logger.debug(
-                            f"Enhanced cleanup completed: {files_removed} files, {space_freed}MB freed"
+                    # Verificação de segurança adicional
+                    if not self._is_accela_temp_directory(install_dir):
+                        logger.warning(
+                            f"SAFETY: Skipping cleanup of potentially non-ACCELA directory: {install_dir}"
                         )
-                    else:
-                        logger.error(
-                            f"Enhanced cleanup failed: {cleanup_result.get('errors', [])}"
-                        )
-
-                        # Fallback para limpeza legada em caso de erro
-                        logger.debug("Falling back to legacy cleanup")
+                        # Fallback para limpeza legada
                         self.cleanup_manager.cleanup_session(
                             self.current_session.session_id
                         )
+                    else:
+                        logger.debug(
+                            f"Starting ENHANCED cleanup of game install directory: {install_dir}"
+                        )
+
+                        # Usar limpeza agressiva mas segura
+                        cleanup_result = self.enhanced_cleanup_manager.safe_cancel_cleanup(
+                            install_dir=install_dir,
+                            game_data=game_data,
+                            session_id=self.current_session.session_id,
+                        )
+
+                        if cleanup_result.get("success", False):
+                            files_removed = cleanup_result.get("total_files_removed", 0)
+                            space_freed = cleanup_result.get("total_space_freed_mb", 0)
+                            logger.debug(
+                                f"Enhanced cleanup completed: {files_removed} files, {space_freed}MB freed"
+                            )
+                        else:
+                            logger.error(
+                                f"Enhanced cleanup failed: {cleanup_result.get('errors', [])}"
+                            )
+
+                            # Fallback para limpeza legada em caso de erro
+                            logger.debug("Falling back to legacy cleanup")
+                            self.cleanup_manager.cleanup_session(
+                                self.current_session.session_id
+                            )
                 else:
                     logger.warning(
                         f"Game install directory not found or doesn't exist: {install_dir}"
