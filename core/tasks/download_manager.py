@@ -39,6 +39,7 @@ class DownloadManager(QObject):
     # State signals
     state_changed = pyqtSignal(str)  # DownloadState value
     depot_completed = pyqtSignal(str)  # depot_id
+    steamless_progress = pyqtSignal(str)  # Steamless processing message
 
     def __init__(self):
         super().__init__()
@@ -419,6 +420,7 @@ class DownloadManager(QObject):
                 self._on_task_cancelled
             )  # Nova conexão
             self.download_task.error.connect(self._handle_task_error)
+            self.download_task.steamless_progress.connect(self._handle_steamless_progress)
 
     def _run_download_task(
         self, game_data: Dict[str, Any], selected_depots: list, dest_path: str
@@ -530,6 +532,11 @@ class DownloadManager(QObject):
     def _handle_bytes_downloaded(self, downloaded_bytes: int, total_bytes: int):
         """Handle bytes downloaded updates"""
         self.download_bytes.emit(downloaded_bytes, total_bytes)
+
+    def _handle_steamless_progress(self, message: str):
+        """Handle Steamless progress messages"""
+        logger.debug(f"Steamless progress: {message}")
+        self.steamless_progress.emit(message)
 
     def _on_process_started(self, process):
         """Handle process start"""

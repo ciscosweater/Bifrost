@@ -4,7 +4,6 @@ Image Cache Manager - Cache system for game header images
 
 import gc
 import hashlib
-import logging
 import os
 import time
 import weakref
@@ -14,8 +13,9 @@ from typing import Any, Dict, Optional
 import requests
 from PyQt6.QtCore import QObject, QThread, pyqtSignal
 from PyQt6.QtGui import QPixmap
+from utils.logger import get_internationalized_logger
 
-logger = logging.getLogger(__name__)
+logger = get_internationalized_logger("ImageCache")
 
 
 class ImageCacheManager(QObject):

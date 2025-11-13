@@ -1,4 +1,3 @@
-import logging
 import os
 import re
 import shutil
@@ -7,8 +6,9 @@ from typing import List, Optional
 
 import psutil
 from PyQt6.QtCore import QObject, pyqtSignal
+from utils.logger import get_internationalized_logger
 
-logger = logging.getLogger(__name__)
+logger = get_internationalized_logger("Steamless")
 
 
 class SteamlessIntegration(QObject):

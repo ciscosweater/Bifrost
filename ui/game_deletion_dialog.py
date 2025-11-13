@@ -229,29 +229,6 @@ class GameDeletionDialog(QDialog):
                 font-family: {Typography.get_font_family()};
                 {Typography.get_font_style(Typography.CAPTION_SIZE)};
             }}
-            QPushButton {{
-                background-color: {theme.colors.SURFACE};
-                color: {theme.colors.TEXT_PRIMARY};
-                border: 1px solid {theme.colors.BORDER};
-                {BorderRadius.get_border_radius(BorderRadius.SMALL)};
-                padding: 6px 12px;
-                font-weight: bold;
-                {Typography.get_font_style(Typography.CAPTION_SIZE)};
-            }}
-
-            QPushButton:hover {{
-                background-color: {theme.colors.PRIMARY};
-                color: {theme.colors.TEXT_ON_PRIMARY};
-                border-color: {theme.colors.PRIMARY};
-            }}
-            QPushButton:pressed {{
-                background-color: {theme.colors.PRIMARY_DARK};
-            }}
-            QPushButton:disabled {{
-                background-color: {theme.colors.SURFACE_LIGHT};
-                color: {theme.colors.TEXT_DISABLED};
-                border-color: {theme.colors.BORDER};
-            }}
         """)
 
         self._setup_ui()
@@ -294,7 +271,7 @@ class GameDeletionDialog(QDialog):
         """Cria o header do dialog."""
         frame = ModernFrame()
         frame.setMinimumHeight(60)  # Altura mínima para garantir visibilidade
-        frame.setMaximumHeight(60)  # Altura fixa para header
+        frame.setMaximumHeight(80)  # Altura fixa para header
 
         # Forçar estilo explícito para garantir visibilidade
         frame.setStyleSheet(f"""
@@ -589,34 +566,32 @@ class GameDeletionDialog(QDialog):
         )  # Margens adequadas
         layout.setSpacing(Spacing.MD)  # Adequate spacing between buttons
 
+        # Left side - action buttons
+        actions_layout = QHBoxLayout()
+
         # Refresh button
         self.refresh_btn = HoverButton(tr("GameDeletionDialog", "Refresh List"))
         self.refresh_btn.clicked.connect(lambda: self._load_games(force_refresh=True))
-        self.refresh_btn.setFixedHeight(40)  # Increased height for better touch targets
-        self.refresh_btn.setFont(
-            QFont(Typography.get_font_family(), Typography.H3_SIZE, QFont.Weight.Bold)
-        )
-        layout.addWidget(self.refresh_btn)
+        self.refresh_btn.setFixedHeight(30)  # Increased height for better touch targets
+        self.refresh_btn.setMaximumWidth(150)
+        actions_layout.addWidget(self.refresh_btn)
 
-        layout.addStretch()
+        actions_layout.addSpacing(Spacing.MD)
 
         # Delete button
         self.delete_btn = HoverButton(tr("GameDeletionDialog", "Delete Selected Games"))
         self.delete_btn.clicked.connect(self._start_deletion)
         self.delete_btn.setEnabled(False)
-        self.delete_btn.setFixedHeight(40)  # Increased height for better touch targets
-        self.delete_btn.setFont(
-            QFont(Typography.get_font_family(), Typography.H3_SIZE, QFont.Weight.Bold)
-        )
-        layout.addWidget(self.delete_btn)
+        self.delete_btn.setFixedHeight(30)  # Increased height for better touch targets
+        actions_layout.addWidget(self.delete_btn)
 
-        # Close button
+        layout.addLayout(actions_layout)
+        layout.addStretch()
+
+        # Right side - close button
         self.close_btn = HoverButton(tr("GameDeletionDialog", "Close"))
         self.close_btn.clicked.connect(self.close)
-        self.close_btn.setFixedHeight(40)  # Increased height for better touch targets
-        self.close_btn.setFont(
-            QFont(Typography.get_font_family(), Typography.H3_SIZE, QFont.Weight.Bold)
-        )
+        self.close_btn.setFixedHeight(30)  # Increased height for better touch targets
         layout.addWidget(self.close_btn)
 
         return frame

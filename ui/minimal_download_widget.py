@@ -5,7 +5,7 @@ Minimal Download Widget - Unified and elegant component for download control
 import logging
 
 from PyQt6.QtCore import QEasingCurve, QPropertyAnimation, Qt, QTimer, pyqtSignal
-from PyQt6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget, QSizePolicy
 
 from ui.theme import BorderRadius, Spacing, Typography, theme
 
@@ -109,6 +109,11 @@ class MinimalDownloadWidget(QWidget):
                 background: transparent;
             }}
         """)
+        self.status_label.setWordWrap(True)
+        self.status_label.setMaximumWidth(400)
+        self.status_label.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum
+        )
         self.status_label.hide()
 
         header_layout.addWidget(self.game_image_label)
@@ -543,6 +548,12 @@ class MinimalDownloadWidget(QWidget):
             return f"{size_bytes / (1024 * 1024):.1f} MB"
         else:
             return f"{size_bytes / (1024 * 1024 * 1024):.1f} GB"
+
+    def update_status(self, message):
+        """Update status message"""
+        if hasattr(self, 'status_label') and self.status_label:
+            self.status_label.setText(message)
+            self.status_label.show()
 
     def reset(self):
         """Reset widget to initial state"""

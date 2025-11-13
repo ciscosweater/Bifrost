@@ -124,6 +124,7 @@ class MainWindow(QMainWindow):
         self.slssteam_mode_was_active = False
         self.game_header_image = None
         self._fix_available = False  # Track if fixes are available for current game
+        self._fix_processing = False  # Track if a fix is currently being processed
         self.keyboard_shortcuts = KeyboardShortcuts(self)
         self.asset_manager = AssetManager(self)
 
@@ -507,6 +508,7 @@ class MainWindow(QMainWindow):
         self.download_manager.download_resumed.connect(self._on_download_resumed)
         self.download_manager.download_cancelled.connect(self._on_download_cancelled)
         self.download_manager.download_completed.connect(self._on_download_completed)
+        self.download_manager.steamless_progress.connect(self._on_steamless_progress)
 
         # Connect OnlineFixesManager signals
         self.online_fixes_manager.fix_check_started.connect(self._on_fix_check_started)
@@ -660,6 +662,10 @@ class MainWindow(QMainWindow):
         """Handle download bytes updates"""
         self.minimal_download_widget.update_downloaded_size(downloaded_bytes)
 
+    def _on_steamless_progress(self, message: str):
+        """Handle Steamless progress updates"""
+        self.minimal_download_widget.update_status(f"Steamless: {message}")
+
     def _on_download_paused(self):
         """Handle download pause"""
         self.minimal_download_widget.set_paused_state()
@@ -702,36 +708,11 @@ class MainWindow(QMainWindow):
                 logger.debug("Checking for Online-Fixes...")
                 self._check_for_online_fixes(install_path)
             else:
-                # If no Online-Fixes check needed, show completion message now
-                if (
-                    hasattr(self, "_completion_message_shown")
-                    and self._completion_message_shown
-                ):
-                    return
-
-                self._completion_message_shown = True
-
-                if self.game_data:
-                    game_name = self.game_data.get("game_name", tr("MainWindow", "Game"))
-                    self.notification_manager.show_notification(
-                        tr("MainWindow", "{0} download completed!").format(game_name), "success"
-                    )
-
-                # Show completion dialog
-                completion_msg = QMessageBox(self)
-                completion_msg.setIcon(QMessageBox.Icon.Information)
-                completion_msg.setWindowTitle(tr("MainWindow", "Download Complete"))
-                completion_msg.setText(
-                    tr("MainWindow", "Game download completed successfully!")
-                )
-                completion_msg.setInformativeText(
-                    tr(
-                        "MainWindow",
-                        "You can now play game or install Online-Fixes if available.",
-                    )
-                )
-                completion_msg.setStandardButtons(QMessageBox.StandardButton.Ok)
-                completion_msg.exec()
+                # Always show Steam restart prompt even without install_path
+                # (SLSsteam may have been set up during download)
+                logger.debug("No install_path available, proceeding with Steam restart check")
+                self._steam_restart_prompted = False
+                QTimer.singleShot(1000, self._prompt_for_steam_restart)
 
             game_name = (
                 self.game_data.get("game_name", tr("MainWindow", "Game")) if self.game_data else tr("MainWindow", "Game")
@@ -755,6 +736,13 @@ class MainWindow(QMainWindow):
         self._ui_reset_timer = QTimer.singleShot(
             8000, self._safe_reset_ui_state
         )  # 8 seconds, only if no fixes
+
+        # Always prompt for Steam restart to ensure SLSsteam integration is applied
+        # This will be called after fix check completes, or immediately if no install_path
+        # Skip if a fix is currently being processed
+        if not hasattr(self, "_steam_restart_scheduled") and not getattr(self, "_fix_processing", False):
+            self._steam_restart_scheduled = True
+            QTimer.singleShot(5000, self._ensure_steam_restart_prompt)
 
     def _on_download_error(self, error_message):
         """Handle download errors"""
@@ -1121,12 +1109,14 @@ class MainWindow(QMainWindow):
         )
         # Fix was applied, clear the flag
         self._fix_available = False
+        # Mark that fix processing is complete
+        self._fix_processing = False
         # Mark that a fix was recently applied to allow Steam restart prompt
         self._fix_applied_recently = True
         # Reset steam restart prompt flag to allow new prompt after fix
         self._steam_restart_prompted = False
-        # Trigger Steam restart prompt
-        self._prompt_for_steam_restart()
+        # Trigger Steam restart prompt after fix is fully applied
+        QTimer.singleShot(1000, self._prompt_for_steam_restart)
 
     def _on_fix_error(self, error_message: str):
         """Handle Online-Fixes errors"""
@@ -1135,6 +1125,8 @@ class MainWindow(QMainWindow):
             tr("MainWindow", "Fix installation failed: {0}").format(error_message),
             "error",
         )
+        # Clear fix processing flag on error
+        self._fix_processing = False
 
     def _confirm_cancel_download(self):
         """Confirm download cancellation with user"""
@@ -1210,6 +1202,9 @@ class MainWindow(QMainWindow):
 
                     # Fix installation started successfully - close the fixes dialog
                     dialog.accept()
+
+                    # Mark that fix processing has started
+                    self._fix_processing = True
 
                     # Reset UI reset cancellation flag since fix is being applied
                     self._ui_reset_cancelled = False
@@ -1324,6 +1319,14 @@ class MainWindow(QMainWindow):
         self.game_data = game_data
         # Reset fix availability for new game
         self._fix_available = False
+        # Reset fix processing state for new game
+        self._fix_processing = False
+        # Reset completion message control for new game
+        self._completion_message_shown = False
+        # Reset Steam restart controls for new game
+        self._steam_restart_prompted = False
+        if hasattr(self, "_steam_restart_scheduled"):
+            delattr(self, "_steam_restart_scheduled")
 
         # Reset UI elements after ZIP processing
         self.drop_text_label.setVisible(False)
@@ -1430,6 +1433,11 @@ class MainWindow(QMainWindow):
         self._completion_message_shown = False
         if hasattr(self, "_fix_applied_recently"):
             delattr(self, "_fix_applied_recently")
+
+        # Reset fix processing control for new download
+        self._fix_processing = False
+        if hasattr(self, "_steam_restart_scheduled"):
+            delattr(self, "_steam_restart_scheduled")
 
         # Reset Steam restart control for new download
         self._steam_restart_prompted = False
@@ -1906,6 +1914,23 @@ class MainWindow(QMainWindow):
                             "Could not restart Steam automatically. Please start it manually.",
                         ),
                     )
+
+    def _ensure_steam_restart_prompt(self):
+        """Ensure Steam restart prompt is shown, but avoid duplication"""
+        # Skip if a fix is currently being processed
+        if self._fix_processing:
+            logger.debug("Fix is currently being processed, skipping Steam restart prompt")
+            return
+
+        # Reset the flag to allow the prompt and call the existing method
+        if hasattr(self, "_steam_restart_prompted") and self._steam_restart_prompted:
+            # If already prompted in this session, skip to avoid spam
+            logger.debug("Steam restart already prompted, skipping duplicate prompt")
+            return
+
+        logger.debug("Ensuring Steam restart prompt is shown")
+        self._steam_restart_prompted = False
+        self._prompt_for_steam_restart()
 
     def _fetch_game_header_image(self, app_id):
         """Fetch game header image for display during download using enhanced manager."""

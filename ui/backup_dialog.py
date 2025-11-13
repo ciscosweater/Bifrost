@@ -5,6 +5,7 @@ import sys
 from typing import Any, Dict
 
 from PyQt6.QtCore import Qt, QThread, pyqtSignal
+from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import (
     QApplication,
     QDialog,
@@ -128,6 +129,54 @@ class BackupDialog(QDialog):
         self.setup_ui()
         self.refresh_backup_list()
 
+    def _create_header(self) -> QFrame:
+        """Cria o header do dialog."""
+        frame = ModernFrame()
+        frame.setMinimumHeight(60)
+        frame.setMaximumHeight(80)
+
+        frame.setStyleSheet(f"""
+            QFrame {{
+                background: {theme.colors.SURFACE};
+                border: 2px solid {theme.colors.PRIMARY};
+                {BorderRadius.get_border_radius(BorderRadius.MEDIUM)};
+            }}
+        """)
+
+        layout = QVBoxLayout(frame)
+        layout.setContentsMargins(Spacing.MD, Spacing.SM, Spacing.MD, Spacing.SM)
+        layout.setSpacing(Spacing.XS)
+
+        title = QLabel(tr("BackupDialog", "Steam Stats Backup Manager"))
+        title.setFont(
+            QFont(Typography.get_font_family(), Typography.H1_SIZE, QFont.Weight.Bold)
+        )
+        title.setStyleSheet(f"""
+            color: {theme.colors.TEXT_ACCENT};
+            font-size: {Typography.H1_SIZE}px;
+            font-weight: bold;
+            margin: 0;
+            border: none;
+            background: transparent;
+            padding: 2px;
+        """)
+        layout.addWidget(title)
+
+        subtitle = QLabel(
+            tr("BackupDialog", "Create, restore, and manage Steam stats backups")
+        )
+        subtitle.setStyleSheet(f"""
+            color: {theme.colors.TEXT_SECONDARY};
+            font-size: {Typography.H3_SIZE}px;
+            margin: 0;
+            border: none;
+            background: transparent;
+            padding: 2px;
+        """)
+        layout.addWidget(subtitle)
+
+        return frame
+
     def setup_ui(self):
         self.setWindowTitle(tr("BackupDialog", "Backup/Restore Stats"))
         self.setFixedSize(900, 650)
@@ -135,23 +184,12 @@ class BackupDialog(QDialog):
 
         # Main layout
         main_layout = QVBoxLayout()
-        main_layout.setContentsMargins(Spacing.LG, Spacing.LG, Spacing.LG, Spacing.LG)
-        main_layout.setSpacing(Spacing.MD)
+        main_layout.setContentsMargins(Spacing.MD, Spacing.MD, Spacing.MD, Spacing.MD)
+        main_layout.setSpacing(Spacing.SM)
 
-        # Title
-        title_label = QLabel(tr("BackupDialog", "Steam Stats Backup Manager"))
-        title_label.setStyleSheet(f"""
-            QLabel {{
-                color: {theme.colors.TEXT_ACCENT};
-                {Typography.get_font_style(Typography.H2_SIZE)};
-                font-weight: bold;
-                padding: {Spacing.SM}px 0;
-            }}
-        """)
-        main_layout.addWidget(title_label)
-
-        # Status section
-        self.setup_status_section(main_layout)
+        # Header
+        header_frame = self._create_header()
+        main_layout.addWidget(header_frame)
 
         # Main content with splitter
         splitter = QSplitter(Qt.Orientation.Horizontal)
@@ -186,58 +224,6 @@ class BackupDialog(QDialog):
                 {BorderRadius.get_border_radius(BorderRadius.MEDIUM)};
             }}
         """)
-
-    def setup_status_section(self, parent_layout):
-        """Setup status information section."""
-        status_frame = ModernFrame()
-        status_layout = QVBoxLayout(status_frame)
-
-        # Steam stats path
-        stats_path = self.backup_manager.get_steam_stats_path()
-        if stats_path:
-            path_label = QLabel(
-                tr("BackupDialog", "Stats Path: {path}").format(path=stats_path)
-            )
-            path_label.setStyleSheet(f"""
-                QLabel {{
-                    color: {theme.colors.TEXT_SECONDARY};
-                    {Typography.get_font_style(Typography.BODY_SIZE)};
-                    padding: {Spacing.XS}px;
-                }}
-            """)
-            status_layout.addWidget(path_label)
-
-            # Count files
-            files_count = len(self.backup_manager.list_stats_files())
-            count_label = QLabel(
-                tr("BackupDialog", "Stats Files: {count}").format(count=files_count)
-            )
-            count_label.setStyleSheet(f"""
-                QLabel {{
-                    color: {theme.colors.TEXT_SECONDARY};
-                    {Typography.get_font_style(Typography.BODY_SIZE)};
-                    padding: {Spacing.XS}px;
-                }}
-            """)
-            status_layout.addWidget(count_label)
-        else:
-            error_label = QLabel(
-                tr(
-                    "BackupDialog",
-                    "❌ Steam installation not found or stats directory missing",
-                )
-            )
-            error_label.setStyleSheet(f"""
-                QLabel {{
-                    color: {theme.colors.ERROR};
-                    {Typography.get_font_style(Typography.BODY_SIZE)};
-                    font-weight: bold;
-                    padding: {Spacing.XS}px;
-                }}
-            """)
-            status_layout.addWidget(error_label)
-
-        parent_layout.addWidget(status_frame)
 
     def setup_backup_list_panel(self, parent_layout=None):
         """Setup backup list panel."""

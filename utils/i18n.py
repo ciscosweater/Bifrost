@@ -71,12 +71,20 @@ class SimpleI18n:
         Returns:
             str: Texto traduzido ou original se não encontrado
         """
-        key = f"{context}.{text}"
-        translated = self.translations.get(key, text)
+        # Primeiro tenta com o formato de ponto (padrão)
+        key_dot = f"{context}.{text}"
+        translated = self.translations.get(key_dot, None)
+        
+        if translated is not None:
+            return translated
+            
+        # Se não encontrar, tenta com espaço (compatibilidade com JSON existente)
+        key_space = f"{context} {text}"
+        translated = self.translations.get(key_space, text)
 
         # Log para debug de traduções faltantes
         if translated == text and self.current_language != "en":
-            logger.debug(f"Missing translation: {key}")
+            logger.debug(f"Missing translation: {key_dot} or {key_space}")
 
         return translated
 

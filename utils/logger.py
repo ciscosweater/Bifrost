@@ -4,6 +4,99 @@ import sys
 from PyQt6.QtCore import QObject, pyqtSignal
 
 from utils.settings import get_settings
+from utils.i18n import get_i18n_manager
+
+
+class InternationalizedLogger:
+    """
+    Wrapper para o logger padrão que adiciona suporte à internacionalização
+    de mensagens de log de nível INFO e superior.
+    """
+
+    def __init__(self, logger):
+        self._logger = logger
+        self._i18n = get_i18n_manager()
+
+    def _translate_message(self, msg, level_name):
+        """
+        Traduz mensagens de log de nível INFO ou superior.
+        Tenta traduzir a parte base da mensagem, ignorando variáveis.
+        """
+        if level_name in ['INFO', 'WARNING', 'ERROR', 'CRITICAL']:
+            import inspect
+            frame = inspect.currentframe()
+            try:
+                if frame is None or frame.f_back is None:
+                    return msg
+                    
+                caller_frame = frame.f_back.f_back  # Pular este frame e o da função wrapper
+                if caller_frame is None:
+                    return msg
+                    
+                module_name = caller_frame.f_globals.get('__name__', 'Unknown')
+                
+                # Usar o nome do módulo como contexto (última parte do nome)
+                context = module_name.split('.')[-1] if '.' in module_name else module_name
+                if context.startswith('_'):
+                    context = context[1:]
+                
+                # Tentar extrair a parte base da mensagem
+                base_msg = msg
+                
+                # Lista de separadores comuns em logs
+                separators = [':', ' for', ' at', ' to', ' from', ' with', ' in', ' by']
+                for separator in separators:
+                    if separator in msg:
+                        # Dividir na primeira ocorrência do separador
+                        parts = msg.split(separator, 1)
+                        base_msg = parts[0].strip()
+                        break
+                
+                # Primeiro tentar traduzir a mensagem completa
+                translated = self._i18n.tr(context, msg)
+                if translated != msg:
+                    return translated
+                
+                # Se não funcionar, tentar traduzir apenas a parte base
+                translated_base = self._i18n.tr(context, base_msg)
+                if translated_base != base_msg:
+                    # Substituir a parte base pela tradução
+                    return msg.replace(base_msg, translated_base, 1)
+                
+                return msg
+            except:
+                return msg
+        return msg
+
+    def info(self, msg, *args, **kwargs):
+        translated_msg = self._translate_message(msg, 'INFO')
+        return self._logger.info(translated_msg, *args, **kwargs)
+
+    def warning(self, msg, *args, **kwargs):
+        translated_msg = self._translate_message(msg, 'WARNING')
+        return self._logger.warning(translated_msg, *args, **kwargs)
+
+    def error(self, msg, *args, **kwargs):
+        translated_msg = self._translate_message(msg, 'ERROR')
+        return self._logger.error(translated_msg, *args, **kwargs)
+
+    def critical(self, msg, *args, **kwargs):
+        translated_msg = self._translate_message(msg, 'CRITICAL')
+        return self._logger.critical(translated_msg, *args, **kwargs)
+
+    def debug(self, msg, *args, **kwargs):
+        return self._logger.debug(msg, *args, **kwargs)
+
+    def log(self, level, msg, *args, **kwargs):
+        translated_msg = self._translate_message(msg, 'INFO') if level >= logging.INFO else msg
+        return self._logger.log(level, translated_msg, *args, **kwargs)
+
+    def exception(self, msg, *args, **kwargs):
+        translated_msg = self._translate_message(msg, 'ERROR')
+        return self._logger.exception(translated_msg, *args, **kwargs)
+
+    def __getattr__(self, name):
+        return getattr(self._logger, name)
 
 
 class QtLogHandler(QObject, logging.Handler):
@@ -101,6 +194,38 @@ def setup_logging():
     logger = logging.getLogger(__name__)
     logger.info(f"Logging configured (simple_mode={simple_mode}, level={log_level}).")
     return logger
+
+
+def get_internationalized_logger(name = None) -> InternationalizedLogger:
+    """
+    Retorna um logger que suporta internacionalização automática
+    
+    Args:
+        name: Nome do logger (usa __name__ se não fornecido)
+        
+    Returns:
+        InternationalizedLogger: Logger wrapper que traduz mensagens automaticamente
+    """
+    import inspect
+    if name is None:
+        # Detectar o módulo chamador
+        frame = inspect.currentframe()
+        try:
+            if frame is None or frame.f_back is None:
+                name = 'app'
+            else:
+                caller_frame = frame.f_back
+                if caller_frame is None:
+                    name = 'app'
+                else:
+                    name = caller_frame.f_globals.get('__name__', 'app')
+        except:
+            name = 'app'
+    else:
+        name = str(name)  # Garantir que é string
+    
+    base_logger = logging.getLogger(name)
+    return InternationalizedLogger(base_logger)
 
 
 def update_logging_mode():

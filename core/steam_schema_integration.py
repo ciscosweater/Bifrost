@@ -1,10 +1,10 @@
-import logging
 import os
 import re
 import shutil
 import subprocess
+from utils.logger import get_internationalized_logger
 
-logger = logging.getLogger(__name__)
+logger = get_internationalized_logger("SteamSchema")
 
 # SLScheevo handles its own login - no need for ACCELA login system
 

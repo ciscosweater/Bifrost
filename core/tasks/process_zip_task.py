@@ -1,12 +1,12 @@
 import zipfile
 import re
 import os
-import logging
 from ui.assets import DEPOT_BLACKLIST
 from core.steam_api import get_depot_info_from_api
 from core.ini_parser import parse_depots_ini
+from utils.logger import get_internationalized_logger
 
-logger = logging.getLogger(__name__)
+logger = get_internationalized_logger("ProcessZip")
 
 KNOWN_DEPOT_DESCRIPTIONS = parse_depots_ini()
 
