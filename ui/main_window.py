@@ -712,9 +712,9 @@ class MainWindow(QMainWindow):
                 self._completion_message_shown = True
 
                 if self.game_data:
-                    game_name = self.game_data.get("game_name", "Game")
+                    game_name = self.game_data.get("game_name", tr("MainWindow", "Game"))
                     self.notification_manager.show_notification(
-                        f"{game_name} download completed!", "success"
+                        tr("MainWindow", "{0} download completed!").format(game_name), "success"
                     )
 
                 # Show completion dialog
@@ -734,11 +734,11 @@ class MainWindow(QMainWindow):
                 completion_msg.exec()
 
             game_name = (
-                self.game_data.get("game_name", "Game") if self.game_data else "Game"
+                self.game_data.get("game_name", tr("MainWindow", "Game")) if self.game_data else tr("MainWindow", "Game")
             )
             self.notification_manager.show_notification(
                 tr("MainWindow", "Successfully downloaded {0}!").format(game_name),
-                "success",
+                tr("MainWindow", "success"),
             )
 
             logger.debug("Download completion handler finished")
@@ -1206,7 +1206,7 @@ class MainWindow(QMainWindow):
                         appid, fix_url, install_path, fix_type, game_name
                     )
                     if not success:
-                        raise Exception("Failed to start fix installation")
+                        raise Exception(tr("MainWindow", "Failed to start fix installation"))
 
                     # Fix installation started successfully - close the fixes dialog
                     dialog.accept()

@@ -411,7 +411,7 @@ class MinimalDownloadWidget(QWidget):
         self.resume_btn.hide()
         self.cancel_btn.hide()
 
-    def set_error_state(self, message="Error"):
+    def set_error_state(self, message=tr("MinimalDownloadWidget", "Error")):
         """Configure error state"""
         self.current_state = "error"
         self.game_image_label.hide()

@@ -93,7 +93,7 @@ class CustomTitleBar(QFrame):
 
         # Add select file button
         self.select_file_button = self._create_text_button(
-            "ZIP",
+            tr("CustomTitleBar", "ZIP"),
             getattr(parent, "_select_zip_file", lambda: None),
             tr("CustomTitleBar", "Select ZIP File"),
         )
@@ -101,7 +101,7 @@ class CustomTitleBar(QFrame):
 
         # Add game manager button
         self.game_manager_button = self._create_text_button(
-            "UN",
+            tr("CustomTitleBar", "UN"),
             getattr(parent, "_open_game_manager", lambda: None),
             tr("CustomTitleBar", "Uninstall Games"),
         )
@@ -109,7 +109,7 @@ class CustomTitleBar(QFrame):
 
         # Add backup button
         self.backup_button = self._create_text_button(
-            "BK",
+            tr("CustomTitleBar", "BK"),
             getattr(parent, "_open_backup_dialog", lambda: None),
             tr("CustomTitleBar", "Backup/Restore Stats"),
         )

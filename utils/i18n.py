@@ -1,187 +1,84 @@
 """
-ACCELA Internationalization Manager
-Gerencia internacionalização e tradução de strings da aplicação
+ACCELA Internationalization Manager - Simplified Version
+Gerencia internacionalização e tradução de strings da aplicação usando JSON
 """
 
+import json
 import logging
 import os
-from typing import Optional
-
-from PyQt6.QtCore import QCoreApplication, QLocale, QTranslator
-from PyQt6.QtWidgets import QApplication
+from typing import Dict, Optional
 
 logger = logging.getLogger(__name__)
 
 
-class I18nManager:
-    """Gerenciador de internacionalização para ACCELA"""
+class SimpleI18n:
+    """Gerenciador de internacionalização simplificado para ACCELA"""
 
     def __init__(self):
-        self.translator = QTranslator()
         self.current_language = "en"
         self.available_languages = {"en": "English", "pt_BR": "Português (Brasil)"}
         self.translations_dir = "translations"
-        self.translations = {}  # Dicionário para traduções .ts
+        self.translations: Dict[str, str] = {}
+        self.load_translations()
 
-    def load_language(self, language_code: str) -> bool:
+    def load_translations(self):
+        """Carrega traduções do arquivo JSON do idioma atual"""
+        try:
+            lang_file = os.path.join(
+                self.translations_dir, f"{self.current_language}.json"
+            )
+            if os.path.exists(lang_file):
+                with open(lang_file, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    self.translations = data.get("translations", {})
+                    logger.info(
+                        f"Loaded {len(self.translations)} translations for {self.current_language}"
+                    )
+            else:
+                logger.warning(f"Translation file not found: {lang_file}")
+                self.translations = {}
+        except Exception as e:
+            logger.error(f"Error loading translations: {e}")
+            self.translations = {}
+
+    def set_language(self, language_code: str) -> bool:
         """
-        Carrega tradução para o idioma especificado
+        Muda o idioma atual e recarrega as traduções
 
         Args:
             language_code: Código do idioma (ex: 'pt_BR')
 
         Returns:
-            bool: True se carregado com sucesso
+            bool: True se mudou com sucesso
         """
-        try:
-            app = QApplication.instance()
-            if app:
-                # Remove translator anterior se existir
-                app.removeTranslator(self.translator)
-
-            # Carrega novo tradutor
-            if language_code == "en":
-                # Inglês é o idioma base, não precisa de arquivo
-                self.current_language = language_code
-                return True
-
-            # Tentar carregar arquivo .qm primeiro
-            translation_file = os.path.join(
-                self.translations_dir, f"app_{language_code}"
-            )
-
-            if self.translator.load(translation_file):
-                if app:
-                    app.installTranslator(self.translator)
-                    self.current_language = language_code
-                    logger.debug(f"Translation loaded for {language_code}")
-                    return True
-                else:
-                    logger.warning("No QApplication instance found")
-                    return False
-            else:
-                # Se não encontrar .qm no formato Qt, tentar nosso formato personalizado
-                qm_file = f"{translation_file}.qm"
-                if os.path.exists(qm_file):
-                    logger.debug(f"Loading custom QM format: {qm_file}")
-                    if self._load_custom_qm(qm_file):
-                        self.current_language = language_code
-                        return True
-                
-                # Se não encontrar .qm, tentar usar .ts diretamente
-                ts_file = f"{translation_file}.ts"
-                if os.path.exists(ts_file):
-                    logger.debug(f"Using .ts file directly: {ts_file}")
-                    self.current_language = language_code
-                    self._load_ts_file(ts_file)
-                    return True
-                else:
-                    logger.warning(
-                        f"Translation file not found: {translation_file} (.qm or .ts)"
-                    )
-                    return False
-
-        except Exception as e:
-            logger.error(f"Error loading translation {language_code}: {e}")
+        if language_code in self.available_languages:
+            self.current_language = language_code
+            self.load_translations()
+            logger.info(f"Language changed to {language_code}")
+            return True
+        else:
+            logger.warning(f"Unsupported language: {language_code}")
             return False
 
-    def _load_ts_file(self, ts_file: str):
+    def tr(self, context: str, text: str) -> str:
         """
-        Carrega traduções de arquivo .ts diretamente (fallback)
+        Função de tradução principal
 
         Args:
-            ts_file: Caminho do arquivo .ts
-        """
-        try:
-            import xml.etree.ElementTree as ET
-
-            tree = ET.parse(ts_file)
-            root = tree.getroot()
-
-            # Dicionário de traduções
-            self.translations = {}
-
-            for context in root.findall("context"):
-                name_elem = context.find("name")
-                if name_elem is not None and name_elem.text:
-                    context_name = name_elem.text
-                    self.translations[context_name] = {}
-
-                    for message in context.findall("message"):
-                        source_elem = message.find("source")
-                        translation_elem = message.find("translation")
-
-                        if source_elem is not None and translation_elem is not None:
-                            source = source_elem.text
-                            translation = translation_elem.text
-                            if source and translation:
-                                self.translations[context_name][source] = translation
-
-            logger.info(f"Loaded {len(self.translations)} contexts from {ts_file}")
-
-        except Exception as e:
-            logger.error(f"Error loading .ts file {ts_file}: {e}")
-            self.translations = {}
-
-    def _load_custom_qm(self, qm_file: str) -> bool:
-        """
-        Carrega traduções de arquivo .qm personalizado
-
-        Args:
-            qm_file: Caminho do arquivo .qm
+            context: Contexto da tradução (geralmente nome da classe)
+            text: Texto para traduzir
 
         Returns:
-            bool: True se carregado com sucesso
+            str: Texto traduzido ou original se não encontrado
         """
-        try:
-            import struct
-            
-            with open(qm_file, 'rb') as f:
-                # Ler magic number
-                magic = f.read(4)
-                if magic != b'\x3c\xb8\x64\x18':
-                    logger.warning(f"Invalid QM magic number in {qm_file}")
-                    return False
-                
-                # Ler mensagens
-                self.translations = {}
-                
-                while True:
-                    try:
-                        # Ler contexto
-                        context_len_bytes = f.read(4)
-                        if not context_len_bytes:
-                            break
-                        
-                        context_len = struct.unpack('<I', context_len_bytes)[0]
-                        context = f.read(context_len).decode('utf-8')
-                        
-                        # Ler source
-                        source_len_bytes = f.read(4)
-                        source_len = struct.unpack('<I', source_len_bytes)[0]
-                        source = f.read(source_len).decode('utf-8')
-                        
-                        # Ler translation
-                        trans_len_bytes = f.read(4)
-                        trans_len = struct.unpack('<I', trans_len_bytes)[0]
-                        translation = f.read(trans_len).decode('utf-8')
-                        
-                        # Adicionar ao dicionário
-                        if context not in self.translations:
-                            self.translations[context] = {}
-                        self.translations[context][source] = translation
-                        
-                    except struct.error:
-                        break
-                    except UnicodeDecodeError:
-                        continue
-                
-                logger.info(f"Loaded custom QM with {len(self.translations)} contexts from {qm_file}")
-                return True
-                
-        except Exception as e:
-            logger.error(f"Error loading custom QM file {qm_file}: {e}")
-            return False
+        key = f"{context}.{text}"
+        translated = self.translations.get(key, text)
+
+        # Log para debug de traduções faltantes
+        if translated == text and self.current_language != "en":
+            logger.debug(f"Missing translation: {key}")
+
+        return translated
 
     def get_available_languages(self) -> dict:
         """Retorna idiomas disponíveis"""
@@ -193,22 +90,23 @@ class I18nManager:
 
     def auto_detect_language(self) -> str:
         """Detecta idioma do sistema"""
-        locale = QLocale.system()
-        language_code = locale.name()
+        import locale
 
-        # Mapeia códigos completos para códigos suportados
-        if language_code.startswith("pt"):
-            return "pt_BR"
-        else:
-            return "en"
+        try:
+            system_locale = locale.getdefaultlocale()[0]
+            if system_locale and system_locale.startswith("pt"):
+                return "pt_BR"
+        except (AttributeError, TypeError):
+            pass
+        return "en"
 
 
 # Instância global do gerenciador
-_i18n_manager = I18nManager()
+_i18n_manager = SimpleI18n()
 
 
-def get_i18n_manager() -> I18nManager:
-    """Retorna instância global do I18nManager"""
+def get_i18n_manager() -> SimpleI18n:
+    """Retorna instância global do SimpleI18n"""
     return _i18n_manager
 
 
@@ -223,17 +121,7 @@ def tr(context: str, text: str) -> str:
     Returns:
         str: Texto traduzido ou original se não encontrado
     """
-    # Primeiro tentar usar o sistema Qt
-    translated = QCoreApplication.translate(context, text)
-
-    # Se não houver tradução ou for igual ao original, tentar nosso dicionário
-    if translated == text:
-        manager = get_i18n_manager()
-        if hasattr(manager, "translations") and context in manager.translations:
-            if text in manager.translations[context]:
-                return manager.translations[context][text]
-
-    return translated
+    return _i18n_manager.tr(context, text)
 
 
 def init_i18n(language: Optional[str] = None) -> bool:
@@ -241,7 +129,6 @@ def init_i18n(language: Optional[str] = None) -> bool:
     Inicializa sistema de internacionalização
 
     Args:
-        app: Instância da QApplication
         language: Idioma específico ou None para auto-detectar
 
     Returns:
@@ -250,7 +137,7 @@ def init_i18n(language: Optional[str] = None) -> bool:
     if language is None:
         language = _i18n_manager.auto_detect_language()
 
-    return _i18n_manager.load_language(language)
+    return _i18n_manager.set_language(language)
 
 
 def reload_language(language: str) -> bool:
@@ -258,13 +145,12 @@ def reload_language(language: str) -> bool:
     Recarrega idioma dinamicamente
 
     Args:
-        app: Instância da QApplication
         language: Código do idioma para carregar
 
     Returns:
         bool: True se carregado com sucesso
     """
-    return _i18n_manager.load_language(language)
+    return _i18n_manager.set_language(language)
 
 
 # Alias para facilitar uso

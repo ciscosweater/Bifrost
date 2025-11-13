@@ -69,7 +69,6 @@ class DownloadControls(QWidget):
                 border: 1px solid {theme.colors.BORDER};
                 border-radius: {BorderRadius.SMALL}px;
                 padding: {Spacing.XS}px {Spacing.SM}px;
-                {theme.animations.get_transition("all", theme.animations.DURATION_NORMAL)};
             }}
         """)
         layout.addWidget(self.status_label)
@@ -92,7 +91,6 @@ class DownloadControls(QWidget):
                 border: 1px solid {theme.colors.BORDER};
                 border-radius: {BorderRadius.SMALL}px;
                 padding: {Spacing.XS}px {Spacing.SM}px;
-                {theme.animations.get_transition("all", theme.animations.DURATION_NORMAL)};
             }}
         """)
         layout.addWidget(self.size_label)
@@ -219,7 +217,6 @@ class DownloadControls(QWidget):
                 border: 1px solid {theme.colors.PRIMARY_DARK};
                 border-radius: {BorderRadius.SMALL}px;
                 padding: {Spacing.XS}px {Spacing.SM}px;
-                {theme.shadows.get_shadow(theme.shadows.SUBTLE)};
             }}
         """)
 
@@ -242,7 +239,6 @@ class DownloadControls(QWidget):
                 border: 1px solid {theme.colors.WARNING_DARK};
                 border-radius: {BorderRadius.SMALL}px;
                 padding: {Spacing.XS}px {Spacing.SM}px;
-                {theme.shadows.get_shadow(theme.shadows.SUBTLE)};
             }}
         """)
 
@@ -267,7 +263,6 @@ class DownloadControls(QWidget):
                 border: 1px solid {theme.colors.SUCCESS_DARK};
                 border-radius: {BorderRadius.SMALL}px;
                 padding: {Spacing.XS}px {Spacing.SM}px;
-                {theme.shadows.get_shadow(theme.shadows.SUBTLE)};
             }}
         """)
 
@@ -290,7 +285,6 @@ class DownloadControls(QWidget):
                 border: 1px solid {theme.colors.ERROR_DARK};
                 border-radius: {BorderRadius.SMALL}px;
                 padding: {Spacing.XS}px {Spacing.SM}px;
-                {theme.shadows.get_shadow(theme.shadows.SUBTLE)};
             }}
         """)
 
@@ -315,7 +309,6 @@ class DownloadControls(QWidget):
                 border: 1px solid {theme.colors.BORDER};
                 border-radius: {BorderRadius.SMALL}px;
                 padding: {Spacing.XS}px {Spacing.SM}px;
-                {theme.animations.get_transition("all", theme.animations.DURATION_NORMAL)};
             }}
         """)
 
@@ -393,7 +386,7 @@ class DownloadControls(QWidget):
                     f"{tr('DownloadControls', 'Total Size')}: {total_formatted}"
                 )
         else:
-            self.size_label.setText("")
+            self.size_label.setText(tr("DownloadControls", ""))
 
     def _format_size(self, size_bytes: int) -> str:
         """Formata tamanho em bytes para exibição"""

@@ -141,7 +141,7 @@ class SlssteamSetupDialog(ModernDialog):
         layout.addWidget(self.title_label)
 
         # Description
-        self.description_label = QLabel("")
+        self.description_label = QLabel(tr("SlssteamSetupDialog", ""))
         self.description_label.setStyleSheet(f"""
             QLabel {{
                 color: {theme.colors.TEXT_SECONDARY};
