@@ -56,11 +56,11 @@ class NotificationManager:
             return
 
         parent_rect = self.parent.rect()
-        start_y = parent_rect.height() - 100  # Start from bottom
+        start_y = 20  # Start from top
 
         for i, notification in enumerate(self.active_notifications[: self.max_visible]):
-            x = parent_rect.width() - notification.width() - 20
-            y = start_y - (i * (notification.height() + self.notification_spacing))
+            x = 20  # Position at left
+            y = start_y + (i * (notification.height() + self.notification_spacing))
 
             notification.move(x, y)
             notification.show()
@@ -82,7 +82,7 @@ class NotificationWidget(QFrame):
 
     def _setup_ui(self):
         """Setup notification UI."""
-        self.setFixedSize(300, 80)
+        self.setFixedSize(280, 60)
         self._setup_style()
 
         layout = QHBoxLayout(self)
@@ -90,7 +90,7 @@ class NotificationWidget(QFrame):
 
         # Icon label
         icon_label = QLabel()
-        icon_label.setFixedSize(24, 24)
+        icon_label.setFixedSize(20, 20)
         icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         icon_label.setText(self._get_icon())
         icon_label.setStyleSheet(f"""
@@ -105,6 +105,7 @@ class NotificationWidget(QFrame):
         # Message label
         message_label = QLabel(self.message)
         message_label.setWordWrap(True)
+        message_label.setMaximumWidth(200)
         message_label.setStyleSheet(f"""
             QLabel {{
                 color: {self._get_color()};
@@ -134,10 +135,10 @@ class NotificationWidget(QFrame):
     def _setup_style(self):
         """Apply notification styling based on type."""
         colors = {
-            "info": (theme.colors.PRIMARY, theme.colors.PRIMARY_DARK),
-            "success": (theme.colors.SUCCESS, theme.colors.SUCCESS_DARK),
-            "warning": (theme.colors.WARNING, theme.colors.WARNING_DARK),
-            "error": (theme.colors.ERROR, theme.colors.ERROR_DARK),
+            "info": theme.colors.PRIMARY,
+            "success": theme.colors.SUCCESS,
+            "warning": theme.colors.WARNING,
+            "error": theme.colors.ERROR,
         }
 
         primary = colors.get(self.notification_type, colors["info"])
