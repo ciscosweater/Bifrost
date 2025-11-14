@@ -169,6 +169,8 @@ class SteamSchemaIntegration:
 
     def _run_slscheevo_for_schema(self, app_id_int):
         """Run SLScheevo directly for schema generation - SLScheevo handles its own login!"""
+        from utils.i18n import tr
+        
         try:
             # Path to SLScheevo BUILD (local copy)
             current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -343,7 +345,6 @@ exec "{slscheevo_build}" "$@"
                         logger.info(f"[INFO] Game {app_id_int} has no achievements")
                         return True
 
-                    from utils.i18n import tr
                     logger.error(
                         f"[X] {tr('SteamSchema', 'SLScheevo failed with return code')} {result.returncode}"
                     )
@@ -405,6 +406,8 @@ exec "{slscheevo_build}" "$@"
 
     def _check_slscheevo_success(self, slscheevo_dir, app_id_int):
         """Check if SLScheevo actually succeeded by looking for generated files"""
+        from utils.i18n import tr
+        
         try:
             slscheevo_data_dir = os.path.join(slscheevo_dir, "data", "bins")
 
@@ -420,7 +423,6 @@ exec "{slscheevo_build}" "$@"
                 logger.info(f"[OK] Found generated schema files for AppID {app_id_int}")
                 return True
             else:
-                from utils.i18n import tr
                 logger.warning(f"{tr('SteamSchema', 'Schema files not found for AppID')} {app_id_int}")
                 return False
 
