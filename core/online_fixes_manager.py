@@ -3,6 +3,7 @@ Online Fixes Manager - Sistema de verificação e aplicação de Online-Fixes
 Baseado na documentação do LuaTools Steam Plugin
 """
 
+import configparser
 import logging
 import os
 import urllib.parse
@@ -85,7 +86,98 @@ class OnlineFixesManager(QObject):
         # URLs permitidas (allowlist)
         self.allowed_domains = ["github.com", "raw.githubusercontent.com"]
 
+        # URLs e timeouts - serão configurados no _load_config
+        self.generic_fix_url = ""
+        self.online_fix_urls = []
+        self.check_timeout = 5.0
+        self.download_timeout = 30.0
+        self.max_file_size_mb = 50
+
+        # Carregar configurações
+        self._load_config()
+
         logger.debug("OnlineFixesManager initialized")
+
+    def _load_config(self):
+        """Carrega configurações do arquivo .ini"""
+        try:
+            config = configparser.ConfigParser()
+            config_path = os.path.join(
+                os.path.dirname(os.path.dirname(__file__)), "config", "online_fixes.ini"
+            )
+
+            # Valores padrão como fallback
+            default_domains = ["github.com", "raw.githubusercontent.com"]
+            default_generic_repo = "https://github.com/ShayneVi/Bypasses"
+            default_online_repos = [
+                "https://github.com/ShayneVi/OnlineFix1",
+                "https://github.com/ShayneVi/OnlineFix2",
+            ]
+            default_check_timeout = 5
+            default_download_timeout = 30
+            default_max_file_size_mb = 50
+
+            if os.path.exists(config_path):
+                config.read(config_path, encoding='utf-8')
+
+                # Carregar domínios permitidos
+                domains_section = config.get('OnlineFixes', 'allowed_domains', fallback=','.join(default_domains))
+                self.allowed_domains = [d.strip() for d in domains_section.split(',') if d.strip()]
+
+                # Carregar URL base do Generic Fix repository
+                generic_repo = config.get('OnlineFixes', 'generic_fix_repo', fallback=default_generic_repo)
+                self.generic_fix_url = f"{generic_repo}/releases/download/v1.0/{{appid}}.zip"
+
+                # Carregar URLs base dos Online Fix repositories
+                online_repos_str = config.get('OnlineFixes', 'online_fix_repos', fallback='\n'.join(default_online_repos))
+                online_repos = [repo.strip() for repo in online_repos_str.split('\n') if repo.strip()]
+                self.online_fix_urls = [f"{repo}/releases/download/fixes/{{appid}}.zip" for repo in online_repos]
+
+                # Carregar timeouts e configurações
+                check_timeout_str = config.get('OnlineFixes', 'check_timeout', fallback=str(default_check_timeout))
+                download_timeout_str = config.get('OnlineFixes', 'download_timeout', fallback=str(default_download_timeout))
+                max_file_size_str = config.get('OnlineFixes', 'max_file_size_mb', fallback=str(default_max_file_size_mb))
+
+                # Converter timeouts para números explicitamente
+                try:
+                    self.check_timeout = float(check_timeout_str)
+                    self.download_timeout = float(download_timeout_str)
+                    self.max_file_size_mb = int(max_file_size_str)
+                except (ValueError, TypeError):
+                    self.check_timeout = float(default_check_timeout)
+                    self.download_timeout = float(default_download_timeout)
+                    self.max_file_size_mb = int(default_max_file_size_mb)
+
+                logger.info(f"Loaded Online Fixes config from {config_path}")
+                logger.info(f"Generic Fix URL: {self.generic_fix_url}")
+                logger.info(f"Online Fix URLs: {len(self.online_fix_urls)} configured")
+                logger.info(f"Allowed domains: {self.allowed_domains}")
+            else:
+                # Usar valores padrão se arquivo não existir
+                self.allowed_domains = default_domains
+                self.generic_fix_url = f"{default_generic_repo}/releases/download/v1.0/{{appid}}.zip"
+                self.online_fix_urls = [f"{repo}/releases/download/fixes/{{appid}}.zip" for repo in default_online_repos]
+                self.check_timeout = float(default_check_timeout)
+                self.download_timeout = float(default_download_timeout)
+                self.max_file_size_mb = default_max_file_size_mb
+
+                logger.warning(f"Config file not found at {config_path}, using defaults")
+                logger.info(f"Using default Generic Fix URL: {self.generic_fix_url}")
+                logger.info(f"Using {len(self.online_fix_urls)} default Online Fix URLs")
+                logger.info(f"Using default allowed domains: {self.allowed_domains}")
+
+        except Exception as e:
+            # Em caso de erro, usar valores padrão
+            logger.error(f"Failed to load Online Fixes config: {e}, using defaults")
+            self.allowed_domains = ["github.com", "raw.githubusercontent.com"]
+            self.generic_fix_url = "https://github.com/ShayneVi/Bypasses/releases/download/v1.0/{appid}.zip"
+            self.online_fix_urls = [
+                "https://github.com/ShayneVi/OnlineFix1/releases/download/fixes/{appid}.zip",
+                "https://github.com/ShayneVi/OnlineFix2/releases/download/fixes/{appid}.zip",
+            ]
+            self.check_timeout = 5
+            self.download_timeout = 30
+            self.max_file_size_mb = 50
 
     def check_for_fixes(self, appid: int, game_name: str = "") -> Dict[str, Any]:
         """
@@ -187,7 +279,7 @@ class OnlineFixesManager(QObject):
     def _check_generic_fix(self, appid: int) -> Dict[str, Any]:
         """Verifica disponibilidade de Generic Fix"""
         try:
-            generic_url = f"https://github.com/ShayneVi/Bypasses/releases/download/v1.0/{appid}.zip"
+            generic_url = self.generic_fix_url.format(appid=appid)
 
             # Validar URL
             if not self._is_url_allowed(generic_url):
@@ -196,7 +288,7 @@ class OnlineFixesManager(QObject):
 
             # Usar HEAD request com timeout menor para verificação rápida
             response = self.http_client.head(
-                generic_url, timeout=5, allow_redirects=True
+                generic_url, timeout=self.check_timeout, allow_redirects=True
             )
             logger.debug(f"Generic fix check for {appid} -> {response.status_code}")
 
@@ -215,10 +307,8 @@ class OnlineFixesManager(QObject):
 
     def _check_online_fix(self, appid: int) -> Dict[str, Any]:
         """Verifica disponibilidade de Online-Fix (múltiplas fontes)"""
-        online_urls = [
-            f"https://github.com/ShayneVi/OnlineFix1/releases/download/fixes/{appid}.zip",
-            f"https://github.com/ShayneVi/OnlineFix2/releases/download/fixes/{appid}.zip",
-        ]
+        # Usar URLs configuradas, formatadas com appid
+        online_urls = [url.format(appid=appid) for url in self.online_fix_urls]
 
         result = {"status": 0, "available": False, "url": None}
 
@@ -229,9 +319,9 @@ class OnlineFixesManager(QObject):
                     logger.warning(f"Online-fix URL not allowed: {online_url}")
                     continue
 
-                # Usar timeout menor para verificação mais rápida
+                # Usar timeout configurado para verificação
                 response = self.http_client.head(
-                    online_url, timeout=5, allow_redirects=True
+                    online_url, timeout=self.check_timeout, allow_redirects=True
                 )
                 logger.debug(
                     f"Online-fix check ({online_url}) for {appid} -> {response.status_code}"

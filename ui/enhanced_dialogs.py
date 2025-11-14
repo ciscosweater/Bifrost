@@ -1,6 +1,6 @@
+import configparser
 import logging
-from utils.logger import get_internationalized_logger
-from utils.i18n import tr
+import os
 
 from PyQt6.QtCore import QEasingCurve, QObject, QPropertyAnimation, Qt, pyqtSignal
 from PyQt6.QtGui import QPixmap
@@ -16,11 +16,14 @@ from PyQt6.QtWidgets import (
     QScrollArea,
     QVBoxLayout,
     QWidget,
+    QTextEdit,
 )
 
 from ui.custom_checkbox import CustomCheckBox
 from ui.interactions import AnimatedLabel, HoverButton, ModernFrame
 from ui.theme import BorderRadius, Spacing, Typography
+from utils.i18n import tr
+from utils.logger import get_internationalized_logger
 from utils.settings import (
     get_font_setting,
     get_logging_setting,
@@ -136,7 +139,7 @@ class SettingsDialog(ModernDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle(tr("EnhancedDialogs", "Settings"))
-        self.setFixedSize(500, 400)
+        self.setFixedSize(500, 800)
         self.settings = get_settings()
         self._original_settings = {}
         self._setup_ui()
@@ -479,6 +482,62 @@ class SettingsDialog(ModernDialog):
 
         scroll_layout.addWidget(drm_frame)
 
+        # Online Fixes Section
+        online_fixes_frame = ModernFrame()
+        online_fixes_layout = QVBoxLayout(online_fixes_frame)
+
+        online_fixes_title = QLabel(tr("EnhancedDialogs", "Online Fixes Repositories"))
+        from .theme import theme
+
+        online_fixes_title.setStyleSheet(
+            f"{Typography.get_font_style(Typography.H3_SIZE, Typography.WEIGHT_BOLD)}; color: {theme.colors.TEXT_ACCENT};"
+        )
+        online_fixes_layout.addWidget(online_fixes_title)
+
+        # Generic Fix Repository
+        generic_fix_label = QLabel(tr("EnhancedDialogs", "Generic Fix Repository:"))
+        generic_fix_label.setStyleSheet(
+            f"color: {theme.colors.TEXT_SECONDARY}; {Typography.get_font_style(Typography.BODY_SIZE)};"
+        )
+        online_fixes_layout.addWidget(generic_fix_label)
+
+        self.generic_fix_repo_edit = QLineEdit()
+        self.generic_fix_repo_edit.setPlaceholderText("https://github.com/owner/repo")
+        self._load_online_fixes_config()
+        self.generic_fix_repo_edit.setText(getattr(self, '_current_config', {}).get('generic_fix_repo', ''))
+        self.generic_fix_repo_edit.setToolTip(
+            tr("EnhancedDialogs", "Repository for generic fixes (bypasses). Just the GitHub repository URL")
+        )
+        online_fixes_layout.addWidget(self.generic_fix_repo_edit)
+
+        # Online Fix Repositories
+        online_repos_label = QLabel(tr("EnhancedDialogs", "Online Fix Repositories:"))
+        online_repos_label.setStyleSheet(
+            f"color: {theme.colors.TEXT_SECONDARY}; {Typography.get_font_style(Typography.BODY_SIZE)};"
+        )
+        online_fixes_layout.addWidget(online_repos_label)
+
+        self.online_fix_repos_edit = QTextEdit()
+        self.online_fix_repos_edit.setMaximumHeight(60)
+        self.online_fix_repos_edit.setPlaceholderText("https://github.com/owner/repo1\nhttps://github.com/owner/repo2")
+        self.online_fix_repos_edit.setText('\n'.join(getattr(self, '_current_config', {}).get('online_fix_repos', [])))
+        self.online_fix_repos_edit.setToolTip(
+            tr("EnhancedDialogs", "One repository URL per line for online fixes. Just the GitHub repository URLs")
+        )
+        online_fixes_layout.addWidget(self.online_fix_repos_edit)
+
+        # Info label
+        online_fixes_info_label = QLabel(
+            tr("EnhancedDialogs", "Just add your GitHub repository URLs. The system will automatically construct the download links")
+        )
+        online_fixes_info_label.setStyleSheet(
+            f"color: {theme.colors.TEXT_DISABLED}; {Typography.get_font_style(Typography.CAPTION_SIZE)}; font-style: italic;"
+        )
+        online_fixes_info_label.setWordWrap(True)
+        online_fixes_layout.addWidget(online_fixes_info_label)
+
+        scroll_layout.addWidget(online_fixes_frame)
+
         scroll_area.setWidget(scroll_widget)
         main_layout.addWidget(scroll_area)
 
@@ -520,6 +579,50 @@ class SettingsDialog(ModernDialog):
             ),
             "language": self.settings.value("language", "en", type=str),
         }
+
+    def _load_online_fixes_config(self):
+        """Load current Online Fixes configuration from file."""
+        try:
+            config = configparser.ConfigParser()
+            config_path = os.path.join(
+                os.path.dirname(os.path.dirname(__file__)), "config", "online_fixes.ini"
+            )
+
+            # Default repository URLs (base URLs)
+            default_config = {
+                'generic_fix_repo': 'https://github.com/ShayneVi/Bypasses',
+                'online_fix_repos': [
+                    'https://github.com/ShayneVi/OnlineFix1',
+                    'https://github.com/ShayneVi/OnlineFix2'
+                ]
+            }
+
+            if os.path.exists(config_path):
+                config.read(config_path, encoding='utf-8')
+
+                # Load generic fix repository URL
+                generic_repo = config.get('OnlineFixes', 'generic_fix_repo', fallback=default_config['generic_fix_repo'])
+
+                # Load online fix repository URLs
+                online_repos_str = config.get('OnlineFixes', 'online_fix_repos', fallback='\n'.join(default_config['online_fix_repos']))
+                online_repos = [repo.strip() for repo in online_repos_str.split('\n') if repo.strip()]
+
+                self._current_config = {
+                    'generic_fix_repo': generic_repo,
+                    'online_fix_repos': online_repos
+                }
+            else:
+                self._current_config = default_config
+
+        except Exception as e:
+            logger.warning(f"Failed to load Online Fixes config: {e}, using defaults")
+            self._current_config = {
+                'generic_fix_repo': 'https://github.com/ShayneVi/Bypasses',
+                'online_fix_repos': [
+                    'https://github.com/ShayneVi/OnlineFix1',
+                    'https://github.com/ShayneVi/OnlineFix2'
+                ]
+            }
 
     def _detect_slscheevo_usernames(self):
         """Detect available SLScheevo usernames and show selection dialog"""
@@ -640,7 +743,61 @@ class SettingsDialog(ModernDialog):
         """
         QMessageBox.information(
             self, tr("EnhancedDialogs", "Settings Help"), help_text.strip()
-        )
+            )
+
+    def _save_online_fixes_config(self):
+        """Save Online Fixes configuration to file."""
+        try:
+            config = configparser.ConfigParser()
+            config_path = os.path.join(
+                os.path.dirname(os.path.dirname(__file__)), "config", "online_fixes.ini"
+            )
+
+            # Create OnlineFixes section
+            config.add_section('OnlineFixes')
+
+            # Save generic fix repository URL
+            generic_repo = self.generic_fix_repo_edit.text().strip()
+            if generic_repo:
+                config.set('OnlineFixes', 'generic_fix_repo', generic_repo)
+            else:
+                config.set('OnlineFixes', 'generic_fix_repo', 'https://github.com/ShayneVi/Bypasses')
+
+            # Save online fix repository URLs
+            online_repos_text = self.online_fix_repos_edit.toPlainText().strip()
+            if online_repos_text:
+                config.set('OnlineFixes', 'online_fix_repos', online_repos_text)
+            else:
+                default_repos = [
+                    'https://github.com/ShayneVi/OnlineFix1',
+                    'https://github.com/ShayneVi/OnlineFix2'
+                ]
+                config.set('OnlineFixes', 'online_fix_repos', '\n'.join(default_repos))
+
+            # Save other settings with defaults
+            config.set('OnlineFixes', 'allowed_domains', 'github.com, raw.githubusercontent.com')
+            config.set('OnlineFixes', 'check_timeout', '5')
+            config.set('OnlineFixes', 'download_timeout', '30')
+            config.set('OnlineFixes', 'max_file_size_mb', '50')
+
+            # Add Logging section if not exists
+            if not config.has_section('Logging'):
+                config.add_section('Logging')
+                config.set('Logging', 'log_level', 'INFO')
+
+            # Write to file
+            with open(config_path, 'w', encoding='utf-8') as f:
+                config.write(f)
+
+            logger.info(f"Online Fixes configuration saved to {config_path}")
+
+        except Exception as e:
+            logger.error(f"Failed to save Online Fixes configuration: {e}")
+            QMessageBox.warning(
+                self,
+                tr("EnhancedDialogs", "Save Failed"),
+                tr("EnhancedDialogs", "Failed to save Online Fixes configuration: {error}").format(error=str(e))
+            )
 
     def accept(self):
         """Save settings with enhanced feedback."""
@@ -725,6 +882,9 @@ class SettingsDialog(ModernDialog):
 
         update_logging_mode()
 
+        # Save Online Fixes configuration
+        self._save_online_fixes_config()
+
         logger.info("Enhanced settings updated successfully.")
 
         # Always show restart dialog if changes were made
@@ -735,9 +895,7 @@ class SettingsDialog(ModernDialog):
                 tr(
                     "EnhancedDialogs",
                     "The following settings were changed:\n\n{changes}\n\nApplication restart is required to apply all changes.\nDo you want to restart now?",
-                ).format(
-                    changes="\n".join([f"• {change}" for change in changes_made])
-                ),
+                ).format(changes="\n".join([f"• {change}" for change in changes_made])),
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                 QMessageBox.StandardButton.Yes,
             )

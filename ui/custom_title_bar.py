@@ -1,7 +1,7 @@
 import logging
 from utils.logger import get_internationalized_logger
 
-from PyQt6.QtCore import QSize, Qt
+from PyQt6.QtCore import QSize, Qt, QTimer
 from PyQt6.QtGui import QColor, QIcon, QPainter, QPixmap
 from PyQt6.QtSvg import QSvgRenderer
 from PyQt6.QtWidgets import (
@@ -9,6 +9,7 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QPushButton,
+    QVBoxLayout,
     QWidget,
 )
 
@@ -38,6 +39,7 @@ class CustomTitleBar(QFrame):
         super().__init__(parent)
         self.parent = parent
         self.drag_pos = None
+        self.current_tip_index = 0
         # self.setFixedHeight(35)  # Increased to avoid cutting and better proportion
         from .theme import theme
 
@@ -87,6 +89,57 @@ class CustomTitleBar(QFrame):
         """)
         left_layout.addWidget(self.navi_label)
 
+        # Central tip widget with transparent background
+        self.tip_widget = QFrame()
+        self.tip_widget.setFixedHeight(24)
+        self.tip_widget.setMinimumWidth(300)
+        self.tip_widget.setMaximumWidth(500)
+        self.tip_widget.setStyleSheet(f"""
+            QFrame {{
+                background: transparent;
+                border: none;
+            }}
+        """)
+
+        tip_layout = QVBoxLayout(self.tip_widget)
+        tip_layout.setContentsMargins(8, 2, 8, 2)
+        tip_layout.setSpacing(0)
+
+        self.tip_label = QLabel()
+        self.tip_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.tip_label.setStyleSheet(f"""
+            QLabel {{
+                color: {theme.colors.TEXT_SECONDARY};
+                {Typography.get_font_style(Typography.CAPTION_SIZE)};
+                border: none;
+                background: transparent;
+                padding: 2px 8px;
+                border-radius: 12px;
+            }}
+        """)
+        tip_layout.addWidget(self.tip_label)
+
+        # Timer para alternar as dicas periodicamente
+        self.tip_timer = QTimer()
+        self.tip_timer.timeout.connect(self._update_tip)
+        self.tip_timer.start(5000)  # 5 segundos
+
+        # Definir as dicas traduzidas
+        self.accela_tips = [
+            tr("CustomTitleBar.Tip", "Tip 2"),
+            tr("CustomTitleBar.Tip", "Tip 3"),
+            tr("CustomTitleBar.Tip", "Tip 4"),
+            tr("CustomTitleBar.Tip", "Tip 5"),
+            tr("CustomTitleBar.Tip", "Tip 6"),
+            tr("CustomTitleBar.Tip", "Tip 7"),
+            tr("CustomTitleBar.Tip", "Tip 8"),
+            tr("CustomTitleBar.Tip", "Tip 9"),
+            tr("CustomTitleBar.Tip", "Tip 10"),
+        ]
+
+        # Mostrar primeira dica
+        self._update_tip()
+
         right_widget = QWidget()
         right_layout = QHBoxLayout(right_widget)
         right_layout.setContentsMargins(0, 0, 0, 0)
@@ -125,6 +178,8 @@ class CustomTitleBar(QFrame):
 
         # Main layout assembly
         layout.addWidget(left_widget)
+        layout.addStretch(1)
+        layout.addWidget(self.tip_widget)  # Adicionar a caixa de dicas no centro
         layout.addStretch(1)
         layout.addWidget(right_widget)
 
@@ -177,6 +232,12 @@ class CustomTitleBar(QFrame):
         self.drag_pos = None
         if a0:
             a0.accept()
+
+    def _update_tip(self):
+        """Atualiza a dica exibida no centro da barra de título"""
+        if hasattr(self, 'tip_label') and hasattr(self, 'accela_tips'):
+            self.tip_label.setText(self.accela_tips[self.current_tip_index])
+            self.current_tip_index = (self.current_tip_index + 1) % len(self.accela_tips)
 
     def _create_svg_button(self, svg_data, on_click, tooltip):
         """
