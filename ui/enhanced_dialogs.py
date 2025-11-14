@@ -212,79 +212,50 @@ class SettingsDialog(ModernDialog):
 
         scroll_layout.addWidget(sls_frame)
 
-        # Steam Schema Section
-        schema_frame = ModernFrame()
-        schema_layout = QVBoxLayout(schema_frame)
+        # SLScheevo Section
+        slscheevo_frame = ModernFrame()
+        slscheevo_layout = QVBoxLayout(slscheevo_frame)
 
-        schema_title = QLabel(tr("EnhancedDialogs", "SLScheevo Schema Generator"))
+        slscheevo_title = QLabel(tr("EnhancedDialogs", "SLScheevo Achievement Generator"))
         from .theme import theme
 
-        schema_title.setStyleSheet(
+        slscheevo_title.setStyleSheet(
             f"{Typography.get_font_style(Typography.H3_SIZE, Typography.WEIGHT_BOLD)}; color: {theme.colors.TEXT_ACCENT};"
         )
-        schema_layout.addWidget(schema_title)
+        slscheevo_layout.addWidget(slscheevo_title)
 
-        self.steam_schema_enabled_checkbox = CustomCheckBox(
-            tr("EnhancedDialogs", "Enable SLScheevo Schema Generation")
+        # Achievement generation toggle
+        self.achievements_enabled_checkbox = CustomCheckBox(
+            tr("EnhancedDialogs", "Enable Achievement Generation")
         )
-        self.steam_schema_enabled_checkbox.setChecked(bool(is_steam_schema_enabled()))
-        self.steam_schema_enabled_checkbox.setToolTip(
+        self.achievements_enabled_checkbox.setChecked(bool(is_steam_schema_enabled()))
+        self.achievements_enabled_checkbox.setToolTip(
             tr(
                 "EnhancedDialogs",
-                "Automatically generate achievement schemas using SLScheevo after downloading games.",
+                "Enable automatic achievement schema generation using SLScheevo.",
             )
         )
-        schema_layout.addWidget(self.steam_schema_enabled_checkbox)
+        slscheevo_layout.addWidget(self.achievements_enabled_checkbox)
 
-        self.auto_setup_checkbox = CustomCheckBox(
-            tr("EnhancedDialogs", "Auto-Setup SLScheevo Credentials")
+        # Open SLScheevo folder button
+        open_folder_button = HoverButton(tr("EnhancedDialogs", "Open SLScheevo Folder"))
+        open_folder_button.clicked.connect(self._open_slscheevo_folder)
+        open_folder_button.setToolTip(
+            tr("EnhancedDialogs", "Open the SLScheevo installation folder")
         )
-        self.auto_setup_checkbox.setChecked(bool(should_auto_setup_credentials()))
-        self.auto_setup_checkbox.setToolTip(
-            tr(
-                "EnhancedDialogs",
-                "Automatically configure SLScheevo login credentials for schema generation.",
-            )
-        )
-        schema_layout.addWidget(self.auto_setup_checkbox)
+        slscheevo_layout.addWidget(open_folder_button)
 
-        # SLScheevo username setting
-        username_layout = QHBoxLayout()
-        username_label = QLabel(tr("EnhancedDialogs", "SLScheevo Username:"))
-        from .theme import theme
-
-        username_label.setStyleSheet(
-            f"color: {theme.colors.TEXT_SECONDARY}; {Typography.get_font_style(Typography.BODY_SIZE)};"
+        # Info label
+        info_label = QLabel(
+            tr("EnhancedDialogs", "Configure SLScheevo credentials and settings in its folder")
         )
-        username_layout.addWidget(username_label)
-
-        self.slscheevo_username_edit = QLineEdit()
-        self.slscheevo_username_edit.setPlaceholderText(
-            tr("EnhancedDialogs", "Leave empty to auto-detect")
+        info_label.setStyleSheet(
+            f"color: {theme.colors.TEXT_DISABLED}; {Typography.get_font_style(Typography.CAPTION_SIZE)}; font-style: italic;"
         )
-        self.slscheevo_username_edit.setText(
-            self.settings.value("slscheevo_username", "", type=str)
-        )
-        self.slscheevo_username_edit.setToolTip(
-            tr(
-                "EnhancedDialogs",
-                "SLScheevo username for schema generation. Leave empty to auto-detect from saved accounts.",
-            )
-        )
-        username_layout.addWidget(self.slscheevo_username_edit)
+        info_label.setWordWrap(True)
+        slscheevo_layout.addWidget(info_label)
 
-        # Add refresh button to detect usernames
-        refresh_button = HoverButton(tr("EnhancedDialogs", "Refresh"))
-        refresh_button.setFixedSize(25, 20)
-        refresh_button.setToolTip(
-            tr("EnhancedDialogs", "Detect available SLScheevo usernames")
-        )
-        refresh_button.clicked.connect(self._detect_slscheevo_usernames)
-        username_layout.addWidget(refresh_button)
-
-        schema_layout.addLayout(username_layout)
-
-        scroll_layout.addWidget(schema_frame)
+        scroll_layout.addWidget(slscheevo_frame)
 
         # Logging Section
         logging_frame = ModernFrame()
@@ -502,7 +473,7 @@ class SettingsDialog(ModernDialog):
         online_fixes_layout.addWidget(generic_fix_label)
 
         self.generic_fix_repo_edit = QLineEdit()
-        self.generic_fix_repo_edit.setPlaceholderText("https://github.com/owner/repo")
+        self.generic_fix_repo_edit.setPlaceholderText(tr("EnhancedDialogs", "https://github.com/owner/repo"))
         self._load_online_fixes_config()
         self.generic_fix_repo_edit.setText(getattr(self, '_current_config', {}).get('generic_fix_repo', ''))
         self.generic_fix_repo_edit.setToolTip(
@@ -519,7 +490,7 @@ class SettingsDialog(ModernDialog):
 
         self.online_fix_repos_edit = QTextEdit()
         self.online_fix_repos_edit.setMaximumHeight(60)
-        self.online_fix_repos_edit.setPlaceholderText("https://github.com/owner/repo1\nhttps://github.com/owner/repo2")
+        self.online_fix_repos_edit.setPlaceholderText(tr("EnhancedDialogs", "https://github.com/owner/repo1") + "\n" + tr("EnhancedDialogs", "https://github.com/owner/repo2"))
         self.online_fix_repos_edit.setText('\n'.join(getattr(self, '_current_config', {}).get('online_fix_repos', [])))
         self.online_fix_repos_edit.setToolTip(
             tr("EnhancedDialogs", "One repository URL per line for online fixes. Just the GitHub repository URLs")
@@ -564,11 +535,7 @@ class SettingsDialog(ModernDialog):
         """Store original settings to detect changes."""
         self._original_settings = {
             "slssteam_mode": self.settings.value("slssteam_mode", True, type=bool),
-            "steam_schema_enabled": bool(is_steam_schema_enabled()),
-            "auto_setup_credentials": bool(should_auto_setup_credentials()),
-            "slscheevo_username": self.settings.value(
-                "slscheevo_username", "", type=str
-            ),
+            "achievements_enabled": bool(is_steam_schema_enabled()),
             "steamless_enabled": self.settings.value(
                 "steamless_enabled", True, type=bool
             ),
@@ -624,125 +591,82 @@ class SettingsDialog(ModernDialog):
                 ]
             }
 
-    def _detect_slscheevo_usernames(self):
-        """Detect available SLScheevo usernames and show selection dialog"""
-        try:
-            # Import here to avoid circular imports
-            from core.steam_schema_integration import SteamSchemaIntegration
-
-            schema_integration = SteamSchemaIntegration()
-
-            # Find SLScheevo directory
-            import os
-
-            current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            slscheevo_dir = os.path.join(current_dir, "slscheevo_build")
-
-            if not os.path.exists(slscheevo_dir):
-                QMessageBox.warning(
-                    self,
-                    tr("EnhancedDialogs", "SLScheevo Not Found"),
-                    tr(
-                        "EnhancedDialogs",
-                        "SLScheevo directory not found. Please install SLScheevo first.",
-                    ),
-                )
-                return
-
-            # Get available usernames
-            usernames = schema_integration._get_available_slscheevo_usernames(
-                slscheevo_dir
-            )
-
-            if not usernames:
-                QMessageBox.information(
-                    self,
-                    tr("EnhancedDialogs", "No Accounts Found"),
-                    tr(
-                        "EnhancedDialogs",
-                        "No SLScheevo accounts found. Please run SLScheevo manually first to set up your Steam login.",
-                    ),
-                )
-                return
-
-            # Show selection dialog
-            msg = QMessageBox(self)
-            msg.setWindowTitle(tr("EnhancedDialogs", "Select SLScheevo Account"))
-            msg.setText(tr("EnhancedDialogs", "Available SLScheevo accounts found:"))
-            msg.setInformativeText(
-                tr("EnhancedDialogs", "Choose an account to set as default:")
-            )
-
-            # Add buttons for each username
-            for username in usernames:
-                msg.addButton(username, QMessageBox.ButtonRole.AcceptRole)
-
-            # Add cancel button
-            cancel_button = msg.addButton(
-                tr("EnhancedDialogs", "Cancel"), QMessageBox.ButtonRole.RejectRole
-            )
-
-            msg.exec()
-
-            # Get selected username
-            clicked_button = msg.clickedButton()
-            if clicked_button and clicked_button != cancel_button:
-                selected_username = clicked_button.text()
-                self.slscheevo_username_edit.setText(selected_username)
-                QMessageBox.information(
-                    self,
-                    tr("EnhancedDialogs", "Username Set"),
-                    tr(
-                        "EnhancedDialogs", "SLScheevo username set to: {username}"
-                    ).format(username=selected_username),
-                )
-
-        except Exception as e:
-            logger.error(f"Error detecting SLScheevo usernames: {e}")
-            QMessageBox.critical(
-                self,
-                tr("EnhancedDialogs", "Error"),
-                tr(
-                    "EnhancedDialogs", "Failed to detect SLScheevo usernames: {e}"
-                ).format(e=e),
-            )
-
     def _show_help(self):
         """Show settings help dialog."""
-        help_text = """
-  Settings Help:
+        help_text = f"""
+  {tr("EnhancedDialogs", "Settings Help")}:
 
-  SLSsteam Integration
-  • Enables compatibility with SLSsteam wrapper
-  • Required for Linux Steam integration
-  • SLSsteam mode auto-selects Steam library folders
+  {tr("EnhancedDialogs", "SLSsteam Integration")}
+  • {tr("EnhancedDialogs", "Enables compatibility with SLSsteam wrapper")}
+  • {tr("EnhancedDialogs", "Required for Linux Steam integration")}
+  • {tr("EnhancedDialogs", "SLSsteam mode auto-selects Steam library folders")}
 
-  Steam Schema Generator
-  • Auto-generates achievement schemas
-  • Requires SLScheevo login credentials
-  • Configure username or leave empty to auto-detect
+  {tr("EnhancedDialogs", "Achievement Generator")}
+  • {tr("EnhancedDialogs", "Enable automatic achievement schema generation")}
+  • {tr("EnhancedDialogs", "Configure SLScheevo in its installation folder")}
+  • {tr("EnhancedDialogs", "Open SLScheevo folder to setup credentials")}
 
-  DRM Removal
-  • Removes Steam DRM from executables
-  • Makes games playable without Steam client
+  {tr("EnhancedDialogs", "DRM Removal")}
+  • {tr("EnhancedDialogs", "Removes Steam DRM from executables")}
+  • {tr("EnhancedDialogs", "Makes games playable without Steam client")}
 
-  Logging Configuration
-  • Simplified format: 'ERROR: message' vs full timestamp
-  • Log levels: DEBUG (all), INFO (normal), WARNING/ERROR/CRITICAL (less)
-  • File 'app.log' always saves complete DEBUG logs for troubleshooting
+  {tr("EnhancedDialogs", "Online Fixes Repositories")}
+  • {tr("EnhancedDialogs", "Configure repositories for game fixes/bypasses")}
+  • {tr("EnhancedDialogs", "Add GitHub repository URLs for generic and specific fixes")}
+  • {tr("EnhancedDialogs", "System automatically constructs download links")}
+  • {tr("EnhancedDialogs", "Supports multiple repository sources")}
 
-  Font Settings
-  • Choose between default and new font styles
-  • Changes require application restart
-  • Font affects entire application interface
+  {tr("EnhancedDialogs", "Logging Configuration")}
+  • {tr("EnhancedDialogs", "Simplified format: 'ERROR: message' vs full timestamp")}
+  • {tr("EnhancedDialogs", "Log levels: DEBUG (all), INFO (normal), WARNING/ERROR/CRITICAL (less)")}
+  • {tr("EnhancedDialogs", "File 'app.log' always saves complete DEBUG logs for troubleshooting")}
 
-  Keyboard Shortcuts:
-  F1 - Show this help
-  Ctrl+S - Open Settings
-  Ctrl+F - Font Settings
+  {tr("EnhancedDialogs", "Font Settings")}
+  • {tr("EnhancedDialogs", "Choose between default and new font styles")}
+  • {tr("EnhancedDialogs", "Changes require application restart")}
+  • {tr("EnhancedDialogs", "Font affects entire application interface")}
+
+  {tr("EnhancedDialogs", "Keyboard Shortcuts")}:
+  {tr("EnhancedDialogs", "F1 - Show this help")}
+  {tr("EnhancedDialogs", "Ctrl+S - Open Settings")}
+  {tr("EnhancedDialogs", "Ctrl+F - Font Settings")}
         """
         QMessageBox.information(
             self, tr("EnhancedDialogs", "Settings Help"), help_text.strip()
+            )
+
+    def _open_slscheevo_folder(self):
+        """Open SLScheevo installation folder."""
+        try:
+            import subprocess
+            import platform
+            
+            current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            slscheevo_dir = os.path.join(current_dir, "slscheevo_build")
+            
+            if not os.path.exists(slscheevo_dir):
+                QMessageBox.warning(
+                    self,
+                    tr("EnhancedDialogs", "Folder Not Found"),
+                    tr("EnhancedDialogs", "SLScheevo folder not found."),
+                )
+                return
+            
+            # Open folder based on operating system
+            system = platform.system()
+            if system == "Windows":
+                subprocess.run(["explorer", slscheevo_dir])
+            elif system == "Darwin":  # macOS
+                subprocess.run(["open", slscheevo_dir])
+            else:  # Linux
+                subprocess.run(["xdg-open", slscheevo_dir])
+                
+        except Exception as e:
+            logger.error(f"Error opening SLScheevo folder: {e}")
+            QMessageBox.critical(
+                self,
+                tr("EnhancedDialogs", "Error"),
+                tr("EnhancedDialogs", "Failed to open SLScheevo folder: {error}").format(error=str(e)),
             )
 
     def _save_online_fixes_config(self):
@@ -804,9 +728,7 @@ class SettingsDialog(ModernDialog):
         # Get current values
         current_values = {
             "slssteam_mode": self.slssteam_mode_checkbox.isChecked(),
-            "steam_schema_enabled": self.steam_schema_enabled_checkbox.isChecked(),
-            "auto_setup_credentials": self.auto_setup_checkbox.isChecked(),
-            "slscheevo_username": self.slscheevo_username_edit.text().strip(),
+            "achievements_enabled": self.achievements_enabled_checkbox.isChecked(),
             "steamless_enabled": self.steamless_enabled_checkbox.isChecked(),
             "simple_mode": self.simple_mode_checkbox.isChecked(),
             "log_level": self.log_level_combo.currentText(),
@@ -840,19 +762,8 @@ class SettingsDialog(ModernDialog):
 
         logger.debug("SLSsteam integration settings updated successfully.")
 
-        # Save Steam Schema settings
-        set_steam_schema_setting("enabled", current_values["steam_schema_enabled"])
-        set_steam_schema_setting(
-            "auto_setup_credentials", current_values["auto_setup_credentials"]
-        )
-
-        # Save SLScheevo username
-        self.settings.setValue(
-            "slscheevo_username", current_values["slscheevo_username"]
-        )
-        logger.info(
-            f"SLScheevo username saved: {current_values['slscheevo_username'] if current_values['slscheevo_username'] else '(auto-detect)'}"
-        )
+        # Save Achievement Generation settings
+        set_steam_schema_setting("enabled", current_values["achievements_enabled"])
 
         # Save Steamless setting
         self.settings.setValue("steamless_enabled", current_values["steamless_enabled"])
