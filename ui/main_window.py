@@ -880,6 +880,9 @@ class MainWindow(QMainWindow):
                 logger.info(f"About to show fixes dialog with {len(fixes_available)} fixes for {game_name}")
                 self.log_output.append(f"Online-Fixes available for {game_name}! Showing dialog...")
 
+                # Properly cleanup thread before showing dialog to avoid race conditions
+                self._cleanup_fix_check_thread_sync()
+
                 # Usar QTimer para evitar deadlock com modais
                 QTimer.singleShot(
                     100,
@@ -900,25 +903,57 @@ class MainWindow(QMainWindow):
             self.log_output.append(f"Error processing Online-Fixes result: {e}")
         finally:
             # Clean up the thread reference with better error handling
-            if hasattr(self, "fix_check_thread") and self.fix_check_thread:
-                try:
-                    thread = self.fix_check_thread
-                    if thread.isRunning():
-                        logger.debug("Thread still running after completion, requesting quit...")
-                        thread.quit()
-                        # Don't wait here as we're in the main thread - let closeEvent handle it
-                    # Call cleanup if available
-                    if hasattr(thread, "cleanup"):
-                        thread.cleanup()
-                    # Clear reference
-                    self.fix_check_thread = None
-                    logger.debug("Fix check thread reference cleared after completion")
-                except Exception as e:
-                    # Silenciar warning de deleção de C/C++ object - é normal no PyQt6
-                    if "wrapped C/C++ object" not in str(e):
-                        logger.warning(f"Error cleaning up fix check thread after completion: {e}")
-                    # Ensure reference is cleared even on error
-                    self.fix_check_thread = None
+            self._cleanup_fix_check_thread_async()
+
+    def _cleanup_fix_check_thread_sync(self):
+        """Synchronously cleanup fix check thread with proper waiting"""
+        if hasattr(self, "fix_check_thread") and self.fix_check_thread:
+            try:
+                thread = self.fix_check_thread
+                if thread.isRunning():
+                    logger.debug("Waiting for fix check thread to finish...")
+                    thread.quit()
+                    # Wait for thread to finish with timeout
+                    if thread.wait(3000):  # 3 second timeout
+                        logger.debug("Fix check thread finished successfully")
+                    else:
+                        logger.warning("Fix check thread did not finish, forcing termination...")
+                        thread.terminate()
+                        thread.wait(1000)  # Wait for termination
+                # Call cleanup if available
+                if hasattr(thread, "cleanup"):
+                    thread.cleanup()
+                # Clear reference
+                self.fix_check_thread = None
+                logger.debug("Fix check thread reference cleared after completion")
+            except Exception as e:
+                # Silenciar warning de deleção de C/C++ object - é normal no PyQt6
+                if "wrapped C/C++ object" not in str(e):
+                    logger.warning(f"Error cleaning up fix check thread synchronously: {e}")
+                # Ensure reference is cleared even on error
+                self.fix_check_thread = None
+
+    def _cleanup_fix_check_thread_async(self):
+        """Asynchronously cleanup fix check thread (for use in finally blocks)"""
+        if hasattr(self, "fix_check_thread") and self.fix_check_thread:
+            try:
+                thread = self.fix_check_thread
+                if thread.isRunning():
+                    logger.debug("Requesting fix check thread to quit...")
+                    thread.quit()
+                    # Don't wait here as we're in a callback - cleanup will be handled by closeEvent
+                # Call cleanup if available
+                if hasattr(thread, "cleanup"):
+                    thread.cleanup()
+                # Clear reference
+                self.fix_check_thread = None
+                logger.debug("Fix check thread reference cleared asynchronously")
+            except Exception as e:
+                # Silenciar warning de deleção de C/C++ object - é normal no PyQt6
+                if "wrapped C/C++ object" not in str(e):
+                    logger.warning(f"Error cleaning up fix check thread asynchronously: {e}")
+                # Ensure reference is cleared even on error
+                self.fix_check_thread = None
 
     def _show_fixes_available_dialog(
         self, game_name: str, appid: int, fixes_available: list
@@ -2207,15 +2242,16 @@ class MainWindow(QMainWindow):
     def _cleanup_all_threads(self):
         """Force cleanup of all running threads with robust error handling"""
         from PyQt6.QtCore import QThread
-        
+
+        # First cleanup fix check thread synchronously to avoid race conditions
+        self._cleanup_fix_check_thread_sync()
+
+        # Collect all other thread references
         threads_to_cleanup = []
-        
-        # Collect all thread references
-        if hasattr(self, "fix_check_thread") and self.fix_check_thread:
-            threads_to_cleanup.append(("fix_check_thread", self.fix_check_thread))
+
         if hasattr(self, "image_thread") and self.image_thread:
             threads_to_cleanup.append(("image_thread", self.image_thread))
-        
+
         for thread_name, thread in threads_to_cleanup:
             try:
                 if thread and thread.isRunning():
@@ -2226,11 +2262,11 @@ class MainWindow(QMainWindow):
                         logger.warning(f"{thread_name} did not quit gracefully, forcing termination...")
                         thread.terminate()
                         thread.wait(500)
-                    
+
                     # Call custom cleanup if available
                     if hasattr(thread, "cleanup"):
                         thread.cleanup()
-                    
+
                     logger.debug(f"{thread_name} cleaned up successfully")
             except Exception as e:
                 # Silenciar warnings normais do PyQt6
@@ -2238,7 +2274,7 @@ class MainWindow(QMainWindow):
                     logger.warning(f"Error cleaning up {thread_name}: {e}")
             finally:
                 # Always clear the reference
-                if thread_name in ["fix_check_thread", "image_thread"]:
+                if thread_name == "image_thread":
                     setattr(self, thread_name, None)
 
     def closeEvent(self, event):
