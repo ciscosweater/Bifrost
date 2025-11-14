@@ -4,14 +4,17 @@ Specific to game installation directory being downloaded
 """
 
 import json
+
+
+from typing import Dict, List
+from utils.logger import get_internationalized_logger
 import logging
 import os
 import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List
 
-logger = logging.getLogger(__name__)
+logger = get_internationalized_logger()
 
 
 # Import i18n safely - will be available when app is running

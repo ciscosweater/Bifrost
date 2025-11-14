@@ -1,4 +1,5 @@
 """
+from utils.logger import get_internationalized_logger
 Download Controls - Componentes UI para controle de downloads (pause/resume/cancel)
 """
 
@@ -25,7 +26,7 @@ except (ImportError, ModuleNotFoundError):
         return text
 
 
-logger = logging.getLogger(__name__)
+logger = get_internationalized_logger()
 
 
 class DownloadControls(QWidget):

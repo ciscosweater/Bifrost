@@ -1,8 +1,9 @@
 import configparser
+from utils.logger import get_internationalized_logger
 import logging
 import os
 
-logger = logging.getLogger(__name__)
+logger = get_internationalized_logger()
 
 def parse_depots_ini():
     """

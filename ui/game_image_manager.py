@@ -2,6 +2,8 @@
 Enhanced Game Image Manager - Multiple fallback sources and formats
 """
 
+from utils.logger import get_internationalized_logger
+
 import logging
 import os
 from typing import Dict, List, Optional
@@ -12,7 +14,7 @@ from PyQt6.QtGui import QPixmap
 
 from utils.image_cache import ImageCacheManager
 
-logger = logging.getLogger(__name__)
+logger = get_internationalized_logger()
 
 
 class GameImageManager(QObject):

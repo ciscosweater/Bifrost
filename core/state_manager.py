@@ -1,4 +1,5 @@
 """
+from utils.logger import get_internationalized_logger
 Application State Manager - Centralized state management for ACCELA
 """
 import logging
@@ -6,7 +7,7 @@ from enum import Enum
 from typing import Optional, Dict, Any
 from PyQt6.QtCore import QObject, pyqtSignal
 
-logger = logging.getLogger(__name__)
+logger = get_internationalized_logger()
 
 class AppState(Enum):
     """Application states"""

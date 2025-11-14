@@ -5,12 +5,13 @@ Download Session - Data model for download state persistence
 import json
 import logging
 import os
+
+from utils.logger import get_internationalized_logger
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
-
-logger = logging.getLogger(__name__)
+logger = get_internationalized_logger()
 
 
 class DownloadState(Enum):

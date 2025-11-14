@@ -3,6 +3,8 @@ Info Card - Minimalist information cards for ACCELA main window
 Provides clean, modern cards for displaying ACCELA info and game statistics
 """
 
+from utils.logger import get_internationalized_logger
+
 import logging
 
 from PyQt6.QtCore import Qt, QTimer
@@ -26,7 +28,7 @@ except (ImportError, ModuleNotFoundError):
         return text
 
 
-logger = logging.getLogger(__name__)
+logger = get_internationalized_logger()
 
 
 class InfoCard(QFrame):

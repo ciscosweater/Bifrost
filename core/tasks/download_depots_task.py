@@ -1,4 +1,5 @@
 import logging
+from utils.logger import get_internationalized_logger
 import os
 import re
 import subprocess
@@ -7,7 +8,7 @@ import sys
 import psutil
 from PyQt6.QtCore import QObject, QThread, pyqtSignal
 
-logger = logging.getLogger(__name__)
+logger = get_internationalized_logger()
 
 
 class StreamReader(QObject):

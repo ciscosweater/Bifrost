@@ -2,6 +2,8 @@
 Download Manager - Central control for downloads with pause/cancel/resume
 """
 
+from utils.logger import get_internationalized_logger
+
 import logging
 import os
 import signal
@@ -20,7 +22,7 @@ from utils.task_runner import TaskRunner
 from .download_depots_task import DownloadDepotsTask
 from .download_session import DownloadSession, DownloadState
 
-logger = logging.getLogger(__name__)
+logger = get_internationalized_logger()
 
 
 class DownloadManager(QObject):

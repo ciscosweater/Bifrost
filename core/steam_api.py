@@ -1,4 +1,5 @@
 import json
+from utils.logger import get_internationalized_logger
 import logging
 import os
 import subprocess
@@ -10,7 +11,7 @@ from typing import Any, Dict
 
 import requests
 
-logger = logging.getLogger(__name__)
+logger = get_internationalized_logger()
 
 
 # --- Configuration ---

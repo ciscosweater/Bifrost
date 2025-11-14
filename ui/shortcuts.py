@@ -1,8 +1,9 @@
 import logging
+from utils.logger import get_internationalized_logger
 
 from PyQt6.QtCore import QObject, Qt, pyqtSignal
 
-logger = logging.getLogger(__name__)
+logger = get_internationalized_logger()
 
 
 class KeyboardShortcuts(QObject):

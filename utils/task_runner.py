@@ -1,7 +1,8 @@
 import logging
+from utils.logger import get_internationalized_logger
 from PyQt6.QtCore import QObject, QThread, pyqtSignal
 
-logger = logging.getLogger(__name__)
+logger = get_internationalized_logger()
 
 class Worker(QObject):
     """

@@ -7,6 +7,7 @@ from typing import List, Optional
 import psutil
 from PyQt6.QtCore import QObject, pyqtSignal
 from utils.logger import get_internationalized_logger
+from utils.i18n import tr
 
 logger = get_internationalized_logger("Steamless")
 
@@ -37,7 +38,7 @@ class SteamlessIntegration(QObject):
                 ["wine", "--version"], capture_output=True, text=True, timeout=10
             )
             if result.returncode == 0:
-                logger.info(f"Wine detected: {result.stdout.strip()}")
+                logger.info(f"{tr('Steamless', 'Wine detected')}: {result.stdout.strip()}")
                 return True
         except (subprocess.TimeoutExpired, FileNotFoundError) as e:
             logger.error(f"Wine not available: {e}")
@@ -361,7 +362,7 @@ class SteamlessIntegration(QObject):
 
             logger.info("System performance optimized for Steamless")
         except Exception as e:
-            logger.warning(f"Could not optimize system performance: {e}")
+            logger.warning(f"{tr('Steamless', 'Could not optimize system performance')}: {e}")
 
     def _restore_system_performance(self):
         """Restore original system performance settings."""
@@ -369,7 +370,7 @@ class SteamlessIntegration(QObject):
             if self.original_process_priority is not None:
                 current_process = psutil.Process()
                 current_process.nice(self.original_process_priority)
-                logger.info("System performance restored to normal")
+                logger.info(tr("Steamless", "System performance restored to normal"))
         except Exception as e:
             logger.warning(f"Could not restore system performance: {e}")
 

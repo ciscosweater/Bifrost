@@ -8,12 +8,15 @@ import os
 import urllib.parse
 import zipfile
 from datetime import datetime
+from utils.i18n import tr
 from typing import Any, Dict, List
 
 import requests
 from PyQt6.QtCore import QMutex, QMutexLocker, QObject, QThread, pyqtSignal
 
-logger = logging.getLogger(__name__)
+from utils.logger import get_internationalized_logger
+
+logger = get_internationalized_logger()
 
 
 class FixDownloadState:
@@ -126,7 +129,7 @@ class OnlineFixesManager(QObject):
                 }
 
                 # Emitir progresso
-                self.fix_check_progress.emit(f"Fetching game name for {appid}...")
+                self.fix_check_progress.emit(f"{tr('OnlineFixes', 'Fetching game name for')} {appid}...")
 
                 # Obter nome do jogo se não fornecido
                 if not game_name:
@@ -134,15 +137,15 @@ class OnlineFixesManager(QObject):
                     result["gameName"] = game_name
 
                 # Verificar Generic Fix
-                self.fix_check_progress.emit(f"Checking generic fix for {game_name}...")
+                self.fix_check_progress.emit(f"{tr('OnlineFixes', 'Checking generic fix for')} {game_name}...")
                 result["genericFix"] = self._check_generic_fix(appid)
 
                 # Verificar Online-Fix
-                self.fix_check_progress.emit(f"Checking online-fix for {game_name}...")
+                self.fix_check_progress.emit(f"{tr('OnlineFixes', 'Checking online-fix for')} {game_name}...")
                 result["onlineFix"] = self._check_online_fix(appid)
 
                 logger.debug(
-                    f"Fix check completed for {appid}: Generic={result['genericFix']['available']}, Online={result['onlineFix']['available']}"
+                    f"{tr('OnlineFixes', 'Fix check completed for')} {appid}: Generic={result['genericFix']['available']}, Online={result['onlineFix']['available']}"
                 )
                 self.fix_check_completed.emit(result)
 

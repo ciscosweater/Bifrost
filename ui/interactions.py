@@ -1,9 +1,10 @@
 import logging
+from utils.logger import get_internationalized_logger
 
 from PyQt6.QtCore import QEasingCurve, QPropertyAnimation, pyqtSignal
 from PyQt6.QtWidgets import QFrame, QLabel, QPushButton
 
-logger = logging.getLogger(__name__)
+logger = get_internationalized_logger()
 
 
 class HoverButton(QPushButton):

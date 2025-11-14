@@ -3,6 +3,7 @@ import re
 import shutil
 import subprocess
 from utils.logger import get_internationalized_logger
+from utils.i18n import tr
 
 logger = get_internationalized_logger("SteamSchema")
 
@@ -18,7 +19,7 @@ class SteamSchemaIntegration:
 
     def get_game_schema_steam_client(self, app_id):
         """Generate stats and schema files using SLScheevo directly"""
-        logger.info(f"Generating stats schema for game ID {app_id} using SLScheevo")
+        logger.info(f"{tr('SteamSchema', 'Generating stats schema for game ID')} {app_id} using SLScheevo")
 
         # Convert app_id to int
         try:
@@ -260,14 +261,14 @@ exec "{slscheevo_build}" "$@"
                 # Add username if available
                 if username:
                     cmd.extend(["--login", username])
-                    logger.info(f"Using SLScheevo username: {username}")
+                    logger.info(f"{tr('SteamSchema', 'Using SLScheevo username')}: {username}")
                 else:
                     logger.warning(
                         "No SLScheevo username available - will try without login"
                     )
 
-                logger.info(f"Running SLScheevo: {' '.join(cmd)}")
-                logger.info("SLScheevo will use saved credentials if available")
+                logger.info(f"{tr('SteamSchema', 'Running SLScheevo')}: {' '.join(cmd)}")
+                logger.info(tr("SteamSchema", "SLScheevo will use saved credentials if available"))
 
                 # Run SLScheevo with output capture for better error handling
                 result = subprocess.run(
@@ -342,8 +343,9 @@ exec "{slscheevo_build}" "$@"
                         logger.info(f"[INFO] Game {app_id_int} has no achievements")
                         return True
 
+                    from utils.i18n import tr
                     logger.error(
-                        f"[X] SLScheevo failed with return code {result.returncode}"
+                        f"[X] {tr('SteamSchema', 'SLScheevo failed with return code')} {result.returncode}"
                     )
                     if result.stderr:
                         # Filter out common Linux warnings
@@ -418,7 +420,8 @@ exec "{slscheevo_build}" "$@"
                 logger.info(f"[OK] Found generated schema files for AppID {app_id_int}")
                 return True
             else:
-                logger.warning(f"Schema files not found for AppID {app_id_int}")
+                from utils.i18n import tr
+                logger.warning(f"{tr('SteamSchema', 'Schema files not found for AppID')} {app_id_int}")
                 return False
 
         except Exception as e:

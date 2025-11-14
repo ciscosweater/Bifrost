@@ -5,10 +5,11 @@ Enhanced File Cleanup Manager com integração ao GameInstallDirectoryCleanup
 import logging
 from typing import Dict, Optional
 
+from utils.logger import get_internationalized_logger
+
 from utils.file_cleanup import FileCleanupManager
 from utils.game_install_cleanup import GameInstallDirectoryCleanup
-
-logger = logging.getLogger(__name__)
+logger = get_internationalized_logger()
 
 
 class EnhancedFileCleanupManager(FileCleanupManager):

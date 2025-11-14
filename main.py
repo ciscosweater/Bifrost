@@ -1,12 +1,13 @@
 import os
 import sys
+from utils.logger import get_internationalized_logger
 
 from PyQt6.QtGui import QFont, QFontDatabase
 from PyQt6.QtWidgets import QApplication
 
 from ui.main_window import MainWindow
 from ui.theme import Typography, theme
-from utils.logger import setup_logging
+from utils.logger import setup_logging, get_internationalized_logger
 from utils.settings import get_font_setting, get_settings
 
 # Add the project root to the Python path. This allows absolute imports
@@ -37,9 +38,10 @@ def main():
     """
     # Set up the application-wide logger to capture logs from all modules.
     logger = setup_logging()
-    logger.debug("========================================")
-    logger.info("Application starting...")
-    logger.debug("========================================")
+    app_logger = get_internationalized_logger()
+    app_logger.debug("========================================")
+    app_logger.info("Application starting...")
+    app_logger.debug("========================================")
 
     app = QApplication(sys.argv)
 
@@ -103,11 +105,11 @@ def main():
     if font_loaded:
         custom_font = QFont(font_name, Typography.BODY_SIZE)
         app.setFont(custom_font)
-        logger.debug(
+        app_logger.debug(
             f"Applied selected font: '{font_name}' with size {Typography.BODY_SIZE}px"
         )
     else:
-        logger.warning(
+        app_logger.warning(
             f"Could not load selected font '{selected_font}', using fallback: {font_name}"
         )
 
@@ -127,12 +129,12 @@ def main():
 
         main_win = MainWindow(zip_file_arg)
         main_win.show()
-        logger.info("Main window displayed successfully.")
+        app_logger.info("Main window displayed successfully.")
         # Start the Qt event loop.
         sys.exit(app.exec())
     except Exception as e:
         # A global catch-all for any unhandled exceptions during initialization.
-        logger.critical(
+        app_logger.critical(
             f"A critical error occurred, and the application must close. Error: {e}",
             exc_info=True,
         )

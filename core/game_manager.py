@@ -1,4 +1,5 @@
 import logging
+from utils.logger import get_internationalized_logger
 import os
 import shutil
 import time
@@ -8,7 +9,7 @@ from PyQt6.QtCore import QThread, pyqtSignal
 
 from . import steam_helpers
 
-logger = logging.getLogger(__name__)
+logger = get_internationalized_logger()
 
 # Directory size cache with TTL (15 minutes for better performance)
 _DIRECTORY_SIZE_CACHE = {}

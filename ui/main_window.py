@@ -1,9 +1,11 @@
 # type: ignore
+from utils.logger import get_internationalized_logger
 import logging
 import os
 import random
 import re
 import sys
+from utils.i18n import tr
 
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QMovie
@@ -62,7 +64,7 @@ except (ImportError, ModuleNotFoundError):
         return text
 
 
-logger = logging.getLogger(__name__)
+logger = get_internationalized_logger()
 
 
 class ScaledLabel(QLabel):
@@ -664,7 +666,7 @@ class MainWindow(QMainWindow):
 
     def _on_steamless_progress(self, message: str):
         """Handle Steamless progress updates"""
-        self.minimal_download_widget.update_status(f"Steamless: {message}")
+        self.minimal_download_widget.update_status(f"{tr('MainWindow', 'Steamless')}: {message}")
 
     def _on_download_paused(self):
         """Handle download pause"""
@@ -757,8 +759,8 @@ class MainWindow(QMainWindow):
 
     def _check_for_online_fixes(self):
         """Inicia verificação de Online-Fixes para o jogo baixado"""
-        logger.info("_check_for_online_fixes() called")
-        self.log_output.append("Starting Online-Fixes verification...")
+        logger.info(tr("OnlineFixes", "_check_for_online_fixes() called"))
+        self.log_output.append(tr("OnlineFixes", "Starting Online-Fixes verification"))
         try:
             if not self.game_data:
                 logger.warning("No game data available for Online-Fixes check")
@@ -771,7 +773,7 @@ class MainWindow(QMainWindow):
                 logger.warning("No AppID available for Online-Fixes check")
                 return
 
-            logger.info(f"Starting Online-Fixes check for AppID {appid}")
+            logger.info(f"{tr('OnlineFixes', 'Online-Fixes check started for AppID')} {appid}")
             self.log_output.append(
                 tr("MainWindow", "Checking for Online-Fixes for {0}...").format(
                     game_name
@@ -828,7 +830,7 @@ class MainWindow(QMainWindow):
             online_fix = result.get("onlineFix", {})
 
             logger.info(
-                f"Online-Fixes check completed for {appid}: Generic={generic_fix.get('available')}, Online={online_fix.get('available')}"
+                f"{tr('OnlineFixes', 'Online-Fixes check completed for')} {appid}: Generic={generic_fix.get('available')}, Online={online_fix.get('available')}"
             )
 
             # Set flag for fix availability
@@ -848,7 +850,7 @@ class MainWindow(QMainWindow):
                 fixes_available.append(("Online-Fix", online_fix.get("url"), "online"))
                 logger.debug(f"Found Online-Fix available: {online_fix.get('url')}")
 
-            logger.info(f"Fix check completed for {appid}: Found {len(fixes_available)} fixes")
+            logger.info(f"{tr('OnlineFixes', 'Fix check completed for')} {appid}: {tr('OnlineFixes', 'Found fixes')} {len(fixes_available)} fixes")
             self.log_output.append(f"Fix check completed for {game_name}: Found {len(fixes_available)} fixes")
 
             if fixes_available:
@@ -865,8 +867,8 @@ class MainWindow(QMainWindow):
                     ),
                 )
             else:
-                self.log_output.append(f"No Online-Fixes available for {game_name}")
-                logger.info(f"No Online-Fixes available for AppID {appid}")
+                self.log_output.append(f"{tr('OnlineFixes', 'No Online-Fixes available for')} {game_name}")
+                logger.info(f"{tr('OnlineFixes', 'No Online-Fixes available for')} AppID {appid}")
                 # Se não há fixes disponíveis, apenas mostrar prompt para reiniciar Steam
                 # (SLSsteam pode ter sido configurado durante o download)
                 self._steam_restart_prompted = False
@@ -1886,7 +1888,7 @@ class MainWindow(QMainWindow):
                         self,
                         tr("MainWindow", "Select SLSsteam.so"),
                         os.path.expanduser("~"),
-                        "SLSsteam.so (SLSsteam.so)",
+                        "SLSsteam.so (*.so)",
                     )
                     if filePath:
                         if not steam_helpers.start_steam_with_path(filePath):

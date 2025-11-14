@@ -1,4 +1,5 @@
 import logging
+from utils.logger import get_internationalized_logger
 import os
 import zipfile
 from datetime import datetime
@@ -7,7 +8,7 @@ from typing import Any, Dict, List, Optional
 from core.game_manager import GameManager
 from core.steam_helpers import find_steam_install
 
-logger = logging.getLogger(__name__)
+logger = get_internationalized_logger()
 
 
 class BackupManager:

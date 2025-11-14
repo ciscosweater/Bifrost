@@ -1,4 +1,5 @@
 import logging
+from utils.logger import get_internationalized_logger
 import os
 import re
 import shutil
@@ -7,7 +8,7 @@ import sys
 
 import psutil
 
-logger = logging.getLogger(__name__)
+logger = get_internationalized_logger()
 
 # A global variable is used here to pass the SLSsteam.so path from the
 # moment it's found (before Steam is killed) to the moment it's needed

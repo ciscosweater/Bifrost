@@ -1,4 +1,6 @@
 import logging
+from utils.logger import get_internationalized_logger
+from utils.i18n import tr
 
 from PyQt6.QtCore import QEasingCurve, QObject, QPropertyAnimation, Qt, pyqtSignal
 from PyQt6.QtGui import QPixmap
@@ -39,7 +41,7 @@ except (ImportError, ModuleNotFoundError):
         return text
 
 
-logger = logging.getLogger(__name__)
+logger = get_internationalized_logger()
 
 
 class ImageFetcher(QObject):
@@ -663,8 +665,7 @@ class SettingsDialog(ModernDialog):
         language_index = self.language_combo.currentIndex()
         current_values["language"] = self.language_codes[language_index]
 
-        # Check for changes that require restart
-        restart_required = False
+        # Check for changes
         changes_made = []
 
         # Check each setting for changes
@@ -673,9 +674,8 @@ class SettingsDialog(ModernDialog):
                 original_value = self._original_settings[key]
                 if original_value != current_value:
                     changes_made.append(f"{key}: {original_value} → {current_value}")
-                    # Font and language changes always require restart
-                    if key in ["selected_font", "language"]:
-                        restart_required = True
+                    # Any setting change requires restart
+                    restart_required = True
 
         # Save SLSsteam mode setting
         self.settings.setValue("slssteam_mode", current_values["slssteam_mode"])
@@ -727,43 +727,31 @@ class SettingsDialog(ModernDialog):
 
         logger.info("Enhanced settings updated successfully.")
 
-        # Show restart dialog if changes were made
+        # Always show restart dialog if changes were made
         if changes_made:
-            if restart_required:
-                reply = QMessageBox.question(
-                    self,
-                    tr("EnhancedDialogs", "Restart Application"),
-                    tr(
-                        "EnhancedDialogs",
-                        "The following settings were changed:\n\n{changes}\n\nApplication restart is required to apply the changes.\nDo you want to restart now?",
-                    ).format(
-                        changes="\n".join([f"• {change}" for change in changes_made])
-                    ),
-                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                    QMessageBox.StandardButton.Yes,
-                )
+            reply = QMessageBox.question(
+                self,
+                tr("EnhancedDialogs", "Restart Application"),
+                tr(
+                    "EnhancedDialogs",
+                    "The following settings were changed:\n\n{changes}\n\nApplication restart is required to apply all changes.\nDo you want to restart now?",
+                ).format(
+                    changes="\n".join([f"• {change}" for change in changes_made])
+                ),
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.Yes,
+            )
 
-                if reply == QMessageBox.StandardButton.Yes:
-                    # Restart application
-                    import os
-                    import sys
+            if reply == QMessageBox.StandardButton.Yes:
+                # Restart application
+                import os
+                import sys
 
-                    from PyQt6.QtWidgets import QApplication
+                from PyQt6.QtWidgets import QApplication
 
-                    logger.info("Restarting application to apply settings...")
-                    QApplication.quit()
-                    os.execv(sys.executable, ["python"] + sys.argv)
-            else:
-                QMessageBox.information(
-                    self,
-                    tr("EnhancedDialogs", "Settings Saved"),
-                    tr(
-                        "EnhancedDialogs",
-                        "The following settings were changed:\n\n{changes}\n\nChanges have been applied successfully!",
-                    ).format(
-                        changes="\n".join([f"• {change}" for change in changes_made])
-                    ),
-                )
+                logger.info("Restarting application to apply settings...")
+                QApplication.quit()
+                os.execv(sys.executable, ["python"] + sys.argv)
 
         super().accept()
 
@@ -782,7 +770,7 @@ class DepotSelectionDialog(ModernDialog):
         self.depot_sizes = depot_sizes or {}
         self.total_game_size = total_game_size
         logger.info(
-            f"DepotSelectionDialog initialized with {len(depots)} depots and {len(self.depot_sizes)} size entries"
+            f"{tr('DepotSelectionDialog', 'DepotSelectionDialog initialized with')} {len(depots)} {tr('DepotSelectionDialog', 'depots and')} {len(self.depot_sizes)} size entries"
         )
         logger.debug(f"Depot sizes: {self.depot_sizes}")
         logger.debug(

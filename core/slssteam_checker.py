@@ -1,11 +1,12 @@
 import logging
+from utils.logger import get_internationalized_logger
 from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, Tuple
 
 import yaml
 
-logger = logging.getLogger(__name__)
+logger = get_internationalized_logger()
 
 
 class SlssteamStatus(Enum):

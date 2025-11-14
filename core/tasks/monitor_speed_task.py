@@ -1,9 +1,18 @@
 import logging
+from utils.logger import get_internationalized_logger
 import time
 import psutil
 from PyQt6.QtCore import QObject, pyqtSignal
 
-logger = logging.getLogger(__name__)
+# Import i18n
+try:
+    from utils.i18n import tr
+except (ImportError, ModuleNotFoundError):
+
+    def tr(context, text):
+        return text
+
+logger = get_internationalized_logger()
 
 class SpeedMonitorTask(QObject):
     """
@@ -37,7 +46,7 @@ class SpeedMonitorTask(QObject):
                 current_bytes = psutil.net_io_counters().bytes_recv
                 speed = (current_bytes - last_bytes) / self.interval
                 last_bytes = current_bytes
-                self.speed_update.emit(f"Download Speed: {self._format_speed(speed)}")
+                self.speed_update.emit(f"{tr('MinimalDownloadWidget', 'Download Speed')}: {self._format_speed(speed)}")
             except Exception as e:
                 logger.warning(f"Error during speed update loop: {e}")
                 self.stop()

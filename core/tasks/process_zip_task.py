@@ -5,6 +5,7 @@ from ui.assets import DEPOT_BLACKLIST
 from core.steam_api import get_depot_info_from_api
 from core.ini_parser import parse_depots_ini
 from utils.logger import get_internationalized_logger
+from utils.i18n import tr
 
 logger = get_internationalized_logger("ProcessZip")
 
@@ -47,7 +48,7 @@ class ProcessZipTask:
             raise
 
     def run(self, zip_path):
-        logger.info(f"Starting zip processing task for: {zip_path}")
+        logger.info(tr("ProcessZip", "Starting zip processing task for") + f": {zip_path}")
         game_data = {}
         try:
             with zipfile.ZipFile(zip_path, 'r') as zip_ref:
@@ -126,7 +127,7 @@ class ProcessZipTask:
                             game_data['depot_sizes'] = depot_sizes
                             logger.debug(f"Transferred {len(game_data['depot_sizes'])} depot size entries to game_data")
                         else:
-                            logger.warning("Empty depot_sizes in api_data")
+                            logger.warning(tr("SteamApi", "Empty depot_sizes in api_data"))
                             game_data['depot_sizes'] = {}
                         
                         # Transfer total game size to game_data
@@ -172,7 +173,7 @@ class ProcessZipTask:
                 for name, content in manifest_files.items():
                     with open(os.path.join(manifest_dir, name), 'wb') as f: f.write(content)
 
-            logger.info("Zip processing task completed successfully.")
+            logger.info(tr("ProcessZip", "Zip processing task completed successfully"))
             return game_data
         except Exception as e:
             logger.error(f"Zip processing failed: {e}", exc_info=True)

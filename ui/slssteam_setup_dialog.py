@@ -1,4 +1,5 @@
 import logging
+from utils.logger import get_internationalized_logger
 import subprocess
 
 from PyQt6.QtCore import Qt, QThread, QTimer, pyqtSignal
@@ -28,7 +29,7 @@ except (ImportError, ModuleNotFoundError):
         return text
 
 
-logger = logging.getLogger(__name__)
+logger = get_internationalized_logger()
 
 
 class SlssteamInstallThread(QThread):

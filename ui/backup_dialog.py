@@ -1,4 +1,5 @@
 import importlib.util
+from utils.logger import get_internationalized_logger
 import logging
 import os
 import sys
@@ -50,7 +51,7 @@ if spec and spec.loader:
 else:
     raise ImportError("Could not load BackupManager")
 
-logger = logging.getLogger(__name__)
+logger = get_internationalized_logger()
 
 
 class BackupWorker(QThread):

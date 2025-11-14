@@ -2,6 +2,8 @@
 Minimal Download Widget - Unified and elegant component for download control
 """
 
+from utils.logger import get_internationalized_logger
+
 import logging
 
 from PyQt6.QtCore import QEasingCurve, QPropertyAnimation, Qt, QTimer, pyqtSignal
@@ -18,7 +20,7 @@ except (ImportError, ModuleNotFoundError):
         return text
 
 
-logger = logging.getLogger(__name__)
+logger = get_internationalized_logger()
 
 
 class MinimalDownloadWidget(QWidget):

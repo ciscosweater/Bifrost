@@ -8,6 +8,7 @@ import os
 import time
 import weakref
 from collections import OrderedDict
+from utils.i18n import tr
 from typing import Any, Dict, Optional
 
 import requests
@@ -50,7 +51,7 @@ class ImageCacheManager(QObject):
         self._weak_cache = weakref.WeakValueDictionary()  # Weak references for QPixmap
         self._cache_loaded = False
 
-        logger.info(f"Image cache initialized at: {self.cache_dir}")
+        logger.info(f"{tr('ImageCache', 'Image cache initialized at')}: {self.cache_dir}")
         self._load_cache_metadata()
 
     def _load_cache_metadata(self):

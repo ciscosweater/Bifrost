@@ -1,4 +1,5 @@
 import logging
+from utils.logger import get_internationalized_logger
 import os
 from typing import Dict, List, Optional
 
@@ -37,7 +38,7 @@ except (ImportError, ModuleNotFoundError):
         return text
 
 
-logger = logging.getLogger(__name__)
+logger = get_internationalized_logger()
 
 
 class GameDeletionWorker(QThread):
@@ -538,13 +539,10 @@ class GameDeletionDialog(QDialog):
         warning_layout = QVBoxLayout(warning_group)
 
         warning_text = QLabel(
-            tr(
-                "GameDeletionDialog",
-                "• This will permanently delete game and all its files\n"
-                "• Save games handling depends on your choice above\n"
-                "• This action cannot be undone\n"
-                "• Only ACCELA-downloaded games will be shown",
-            )
+            f"• {tr('GameDeletionDialog', 'This will permanently delete game and all its files')}\n"
+            f"• {tr('GameDeletionDialog', 'Save games handling depends on your choice above')}\n"
+            f"• {tr('GameDeletionDialog', 'This action cannot be undone')}\n"
+            f"• {tr('GameDeletionDialog', 'Only ACCELA-downloaded games will be shown')}"
         )
         warning_text.setStyleSheet(
             f"color: {theme.colors.TEXT_PRIMARY}; padding: {Spacing.XS}px; {Typography.get_font_style(Typography.BODY_SIZE)};"
@@ -752,7 +750,7 @@ class GameDeletionDialog(QDialog):
 <b>Save Data (compatdata):</b><br>
 • Path: compatdata/{9}/<br>
 • Action: Will be deleted if checked<br>
-• Tip: Uncheck to preserve save games""",
+• {tr('GameDeletionDialog', 'Tip: Uncheck to preserve save games')}""",
             ).format(
                 game.get("display_name", "N/A"),
                 game.get("name", "N/A"),

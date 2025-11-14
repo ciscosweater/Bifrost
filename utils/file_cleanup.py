@@ -6,7 +6,8 @@ import logging
 import os
 from typing import List, Optional
 
-logger = logging.getLogger(__name__)
+from utils.logger import get_internationalized_logger
+
 
 
 class FileCleanupManager:

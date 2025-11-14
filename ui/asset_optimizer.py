@@ -1,4 +1,5 @@
 import hashlib
+from utils.logger import get_internationalized_logger
 import logging
 import os
 
@@ -6,7 +7,7 @@ from PyQt6.QtCore import QObject, Qt, QTimer
 from PyQt6.QtGui import QMovie, QPixmap
 from PyQt6.QtWidgets import QLabel
 
-logger = logging.getLogger(__name__)
+logger = get_internationalized_logger()
 
 
 class AssetManager(QObject):
