@@ -150,7 +150,7 @@ class MainWindow(QMainWindow):
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
         self.main_layout = QVBoxLayout(self.central_widget)
-        self.main_layout.setContentsMargins(0, 0, 0, 5)
+        self.main_layout.setContentsMargins(0, 0, 0, 0)
         self.main_layout.setSpacing(0)
 
         # Add title bar at the top of the window
@@ -443,6 +443,7 @@ class MainWindow(QMainWindow):
         )
         self.log_output.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.content_layout.addWidget(self.log_output, 2)
+        self.content_layout.addSpacing(Spacing.SM)  # Add spacing at the bottom
         # Get the Qt log handler after logging is set up
         try:
             from utils.logger import qt_log_handler
@@ -453,13 +454,8 @@ class MainWindow(QMainWindow):
             # Fallback if logging handler is not available
             pass
 
-        self.status_bar = QStatusBar()
-        self.setStatusBar(self.status_bar)
-        self.status_bar.setSizeGripEnabled(True)
-        self.status_bar.setStyleSheet(
-            f"QStatusBar {{ border: 0px; background: {theme.colors.BACKGROUND}; height: 8px; }}"
-        )
-        self.status_bar.setMaximumHeight(8)  # Minimum status bar just for size grip
+        # Remove status bar completely to avoid any visual artifacts
+        self.setStatusBar(None)
 
         self.setAcceptDrops(True)
 

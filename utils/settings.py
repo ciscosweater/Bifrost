@@ -29,7 +29,7 @@ STEAM_SCHEMA_SETTINGS = {
 # --- Font Settings ---
 FONT_SETTINGS = {
     "selected_font": {
-        "default": "TrixieCyrG-Plain Regular",
+        "default": "MotivaSansRegular",
         "type": str,
         "description": "Selected application font",
     }

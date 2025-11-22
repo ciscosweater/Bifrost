@@ -25,11 +25,9 @@ from ui.theme import BorderRadius, Spacing, Typography
 from utils.i18n import tr
 from utils.logger import get_internationalized_logger
 from utils.settings import (
-    get_font_setting,
     get_logging_setting,
     get_settings,
     is_steam_schema_enabled,
-    set_font_setting,
     set_logging_setting,
     set_steam_schema_setting,
     should_auto_setup_credentials,
@@ -323,55 +321,6 @@ class SettingsDialog(ModernDialog):
 
         scroll_layout.addWidget(logging_frame)
 
-        # Font Settings Section
-        font_frame = ModernFrame()
-        font_layout = QVBoxLayout(font_frame)
-
-        font_title = QLabel(tr("EnhancedDialogs", "Font Settings"))
-        from .theme import theme
-
-        font_title.setStyleSheet(
-            f"{Typography.get_font_style(Typography.H3_SIZE, Typography.WEIGHT_BOLD)}; color: {theme.colors.TEXT_ACCENT};"
-        )
-        font_layout.addWidget(font_title)
-
-        # Font selection
-        font_selection_layout = QHBoxLayout()
-        font_label = QLabel(tr("EnhancedDialogs", "Application Font:"))
-        font_label.setStyleSheet(
-            f"color: {theme.colors.TEXT_SECONDARY}; {Typography.get_font_style(Typography.BODY_SIZE)};"
-        )
-        font_selection_layout.addWidget(font_label)
-
-        self.font_combo = QComboBox()
-        self.font_combo.addItems(
-            ["TrixieCyrG-Plain Regular (Default)", "MotivaSansRegular (New)"]
-        )
-        current_font = str(
-            get_font_setting("selected_font", "TrixieCyrG-Plain Regular")
-        )
-        if current_font == "MotivaSansRegular":
-            self.font_combo.setCurrentIndex(1)
-        else:
-            self.font_combo.setCurrentIndex(0)
-        self.font_combo.setToolTip(
-            tr("EnhancedDialogs", "Select font to use throughout the application")
-        )
-        font_selection_layout.addWidget(self.font_combo)
-
-        font_layout.addLayout(font_selection_layout)
-
-        # Info label
-        font_info_label = QLabel(
-            tr("EnhancedDialogs", "Requires application restart to take effect")
-        )
-        font_info_label.setStyleSheet(
-            f"color: {theme.colors.TEXT_DISABLED}; {Typography.get_font_style(Typography.CAPTION_SIZE)}; font-style: italic;"
-        )
-        font_layout.addWidget(font_info_label)
-
-        scroll_layout.addWidget(font_frame)
-
         # Language Settings Section
         language_frame = ModernFrame()
         language_layout = QVBoxLayout(language_frame)
@@ -541,9 +490,6 @@ class SettingsDialog(ModernDialog):
             ),
             "simple_mode": bool(get_logging_setting("simple_mode", False)),
             "log_level": str(get_logging_setting("level", "INFO")),
-            "selected_font": str(
-                get_font_setting("selected_font", "TrixieCyrG-Plain Regular")
-            ),
             "language": self.settings.value("language", "en", type=str),
         }
 
@@ -621,15 +567,9 @@ class SettingsDialog(ModernDialog):
   • {tr("EnhancedDialogs", "Log levels: DEBUG (all), INFO (normal), WARNING/ERROR/CRITICAL (less)")}
   • {tr("EnhancedDialogs", "File 'app.log' always saves complete DEBUG logs for troubleshooting")}
 
-  {tr("EnhancedDialogs", "Font Settings")}
-  • {tr("EnhancedDialogs", "Choose between default and new font styles")}
-  • {tr("EnhancedDialogs", "Changes require application restart")}
-  • {tr("EnhancedDialogs", "Font affects entire application interface")}
-
   {tr("EnhancedDialogs", "Keyboard Shortcuts")}:
   {tr("EnhancedDialogs", "F1 - Show this help")}
   {tr("EnhancedDialogs", "Ctrl+S - Open Settings")}
-  {tr("EnhancedDialogs", "Ctrl+F - Font Settings")}
         """
         QMessageBox.information(
             self, tr("EnhancedDialogs", "Settings Help"), help_text.strip()
@@ -734,12 +674,6 @@ class SettingsDialog(ModernDialog):
             "log_level": self.log_level_combo.currentText(),
         }
 
-        selected_text = self.font_combo.currentText()
-        if "MotivaSansRegular" in selected_text:
-            current_values["selected_font"] = "MotivaSansRegular"
-        else:
-            current_values["selected_font"] = "TrixieCyrG-Plain Regular"
-
         # Get selected language
         language_index = self.language_combo.currentIndex()
         current_values["language"] = self.language_codes[language_index]
@@ -776,12 +710,6 @@ class SettingsDialog(ModernDialog):
         set_logging_setting("level", current_values["log_level"])
         logger.info(
             f"Logging settings updated: simple_mode={current_values['simple_mode']}, level={current_values['log_level']}"
-        )
-
-        # Save font settings
-        set_font_setting("selected_font", current_values["selected_font"])
-        logger.info(
-            f"Font setting updated: selected_font={current_values['selected_font']}"
         )
 
         # Save language setting

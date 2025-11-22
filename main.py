@@ -8,7 +8,7 @@ from PyQt6.QtWidgets import QApplication
 from ui.main_window import MainWindow
 from ui.theme import Typography, theme
 from utils.logger import setup_logging, get_internationalized_logger
-from utils.settings import get_font_setting, get_settings
+from utils.settings import get_settings
 
 # Add the project root to the Python path. This allows absolute imports
 # (e.g., 'from core.tasks...') to work from any submodule.
@@ -65,13 +65,6 @@ def main():
     app.setStyle("Fusion")
 
     # --- MODIFICATION START ---
-    # Load fonts and apply selected font
-    selected_font = get_font_setting("selected_font", "TrixieCyrG-Plain Regular")
-
-    # Load TrixieCyrG font
-    trixie_path = "assets/fonts/TrixieCyrG-Plain Regular.otf"
-    trixie_id = QFontDatabase.addApplicationFont(trixie_path)
-
     # Load MotivaSans font
     motiva_path = "assets/fonts/MotivaSansRegular.woff.ttf"
     motiva_id = QFontDatabase.addApplicationFont(motiva_path)
@@ -79,38 +72,25 @@ def main():
     font_loaded = False
     font_name = "Arial"  # Default fallback
 
-    if selected_font == "TrixieCyrG-Plain Regular":
-        if trixie_id != -1:
-            font_families = QFontDatabase.applicationFontFamilies(trixie_id)
-            if font_families:
-                font_name = font_families[
-                    0
-                ]  # Use "TrixieCyrG-Plain" instead of "TrixieCyrG-Plain Regular"
-                font_loaded = True
-                logger.debug(f"Loaded TrixieCyrG font: '{font_name}'")
-        else:
-            logger.warning(f"Failed to load TrixieCyrG font from: {trixie_path}")
-
-    elif selected_font == "MotivaSansRegular":
-        if motiva_id != -1:
-            font_families = QFontDatabase.applicationFontFamilies(motiva_id)
-            if font_families:
-                font_name = font_families[0]
-                font_loaded = True
-                logger.debug(f"Loaded MotivaSans font: '{font_name}'")
-        else:
-            logger.warning(f"Failed to load MotivaSans font from: {motiva_path}")
+    if motiva_id != -1:
+        font_families = QFontDatabase.applicationFontFamilies(motiva_id)
+        if font_families:
+            font_name = font_families[0]
+            font_loaded = True
+            logger.debug(f"Loaded MotivaSans font: '{font_name}'")
+    else:
+        logger.warning(f"Failed to load MotivaSans font from: {motiva_path}")
 
     # Apply font if loaded successfully
     if font_loaded:
         custom_font = QFont(font_name, Typography.BODY_SIZE)
         app.setFont(custom_font)
         app_logger.debug(
-            f"Applied selected font: '{font_name}' with size {Typography.BODY_SIZE}px"
+            f"Applied MotivaSans font: '{font_name}' with size {Typography.BODY_SIZE}px"
         )
     else:
         app_logger.warning(
-            f"Could not load selected font '{selected_font}', using fallback: {font_name}"
+            f"Could not load MotivaSans font, using fallback: {font_name}"
         )
 
     # Apply theme after font is loaded

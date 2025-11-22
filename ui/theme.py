@@ -81,7 +81,7 @@ class Typography:
     WEIGHT_BOLD = "bold"
 
     # Font family
-    PRIMARY_FONT = "TrixieCyrG-Plain Regular"
+    PRIMARY_FONT = "MotivaSansRegular"
     FALLBACK_FONT = "Arial"
 
     @staticmethod
@@ -92,20 +92,7 @@ class Typography:
     @staticmethod
     def get_font_family() -> str:
         """Get font family string with fallback"""
-        from utils.settings import get_font_setting
-
-        selected_font = str(
-            get_font_setting("selected_font", "TrixieCyrG-Plain Regular")
-            or "TrixieCyrG-Plain Regular"
-        )
-
-        # Map setting names to actual font family names
-        if selected_font == "TrixieCyrG-Plain Regular":
-            return "TrixieCyrG-Plain"  # Actual font family name
-        elif selected_font == "MotivaSansRegular":
-            return "Motiva Sans"  # Actual font family name
-        else:
-            return selected_font
+        return "Motiva Sans"
 
 
 class Spacing:

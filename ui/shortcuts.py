@@ -14,7 +14,6 @@ class KeyboardShortcuts(QObject):
     # Signals for different actions
     open_file_requested = pyqtSignal()
     settings_requested = pyqtSignal()
-    font_settings_requested = pyqtSignal()
     quit_requested = pyqtSignal()
     help_requested = pyqtSignal()
 
@@ -23,7 +22,6 @@ class KeyboardShortcuts(QObject):
         self._shortcuts = {
             Qt.Key.Key_O: self._handle_ctrl_o,  # Ctrl+O: Open file
             Qt.Key.Key_S: self._handle_ctrl_s,  # Ctrl+S: Settings
-            Qt.Key.Key_F: self._handle_ctrl_f,  # Ctrl+F: Font Settings
             Qt.Key.Key_Q: self._handle_ctrl_q,  # Ctrl+Q: Quit
             Qt.Key.Key_W: self._handle_ctrl_w,  # Ctrl+W: Close window
             Qt.Key.Key_F1: self._handle_f1,  # F1: Help
@@ -73,11 +71,6 @@ class KeyboardShortcuts(QObject):
         logger.debug("Ctrl+S pressed - Settings requested")
         self.settings_requested.emit()
 
-    def _handle_ctrl_f(self):
-        """Ctrl+F: Open font settings."""
-        logger.debug("Ctrl+F pressed - Font settings requested")
-        self.font_settings_requested.emit()
-
     def _handle_ctrl_q(self):
         """Ctrl+Q: Quit application."""
         logger.debug("Ctrl+Q pressed - Quit requested")
@@ -112,7 +105,6 @@ class ShortcutHelper:
     SHORTCUTS_DOC = {
         "Ctrl+O": "Open ZIP file",
         "Ctrl+S": "Open Settings",
-        "Ctrl+F": "Font Settings",
         "Ctrl+Q": "Quit Application",
         "Ctrl+W": "Close Window",
         "F1": "Show Help",
