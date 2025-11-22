@@ -1,6 +1,6 @@
 """
 from utils.logger import get_internationalized_logger
-Application State Manager - Centralized state management for ACCELA
+Application State Manager - Centralized state management for Bifrost
 """
 import logging
 from enum import Enum

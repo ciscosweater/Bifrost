@@ -246,7 +246,7 @@ def _fetch_with_web_api(app_id: str) -> Dict[str, Any]:
     url = "https://store.steampowered.com/api/appdetails"
     params = {"appids": app_id}
     headers = {
-        "User-Agent": "ACCELA-Client/1.0",
+        "User-Agent": "Bifrost-Client/1.0",
         "Accept": "application/json",
         "Connection": "close",
     }

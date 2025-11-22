@@ -1,5 +1,5 @@
 """
-ACCELA Design System - Centralized styling and design constants
+Bifrost Design System - Centralized styling and design constants
 Provides unified color palette, typography, spacing, and component styles
 """
 
@@ -7,7 +7,7 @@ from PyQt6.QtGui import QColor
 
 
 class Colors:
-    """Centralized color palette for ACCELA application"""
+    """Centralized color palette for Bifrost application"""
 
     # Primary colors (Steam-inspired theme)
     PRIMARY = "#66C0F4"  # Steam blue accent

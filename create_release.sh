@@ -4,10 +4,10 @@ set -eu
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"
 cd "$SCRIPT_DIR"
 
-RELEASE_DIR="release/ACCELA-RELEASE"
+RELEASE_DIR="release/Bifrost-RELEASE"
 BIN_DIR="$RELEASE_DIR/bin"
 
-echo "Creating ACCELA release..."
+echo "Creating Bifrost release..."
 
 # Clean previous release
 rm -rf "$RELEASE_DIR"
@@ -16,11 +16,11 @@ mkdir -p "$BIN_DIR"
 # Copy essential files
 echo "Copying essential files..."
 cp main.py "$BIN_DIR/"
-cp ACCELA "$BIN_DIR/"
+cp Bifrost "$BIN_DIR/"
 cp playsound.py "$BIN_DIR/"
 cp requirements.txt "$BIN_DIR/"
 cp icon.png "$BIN_DIR/"
-cp accela.png "$BIN_DIR/"
+cp bifrost.png "$BIN_DIR/"
 cp LICENSE "$BIN_DIR/"
 cp README.md "$BIN_DIR/"
 
@@ -74,7 +74,7 @@ set -eu
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"
 cd "$SCRIPT_DIR"
 
-INSTALL_DIR="$HOME/.local/share/ACCELA"
+INSTALL_DIR="$HOME/.local/share/Bifrost"
 BIN_DIR="$INSTALL_DIR/bin"
 VENV_DIR="$BIN_DIR/.venv"
 
@@ -107,7 +107,7 @@ cat << "BANNER"
 BANNER
 
 perform_update() {
-    echo "Existing ACCELA installation found. Updating..."
+    echo "Existing Bifrost installation found. Updating..."
 
     if [ -f "$BIN_DIR/app.log" ];
     then
@@ -124,7 +124,7 @@ if [ -d "$BIN_DIR" ];
 then
     perform_update
 else
-    echo "Starting new ACCELA installation..."
+    echo "Starting new Bifrost installation..."
 fi
 
 mkdir -p "$INSTALL_DIR"
@@ -155,16 +155,16 @@ mkdir -p "$DESKTOP_ENTRY_DIR"
 
 ICON_THEME_DIR="$HOME/.local/share/icons/hicolor/256x256/apps"
 mkdir -p "$ICON_THEME_DIR"
-install -Dm644 "$BIN_DIR/accela.png" "$ICON_THEME_DIR/accela.png"
+install -Dm644 "$BIN_DIR/bifrost.png" "$ICON_THEME_DIR/bifrost.png"
 
-cat > "$DESKTOP_ENTRY_DIR/accela.desktop" <<DESKTOP
+cat > "$DESKTOP_ENTRY_DIR/bifrost.desktop" <<DESKTOP
 [Desktop Entry]
 Version=2.0
-Name=ACCELA
+Name=Bifrost
 Comment=ＧｏＤ_Ｉｓ_ｉＮ_ｔＨｅ_ＷｉＲｅＤ
-Exec=$BIN_DIR/ACCELA
+Exec=$BIN_DIR/Bifrost
 Path=$BIN_DIR/
-Icon=accela
+Icon=bifrost
 Terminal=false
 Type=Application
 Categories=Utility;Application;
@@ -191,8 +191,8 @@ chmod +x "$RELEASE_DIR/INSTALL"
 # Create release archive
 echo "Creating release archive..."
 cd release
-RELEASE_FILE="ACCELA-RELEASE-v1.1.1.tar.gz"
-tar -czf "$RELEASE_FILE" ACCELA-RELEASE/
+RELEASE_FILE="Bifrost-RELEASE-v1.1.1.tar.gz"
+tar -czf "$RELEASE_FILE" Bifrost-RELEASE/
 
 echo "Release created: release/$RELEASE_FILE"
 echo "Release size: $(du -h "release/$RELEASE_FILE" | cut -f1)"

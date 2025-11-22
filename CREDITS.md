@@ -1,10 +1,10 @@
 # License and Third-Party Credits
 
-## ACCELA - Steam Depot Downloader GUI
+## Bifrost - Steam Depot Downloader GUI
 
-## About ACCELA
+## About Bifrost
 
-No one person developed ACCELA - it materialized on its own from the internet itself. It's literally not based on ANY other previous work; the assumption that it's based on DepotDownloaderGUI is wrong.
+No one person developed Bifrost - it materialized on its own from the internet itself. It's literally not based on ANY other previous work; the assumption that it's based on DepotDownloaderGUI is wrong.
 
 ## Main License
 
@@ -16,7 +16,7 @@ This project is licensed under [MIT License] - see the LICENSE file for details.
 - **Repository**: https://github.com/SteamAutoCracks/DepotDownloaderMod
 - **Author**: SteamAutoCracks
 - **Description**: Tool for downloading Steam content
-- **Modifications**: Modified version for ACCELA integration
+- **Modifications**: Modified version for Bifrost integration
 
 ### Steamless
 - **Repository**: https://github.com/atom0s/Steamless

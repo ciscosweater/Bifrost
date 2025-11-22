@@ -125,7 +125,7 @@ class CustomTitleBar(QFrame):
         self.tip_timer.start(5000)  # 5 segundos
 
         # Definir as dicas traduzidas
-        self.accela_tips = [
+        self.bifrost_tips = [
             tr("CustomTitleBar.Tip", "Tip 2"),
             tr("CustomTitleBar.Tip", "Tip 3"),
             tr("CustomTitleBar.Tip", "Tip 4"),
@@ -235,9 +235,9 @@ class CustomTitleBar(QFrame):
 
     def _update_tip(self):
         """Atualiza a dica exibida no centro da barra de título"""
-        if hasattr(self, 'tip_label') and hasattr(self, 'accela_tips'):
-            self.tip_label.setText(self.accela_tips[self.current_tip_index])
-            self.current_tip_index = (self.current_tip_index + 1) % len(self.accela_tips)
+        if hasattr(self, 'tip_label') and hasattr(self, 'bifrost_tips'):
+            self.tip_label.setText(self.bifrost_tips[self.current_tip_index])
+            self.current_tip_index = (self.current_tip_index + 1) % len(self.bifrost_tips)
 
     def _create_svg_button(self, svg_data, on_click, tooltip):
         """

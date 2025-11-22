@@ -472,26 +472,26 @@ class BackupDialog(QDialog):
                 info_text += tr("BackupDialog", "Total Games: {count}\n").format(
                     count=len(info.get("games", []))
                 )
-                info_text += tr("BackupDialog", "ACCELA Games: {count}\n").format(
-                    count=len(info.get("accela_games", []))
+                info_text += tr("BackupDialog", "Bifrost Games: {count}\n").format(
+                    count=len(info.get("bifrost_games", []))
                 )
                 info_text += tr("BackupDialog", "Other Games: {count}\n\n").format(
-                    count=len(info.get("non_accela_games", []))
+                    count=len(info.get("non_bifrost_games", []))
                 )
 
-                # List ACCELA games
-                if info.get("accela_games"):
-                    info_text += tr("BackupDialog", "ACCELA Games in Backup:\n")
-                    for i, game in enumerate(info["accela_games"], 1):
+                # List Bifrost games
+                if info.get("bifrost_games"):
+                    info_text += tr("BackupDialog", "Bifrost Games in Backup:\n")
+                    for i, game in enumerate(info["bifrost_games"], 1):
                         info_text += tr(
                             "BackupDialog", "{i:2d}. {name} (ID: {app_id})\n"
                         ).format(i=i, name=game["name"], app_id=game["app_id"])
                     info_text += "\n"
 
-                # List non-ACCELA games if any
-                if info.get("non_accela_games"):
+                # List non-Bifrost games if any
+                if info.get("non_bifrost_games"):
                     info_text += tr("BackupDialog", "Other Games in Backup:\n")
-                    for i, game in enumerate(info["non_accela_games"], 1):
+                    for i, game in enumerate(info["non_bifrost_games"], 1):
                         info_text += tr(
                             "BackupDialog", "{i:2d}. {name} (ID: {app_id})\n"
                         ).format(i=i, name=game["name"], app_id=game["app_id"])

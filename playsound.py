@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Enhanced sound player for ACCELA with error handling and fallback support
+Enhanced sound player for Bifrost with error handling and fallback support
 """
 
 import sys

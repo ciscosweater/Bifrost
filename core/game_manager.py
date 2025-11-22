@@ -227,16 +227,16 @@ class DirectorySizeWorker(QThread):
 
 class GameManager:
     """
-    Manages operations with games downloaded by ACCELA.
+    Manages operations with games downloaded by Bifrost.
     Responsible for scanning, parsing, and safely deleting games.
     """
 
     @staticmethod
-    def scan_accela_games(
+    def scan_bifrost_games(
         async_size_calculation: bool = True, force_refresh: bool = False
     ) -> List[Dict]:
         """
-        Scans all Steam libraries for ACCELA games.
+        Scans all Steam libraries for Bifrost games.
 
         Args:
             async_size_calculation: If True, calculates sizes asynchronously for better performance
@@ -260,7 +260,7 @@ class GameManager:
         games = []
         libraries = steam_helpers.get_steam_libraries()
 
-        logger.debug(f"Scanning {len(libraries)} Steam libraries for ACCELA games")
+        logger.debug(f"Scanning {len(libraries)} Steam libraries for Bifrost games")
 
         for library_path in libraries:
             steamapps_path = os.path.join(library_path, "steamapps")
@@ -274,7 +274,7 @@ class GameManager:
             for acf_file in acf_files:
                 try:
                     game_info = GameManager._parse_acf_file(acf_file)
-                    if game_info and GameManager._is_accela_game(game_info):
+                    if game_info and GameManager._is_bifrost_game(game_info):
                         # Extract appid from the ACF file path
                         acf_filename = os.path.basename(acf_file)
                         appid = None
@@ -334,7 +334,7 @@ class GameManager:
                     logger.error(f"Error processing ACF file {acf_file}: {e}")
                     continue
 
-        logger.debug(f"Found {len(games)} ACCELA games")
+        logger.debug(f"Found {len(games)} Bifrost games")
 
         # Cache the result
         _GAMES_SCAN_CACHE[cache_key] = (games, current_time)
@@ -498,14 +498,14 @@ class GameManager:
             return None
 
     @staticmethod
-    def _is_accela_game(game_info: Dict) -> bool:
-        """Check if the game is ACCELA with robust validations."""
+    def _is_bifrost_game(game_info: Dict) -> bool:
+        """Check if the game is Bifrost with robust validations."""
         try:
             if not game_info or not isinstance(game_info, dict):
                 logger.debug("Invalid game_info: not a dictionary or empty")
                 return False
 
-            # ACCELA games have specific characteristics:
+            # Bifrost games have specific characteristics:
             # 1. SizeOnDisk = 0 (because they're downloaded differently)
             # 2. Have valid installdir
             # 3. Have valid name
@@ -540,31 +540,31 @@ class GameManager:
                 logger.debug(f"Suspicious characters in installdir: {installdir}")
                 return False
 
-            # Check if it's a valid ACCELA game
-            is_accela = (
+            # Check if it's a valid Bifrost game
+            is_bifrost = (
                 size_on_disk_clean == "0"  # SizeOnDisk is exactly '0'
                 and len(name) > 0  # Has a valid name
                 and len(installdir) > 0  # Has a valid installdir
             )
 
-            if is_accela:
-                logger.debug(f"Valid ACCELA game detected: {name} ({installdir})")
+            if is_bifrost:
+                logger.debug(f"Valid Bifrost game detected: {name} ({installdir})")
             else:
                 logger.debug(
-                    f"Not an ACCELA game: {name} (SizeOnDisk: {size_on_disk_clean}, installdir: {installdir})"
+                    f"Not an Bifrost game: {name} (SizeOnDisk: {size_on_disk_clean}, installdir: {installdir})"
                 )
 
-            return is_accela
+            return is_bifrost
 
         except Exception as e:
-            logger.error(f"Error checking if game is ACCELA: {e}", exc_info=True)
+            logger.error(f"Error checking if game is Bifrost: {e}", exc_info=True)
             return False
 
     @staticmethod
     def delete_game(
         game_info: Dict, delete_compatdata: bool = False
     ) -> Tuple[bool, str]:
-        """Delete ACCELA game safely with additional validations."""
+        """Delete Bifrost game safely with additional validations."""
         try:
             app_id = game_info.get("appid")
             library_path = game_info.get("library_path")
@@ -647,11 +647,11 @@ class GameManager:
             except (OSError, ValueError) as e:
                 return False, f"Path validation failed: {str(e)}"
 
-            # Confirm it's really an ACCELA game before deleting
+            # Confirm it's really an Bifrost game before deleting
             if acf_path and os.path.exists(acf_path):
                 parsed_info = GameManager._parse_acf_file(acf_path)
-                if not parsed_info or not GameManager._is_accela_game(parsed_info):
-                    return False, "Security check: Game is not a valid ACCELA game"
+                if not parsed_info or not GameManager._is_bifrost_game(parsed_info):
+                    return False, "Security check: Game is not a valid Bifrost game"
 
             deleted_items = []
             errors = []

@@ -109,7 +109,7 @@ class ClickableStatusIndicator(StatusIndicator):
 
 class SlssteamStatusWidget(ModernFrame):
     """
-    SLSsteam status indicator widget for ACCELA main window.
+    SLSsteam status indicator widget for Bifrost main window.
 
     Shows installation status with visual indicator and action button.
     """
@@ -275,7 +275,7 @@ class SlssteamStatusWidget(ModernFrame):
             self.current_status, self.current_details
         )
         if not self.can_start_operations():
-            description += f"\n\n{tr('SlssteamStatus', 'ACCELA operations are blocked until SLSsteam is configured.')}"
+            description += f"\n\n{tr('SlssteamStatus', 'Bifrost operations are blocked until SLSsteam is configured.')}"
 
         self.setToolTip(description)
 
@@ -380,7 +380,7 @@ class SlssteamStatusWidget(ModernFrame):
         return self.current_status == SlssteamStatus.INSTALLED_GOOD_CONFIG
 
     def can_start_operations(self) -> bool:
-        """Check if ACCELA operations can start (SLSsteam must be ready)"""
+        """Check if Bifrost operations can start (SLSsteam must be ready)"""
         return self.is_slssteam_ready()
 
     def get_blocking_message(self) -> str:

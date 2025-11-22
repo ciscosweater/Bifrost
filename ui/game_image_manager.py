@@ -135,7 +135,7 @@ class GameImageManager(QObject):
         """
         try:
             headers = {
-                "User-Agent": "ACCELA/1.0 (Steam Game Manager)",
+                "User-Agent": "Bifrost/1.0 (Steam Game Manager)",
                 "Accept": "application/json",
                 "Accept-Language": "en-US,en;q=0.9",
                 "Cache-Control": "no-cache",
@@ -199,12 +199,12 @@ class GameImageManager(QObject):
             # Try to load a default image from assets
             current_dir = os.path.dirname(os.path.abspath(__file__))
             project_root = os.path.dirname(current_dir)
-            fallback_path = os.path.join(project_root, "assets", "images", "accela.png")
+            fallback_path = os.path.join(project_root, "assets", "images", "bifrost.png")
 
             if os.path.exists(fallback_path):
                 pixmap = QPixmap()
                 if pixmap.load(fallback_path):
-                    logger.debug("Using fallback ACCELA image")
+                    logger.debug("Using fallback Bifrost image")
                     return pixmap
 
             # Create a simple colored placeholder if no image available
@@ -242,7 +242,7 @@ class GameImageManager(QObject):
         """
         try:
             headers = {
-                "User-Agent": "ACCELA/1.0 (Steam Game Manager)",
+                "User-Agent": "Bifrost/1.0 (Steam Game Manager)",
                 "Accept": "image/jpeg,image/png,image/*",
                 "Accept-Language": "en-US,en;q=0.9",
                 "Cache-Control": "no-cache",
@@ -516,12 +516,12 @@ class GameImageThread(QThread):
             # Try to load a default image from assets
             current_dir = os.path.dirname(os.path.abspath(__file__))
             project_root = os.path.dirname(current_dir)
-            fallback_path = os.path.join(project_root, "assets", "images", "accela.png")
+            fallback_path = os.path.join(project_root, "assets", "images", "bifrost.png")
 
             if os.path.exists(fallback_path):
                 pixmap = QPixmap()
                 if pixmap.load(fallback_path):
-                    logger.debug("Using fallback ACCELA image")
+                    logger.debug("Using fallback Bifrost image")
                     return pixmap
 
             # Create a simple colored placeholder if no image available

@@ -1,8 +1,8 @@
 from PyQt6.QtCore import QSettings
 
 # --- Constants for QSettings ---
-APP_NAME = "ACCELA"
-ORG_NAME = "ACCELA"
+APP_NAME = "Bifrost"
+ORG_NAME = "Bifrost"
 
 # --- Steam Schema Generator Settings ---
 STEAM_SCHEMA_SETTINGS = {

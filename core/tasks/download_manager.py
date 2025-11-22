@@ -271,9 +271,9 @@ class DownloadManager(QObject):
 
                 if install_dir and os.path.exists(install_dir):
                     # Verificação de segurança adicional
-                    if not self._is_accela_temp_directory(install_dir):
+                    if not self._is_bifrost_temp_directory(install_dir):
                         logger.warning(
-                            f"SAFETY: Skipping cleanup of potentially non-ACCELA directory: {install_dir}"
+                            f"SAFETY: Skipping cleanup of potentially non-Bifrost directory: {install_dir}"
                         )
                         # Fallback para limpeza legada
                         self.cleanup_manager.cleanup_session(
@@ -325,9 +325,9 @@ class DownloadManager(QObject):
             logger.error(f"Error during download cancellation: {e}")
             self.download_error.emit(f"Error during cancellation: {e}")
 
-    def _is_accela_temp_directory(self, directory: str) -> bool:
+    def _is_bifrost_temp_directory(self, directory: str) -> bool:
         """
-        SAFETY CHECK: Verify this is really an ACCELA temp directory before deletion
+        SAFETY CHECK: Verify this is really an Bifrost temp directory before deletion
         """
         if not directory or not os.path.exists(directory):
             return False
@@ -350,8 +350,8 @@ class DownloadManager(QObject):
                 )
                 return False
 
-        # Only delete if clearly an ACCELA temp directory
-        accelra_indicators = ["accela_temp", "download_temp", "partial_download"]
+        # Only delete if clearly an Bifrost temp directory
+        accelra_indicators = ["bifrost_temp", "download_temp", "partial_download"]
 
         for indicator in accelra_indicators:
             if indicator in dir_lower:

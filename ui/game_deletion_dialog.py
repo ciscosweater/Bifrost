@@ -153,7 +153,7 @@ class GameDeletionWorker(QThread):
 
 
 class GameDeletionDialog(QDialog):
-    """Main dialog for ACCELA game deletion."""
+    """Main dialog for Bifrost game deletion."""
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -161,7 +161,7 @@ class GameDeletionDialog(QDialog):
         self.selected_games = []
         self.deletion_worker = None
 
-        self.setWindowTitle(tr("GameDeletionDialog", "Uninstall ACCELA Games"))
+        self.setWindowTitle(tr("GameDeletionDialog", "Uninstall Bifrost Games"))
         self.setModal(True)
         self.setMinimumSize(800, 500)
         self.resize(850, 600)
@@ -287,7 +287,7 @@ class GameDeletionDialog(QDialog):
         layout.setContentsMargins(Spacing.MD, Spacing.SM, Spacing.MD, Spacing.SM)
         layout.setSpacing(Spacing.XS)
 
-        title = QLabel(tr("GameDeletionDialog", "Uninstall ACCELA Games"))
+        title = QLabel(tr("GameDeletionDialog", "Uninstall Bifrost Games"))
         title.setFont(
             QFont(Typography.get_font_family(), Typography.H1_SIZE, QFont.Weight.Bold)
         )
@@ -303,7 +303,7 @@ class GameDeletionDialog(QDialog):
         layout.addWidget(title)
 
         subtitle = QLabel(
-            tr("GameDeletionDialog", "Select and delete games downloaded by ACCELA")
+            tr("GameDeletionDialog", "Select and delete games downloaded by Bifrost")
         )
         subtitle.setStyleSheet(f"""
             color: {theme.colors.TEXT_SECONDARY};
@@ -542,7 +542,7 @@ class GameDeletionDialog(QDialog):
             f"• {tr('GameDeletionDialog', 'This will permanently delete game and all its files')}\n"
             f"• {tr('GameDeletionDialog', 'Save games handling depends on your choice above')}\n"
             f"• {tr('GameDeletionDialog', 'This action cannot be undone')}\n"
-            f"• {tr('GameDeletionDialog', 'Only ACCELA-downloaded games will be shown')}"
+            f"• {tr('GameDeletionDialog', 'Only Bifrost-downloaded games will be shown')}"
         )
         warning_text.setStyleSheet(
             f"color: {theme.colors.TEXT_PRIMARY}; padding: {Spacing.XS}px; {Typography.get_font_style(Typography.BODY_SIZE)};"
@@ -619,12 +619,12 @@ class GameDeletionDialog(QDialog):
         return frame
 
     def _load_games(self, force_refresh: bool = False):
-        """Carrega a lista de jogos ACCELA."""
-        self.games_list = GameManager.scan_accela_games(force_refresh=force_refresh)
+        """Carrega a lista de jogos Bifrost."""
+        self.games_list = GameManager.scan_bifrost_games(force_refresh=force_refresh)
         self._populate_games_table()
         self._update_details_panel()
 
-        logger.info(f"Loaded {len(self.games_list)} ACCELA games")
+        logger.info(f"Loaded {len(self.games_list)} Bifrost games")
 
     def _populate_games_table(self):
         """Popula a tabela com os jogos encontrados."""

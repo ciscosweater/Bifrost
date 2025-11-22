@@ -64,7 +64,7 @@ AGENTS.md
 
 # Release files
 release/
-ACCELA-RELEASE-*.tar.gz
+Bifrost-RELEASE-*.tar.gz
 
 # Stats Backups
 backups/

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e  # Exit on error
 
-# Enhanced ACCELA Launcher with automatic setup and dependency checking
+# Enhanced Bifrost Launcher with automatic setup and dependency checking
 cd "$(dirname "$(readlink -f "$0")")"
 SCRIPT_DIR="$(pwd)"
 
@@ -14,7 +14,7 @@ NC='\033[0m' # No Color
 
 # Function to print colored output
 print_status() {
-    echo -e "${GREEN}[ACCELA]${NC} $1"
+    echo -e "${GREEN}[BIFROST]${NC} $1"
 }
 
 print_warning() {
@@ -95,7 +95,7 @@ play_sound() {
 
 # Main execution
 main() {
-    print_info "Initializing ACCELA..."
+    print_info "Initializing Bifrost..."
 
     # Setup virtual environment and check dependencies
     setup_virtual_env
@@ -112,12 +112,12 @@ main() {
             play_sound "$SCRIPT_DIR/audio/sfx/lal.wav"
         else
             print_error "File '$ZIP_FILE' does not exist or is not a zip file."
-            print_info "Usage: ACCELA [zip_file]"
+            print_info "Usage: BIFROST [zip_file]"
             exit 1
         fi
     else
         # No zip file provided, run normally
-        print_status "Starting ACCELA GUI..."
+        print_status "Starting Bifrost GUI..."
         play_sound "$SCRIPT_DIR/audio/sfx/etw.wav"
         python "$SCRIPT_DIR/main.py"
         play_sound "$SCRIPT_DIR/audio/sfx/lal.wav"

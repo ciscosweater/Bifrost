@@ -20,7 +20,7 @@ class SlssteamStatus(Enum):
 
 class SlssteamChecker:
     """
-    SLSsteam installation and configuration checker for ACCELA.
+    SLSsteam installation and configuration checker for Bifrost.
 
     Verifies:
     1. SLSsteam installation in ~/.local/share/SLSsteam/
@@ -207,7 +207,7 @@ class SlssteamChecker:
     ) -> str:
         """Get detailed status description"""
         if status == SlssteamStatus.NOT_INSTALLED:
-            return "SLSsteam is required for ACCELA to function. Click 'Install' to continue."
+            return "SLSsteam is required for Bifrost to function. Click 'Install' to continue."
 
         elif status == SlssteamStatus.INSTALLED_BAD_CONFIG:
             pno_setting = details.get("play_not_owned_games", "unknown")

@@ -7,7 +7,7 @@ from utils.i18n import tr
 
 logger = get_internationalized_logger("SteamSchema")
 
-# SLScheevo handles its own login - no need for ACCELA login system
+# SLScheevo handles its own login - no need for Bifrost login system
 
 
 class SteamSchemaIntegration:
@@ -298,8 +298,8 @@ exec "{slscheevo_build}" "$@"
                     logger.info(
                         f"[OK] SLScheevo completed successfully for AppID {app_id_int}"
                     )
-                    # Copy generated bins to ACCELA data directory
-                    self._copy_slscheevo_bins_to_accela(slscheevo_dir)
+                    # Copy generated bins to Bifrost data directory
+                    self._copy_slscheevo_bins_to_bifrost(slscheevo_dir)
                     return True
                 elif result.returncode == 2:  # EXIT_NO_ACHIEVEMENTS
                     logger.info(
@@ -307,7 +307,7 @@ exec "{slscheevo_build}" "$@"
                     )
                     # Check if any files were generated anyway
                     if self._check_slscheevo_success(slscheevo_dir, app_id_int):
-                        self._copy_slscheevo_bins_to_accela(slscheevo_dir)
+                        self._copy_slscheevo_bins_to_bifrost(slscheevo_dir)
                         return True
                     return True  # Not an error - just no achievements
                 elif result.returncode == 5:  # EXIT_NO_ACCOUNT_ID
@@ -318,7 +318,7 @@ exec "{slscheevo_build}" "$@"
                     logger.error(f"  cd {slscheevo_dir}")
                     logger.error("  ./SLScheevo")
                     logger.error(
-                        "After logging in once, your credentials will be saved and ACCELA can use SLScheevo automatically."
+                        "After logging in once, your credentials will be saved and Bifrost can use SLScheevo automatically."
                     )
                     return False
                 elif result.returncode == 6:  # EXIT_INVALID_APPID
@@ -330,8 +330,8 @@ exec "{slscheevo_build}" "$@"
                         logger.info(
                             f"[OK] SLScheevo completed successfully for AppID {app_id_int} (exit code {result.returncode})"
                         )
-                        # Copy generated bins to ACCELA data directory
-                        self._copy_slscheevo_bins_to_accela(slscheevo_dir)
+                        # Copy generated bins to Bifrost data directory
+                        self._copy_slscheevo_bins_to_bifrost(slscheevo_dir)
                         return True
 
                     # Check if this is a "no achievements" case
@@ -373,11 +373,11 @@ exec "{slscheevo_build}" "$@"
             logger.error(f"Traceback: {traceback.format_exc()}")
             return False
 
-    def _copy_slscheevo_bins_to_accela(self, slscheevo_path):
-        """Copy generated bin files from SLScheevo to ACCELA"""
+    def _copy_slscheevo_bins_to_bifrost(self, slscheevo_path):
+        """Copy generated bin files from SLScheevo to Bifrost"""
         try:
             slscheevo_data_dir = os.path.join(slscheevo_path, "data", "bins")
-            accela_data_dir = self.default_output_dir
+            bifrost_data_dir = self.default_output_dir
 
             if not os.path.exists(slscheevo_data_dir):
                 logger.warning(
@@ -385,15 +385,15 @@ exec "{slscheevo_build}" "$@"
                 )
                 return
 
-            # Create ACCELA data directory if it doesn't exist
-            os.makedirs(accela_data_dir, exist_ok=True)
+            # Create Bifrost data directory if it doesn't exist
+            os.makedirs(bifrost_data_dir, exist_ok=True)
 
             # Copy all bin files
             copied_count = 0
             for file_path in os.listdir(slscheevo_data_dir):
                 if file_path.endswith(".bin"):
                     src_file = os.path.join(slscheevo_data_dir, file_path)
-                    dst_file = os.path.join(accela_data_dir, file_path)
+                    dst_file = os.path.join(bifrost_data_dir, file_path)
 
                     shutil.copy2(src_file, dst_file)
                     copied_count += 1

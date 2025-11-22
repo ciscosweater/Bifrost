@@ -46,13 +46,13 @@ def main():
     app = QApplication(sys.argv)
 
     # Set application name for proper desktop integration
-    app.setApplicationName("ACCELA")
-    app.setApplicationDisplayName("ACCELA")
+    app.setApplicationName("Bifrost")
+    app.setApplicationDisplayName("Bifrost")
 
     # Set application icon
     try:
         from PyQt6.QtGui import QIcon
-        app.setWindowIcon(QIcon("accela.png"))
+        app.setWindowIcon(QIcon("bifrost.png"))
     except Exception as e:
         print(f"Warning: Could not set application icon: {e}")
 

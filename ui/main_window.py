@@ -112,7 +112,7 @@ class ScaledFontLabel(QLabel):
 class MainWindow(QMainWindow):
     def __init__(self, zip_file=None):
         super().__init__()
-        self.setWindowTitle(tr("MainWindow", "ACCELA"))
+        self.setWindowTitle(tr("MainWindow", "Bifrost"))
         self.setGeometry(100, 100, 800, 600)
         self.settings = get_settings()
         self.game_data = None
@@ -584,7 +584,7 @@ class MainWindow(QMainWindow):
 
             # Reset game title
             if hasattr(self, "game_title_label"):
-                self.game_title_label.setText(tr("MainWindow", "ACCELA"))
+                self.game_title_label.setText(tr("MainWindow", "Bifrost"))
 
             # Reset game header image to prevent stale references
             if hasattr(self, "game_header_label"):
@@ -2172,7 +2172,7 @@ class MainWindow(QMainWindow):
                 tr("MainWindow", "SLSsteam Error"),
                 tr(
                     "MainWindow",
-                    "SLSsteam status widget not available. Please restart ACCELA.",
+                    "SLSsteam status widget not available. Please restart Bifrost.",
                 ),
             )
             return False
@@ -2185,7 +2185,7 @@ class MainWindow(QMainWindow):
                 tr("MainWindow", "SLSsteam Required"),
                 tr(
                     "MainWindow",
-                    "SLSsteam is required for ACCELA to function.\n\n{0}\n\n"
+                    "SLSsteam is required for Bifrost to function.\n\n{0}\n\n"
                     "Would you like to configure SLSsteam now?",
                 ).format(blocking_msg),
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
@@ -2210,7 +2210,7 @@ class MainWindow(QMainWindow):
             self.settings.setValue("slssteam_mode", True)
 
     def _open_game_manager(self):
-        """Open the Game Manager dialog for deleting ACCELA games"""
+        """Open the Game Manager dialog for deleting Bifrost games"""
         try:
             dialog = GameDeletionDialog(self)
             dialog.exec()

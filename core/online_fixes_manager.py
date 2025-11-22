@@ -65,7 +65,7 @@ class OnlineFixesManager(QObject):
         # Configurar headers para melhor performance
         self.http_client.headers.update(
             {
-                "User-Agent": "ACCELA-OnlineFixes/1.0",
+                "User-Agent": "Bifrost-OnlineFixes/1.0",
                 "Accept": "application/octet-stream",
                 "Accept-Encoding": "gzip, deflate",
             }
@@ -74,7 +74,7 @@ class OnlineFixesManager(QObject):
         # Headers para melhor performance
         self.http_client.headers.update(
             {
-                "User-Agent": "ACCELA-OnlineFixes/1.0",
+                "User-Agent": "Bifrost-OnlineFixes/1.0",
                 "Accept": "application/octet-stream",
                 "Accept-Encoding": "gzip, deflate",
             }
@@ -684,7 +684,7 @@ class OnlineFixesManager(QObject):
     ):
         """Cria log de instalação do fix"""
         try:
-            log_file_path = os.path.join(install_path, f"accela-fix-log-{appid}.log")
+            log_file_path = os.path.join(install_path, f"bifrost-fix-log-{appid}.log")
 
             with open(log_file_path, "w", encoding="utf-8") as f:
                 f.write(f"Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Translation Management Script for ACCELA
+Translation Management Script for Bifrost
 Helps manage translations, find missing strings, and update JSON files
 """
 
@@ -151,7 +151,7 @@ def main():
             print(f"Unknown command: {command}")
         return
     
-    print("🌐 ACCELA Translation Manager")
+    print("🌐 Bifrost Translation Manager")
     print("1. Check missing translations")
     print("2. Add new translation")
     print("3. Update from TS files")

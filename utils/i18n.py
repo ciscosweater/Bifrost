@@ -1,5 +1,5 @@
 """
-ACCELA Internationalization Manager - Simplified Version
+Bifrost Internationalization Manager - Simplified Version
 Gerencia internacionalização e tradução de strings da aplicação usando JSON
 """
 
@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 class SimpleI18n:
-    """Gerenciador de internacionalização simplificado para ACCELA"""
+    """Gerenciador de internacionalização simplificado para Bifrost"""
 
     def __init__(self):
         self.current_language = "en"

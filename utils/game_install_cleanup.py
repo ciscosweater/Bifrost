@@ -1031,7 +1031,7 @@ class GameInstallDirectoryCleanup:
             # Create log file in game directory
             log_file = os.path.join(
                 install_dir,
-                f".accela_cleanup_log_{session_id or datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+                f".bifrost_cleanup_log_{session_id or datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
             )
 
             with open(log_file, "w", encoding="utf-8") as f:
@@ -1049,7 +1049,7 @@ class GameInstallDirectoryCleanup:
         logs = []
         try:
             for file in os.listdir(install_dir):
-                if file.startswith(".accela_cleanup_log_") and file.endswith(".json"):
+                if file.startswith(".bifrost_cleanup_log_") and file.endswith(".json"):
                     log_file = os.path.join(install_dir, file)
                     try:
                         with open(log_file, "r", encoding="utf-8") as f:

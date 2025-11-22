@@ -1,4 +1,4 @@
-# ACCELA - Steam Depot Downloader GUI
+# Bifrost - Steam Depot Downloader GUI
 
 Graphical interface for downloading Steam depots with advanced management features.
 
@@ -6,11 +6,11 @@ Graphical interface for downloading Steam depots with advanced management featur
 
 ### Linux (Recommended)
 ```bash
-# Make the ACCELA launcher executable
-chmod +x ACCELA
+# Make the Bifrost launcher executable
+chmod +x Bifrost
 
 # Run the application (will auto-setup virtual environment)
-./ACCELA
+./Bifrost
 ```
 
 ### Manual Setup (Development)
@@ -37,7 +37,7 @@ python main.py
 ## How to Use
 
 1. **Configure your Steam credentials on SLScheevo** (optional, for generating achievements)
-2. **Run ACCELA** through installer or manually
+2. **Run Bifrost** through installer or manually
 3. **Select the desired game** selecting a .zip file containing manifests and .lua
 4. **Choose depots/manifests** to download
 5. **Set the destination** directory
@@ -51,7 +51,7 @@ python main.py
 - Installed games management
 - Modern dark theme
 - Automatic virtual environment setup
-- Integrated launcher script (./ACCELA)
+- Integrated launcher script (./Bifrost)
 - Sound effects and visual feedback
 
 ## Release Process
@@ -67,17 +67,17 @@ chmod +x create_release.sh
 The release script creates an `INSTALL` script for easy deployment to user systems. Users can then install by extracting and running:
 
 ```bash
-tar -xzf ACCELA-RELEASE-v1.1.1.tar.gz
-cd ACCELA-RELEASE
+tar -xzf Bifrost-RELEASE-v1.1.1.tar.gz
+cd Bifrost-RELEASE
 ./INSTALL
 ```
 
 ## File Structure
 
 ```
-ACCELA/
+Bifrost/
 ├── main.py                 # Main Python entry point
-├── ACCELA                  # Application launcher script
+├── Bifrost                  # Application launcher script
 ├── requirements.txt        # Python dependencies
 ├── create_release.sh       # Release creation script
 ├── core/                   # Core application logic
@@ -91,7 +91,7 @@ ACCELA/
 ├── assets/                 # Application assets (fonts, images, gifs)
 ├── audio/                  # Sound effects and audio files
 ├── translations/           # Internationalization files
-├── accela.png              # Application icon
+├── bifrost.png              # Application icon
 └── icon.png                # Desktop icon
 ```
 
@@ -121,7 +121,7 @@ For issues and suggestions, check the documentation or contact the developer.
 
 ## Credits and Acknowledgments
 
-**ACCELA**: No one person developed ACCELA - it materialized on its own from the internet itself. It's literally not based on ANY other previous work; the assumption that it's based on DepotDownloaderGUI is wrong.
+**Bifrost**: No one person developed Bifrost - it materialized on its own from the internet itself. It's literally not based on ANY other previous work; the assumption that it's based on DepotDownloaderGUI is wrong.
 
 This project incorporates open-source third-party tools:
 

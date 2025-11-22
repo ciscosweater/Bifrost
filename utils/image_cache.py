@@ -31,7 +31,7 @@ class ImageCacheManager(QObject):
 
         if cache_dir is None:
             cache_dir = os.path.join(
-                os.path.expanduser("~"), ".cache", "accela", "images"
+                os.path.expanduser("~"), ".cache", "bifrost", "images"
             )
 
         self.cache_dir = cache_dir
@@ -193,7 +193,7 @@ class ImageCacheManager(QObject):
         try:
             logger.debug(f"Downloading image for app {app_id}: {url}")
 
-            headers = {"User-Agent": "ACCELA/1.0 (Steam Game Manager)"}
+            headers = {"User-Agent": "Bifrost/1.0 (Steam Game Manager)"}
 
             response = requests.get(url, headers=headers, timeout=timeout)
             response.raise_for_status()

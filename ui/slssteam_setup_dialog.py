@@ -231,7 +231,7 @@ class SlssteamSetupDialog(ModernDialog):
             self.description_label.setText(
                 tr(
                     "SlssteamSetupDialog",
-                    "SLSsteam is required for ACCELA to function properly. "
+                    "SLSsteam is required for Bifrost to function properly. "
                     "This will install SLSsteam and configure it for Steam integration.",
                 )
             )

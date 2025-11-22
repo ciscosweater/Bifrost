@@ -1,6 +1,6 @@
 """
-Info Card - Minimalist information cards for ACCELA main window
-Provides clean, modern cards for displaying ACCELA info and game statistics
+Info Card - Minimalist information cards for Bifrost main window
+Provides clean, modern cards for displaying Bifrost info and game statistics
 """
 
 from utils.logger import get_internationalized_logger
@@ -118,12 +118,12 @@ class InfoCard(QFrame):
         self.value_label.setText(new_value)
 
 
-class AccelaInfoCard(InfoCard):
-    """Card showing ACCELA information"""
+class BifrostInfoCard(InfoCard):
+    """Card showing Bifrost information"""
 
     def __init__(self):
         super().__init__(
-            title=tr("InfoCards", "ACCELA"),
+            title=tr("InfoCards", "Bifrost"),
             value="v1.1.1",
             icon_text="",
             color=Colors.PRIMARY,
@@ -155,10 +155,10 @@ class GamesStatsCard(InfoCard):
     def _update_stats(self, force_refresh: bool = False):
         """Update games statistics"""
         try:
-            # Try to get ACCELA games count
+            # Try to get Bifrost games count
             from core.game_manager import GameManager
 
-            games = GameManager.scan_accela_games(force_refresh=force_refresh)
+            games = GameManager.scan_bifrost_games(force_refresh=force_refresh)
             count = len(games) if games else 0
 
             if count > 0:
@@ -200,11 +200,11 @@ class StorageCard(InfoCard):
 
             from core.game_manager import GameManager
 
-            # Try to get Steam libraries and calculate ACCELA games size
+            # Try to get Steam libraries and calculate Bifrost games size
             from core.steam_helpers import get_steam_libraries
 
             libraries = get_steam_libraries()
-            games = GameManager.scan_accela_games(force_refresh=force_refresh)
+            games = GameManager.scan_bifrost_games(force_refresh=force_refresh)
 
             if not libraries or not games:
                 self.update_value("N/A")
@@ -239,7 +239,7 @@ class StorageCard(InfoCard):
 
 
 class StatusCard(InfoCard):
-    """Card showing ACCELA status"""
+    """Card showing Bifrost status"""
 
     def __init__(self):
         super().__init__(
@@ -261,7 +261,7 @@ class StatusCard(InfoCard):
         QTimer.singleShot(4000, self._update_status)
 
     def _update_status(self):
-        """Update ACCELA status"""
+        """Update Bifrost status"""
         try:
             import os
 
@@ -311,10 +311,10 @@ class InfoCardsContainer(QWidget):
 
     def _create_cards(self):
         """Create info cards"""
-        # ACCELA info card
-        self.accela_card = AccelaInfoCard()
-        self.cards_layout.addWidget(self.accela_card)
-        self.cards.append(self.accela_card)
+        # Bifrost info card
+        self.bifrost_card = BifrostInfoCard()
+        self.cards_layout.addWidget(self.bifrost_card)
+        self.cards.append(self.bifrost_card)
 
         # Games stats card
         self.games_card = GamesStatsCard()

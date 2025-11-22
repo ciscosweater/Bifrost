@@ -48,12 +48,12 @@ class BackupManager:
 
         return stats_path
 
-    def list_stats_files(self, accela_only: bool = True) -> List[str]:
+    def list_stats_files(self, bifrost_only: bool = True) -> List[str]:
         """
         Lista os arquivos de stats na pasta appcache/stats.
 
         Args:
-            accela_only: Se True, inclui apenas stats de jogos ACCELA
+            bifrost_only: Se True, inclui apenas stats de jogos Bifrost
 
         Returns:
             Lista de caminhos completos dos arquivos .bin
@@ -68,13 +68,13 @@ class BackupManager:
                 if file.endswith(".bin"):
                     all_files.append(os.path.join(stats_path, file))
 
-            if not accela_only:
+            if not bifrost_only:
                 return sorted(all_files)
 
-            # Filter for ACCELA games only
-            accela_files = []
-            accela_games = GameManager.scan_accela_games()
-            accela_app_ids = {str(game.get("appid", "")) for game in accela_games}
+            # Filter for Bifrost games only
+            bifrost_files = []
+            bifrost_games = GameManager.scan_bifrost_games()
+            bifrost_app_ids = {str(game.get("appid", "")) for game in bifrost_games}
 
             for file_path in all_files:
                 filename = os.path.basename(file_path)
@@ -96,34 +96,34 @@ class BackupManager:
                     if len(parts) >= 2:
                         app_id = parts[-1]  # Last part is the appID
 
-                if app_id in accela_app_ids:
-                    accela_files.append(file_path)
+                if app_id in bifrost_app_ids:
+                    bifrost_files.append(file_path)
                     logger.debug(
-                        f"ACCELA stats file found: {filename} (AppID: {app_id})"
+                        f"Bifrost stats file found: {filename} (AppID: {app_id})"
                     )
                 else:
                     logger.debug(
-                        f"Skipping non-ACCELA stats file: {filename} (AppID: {app_id})"
+                        f"Skipping non-Bifrost stats file: {filename} (AppID: {app_id})"
                     )
 
             logger.debug(
-                f"Found {len(accela_files)} ACCELA stats files out of {len(all_files)} total"
+                f"Found {len(bifrost_files)} Bifrost stats files out of {len(all_files)} total"
             )
-            return sorted(accela_files)
+            return sorted(bifrost_files)
 
         except Exception as e:
             logger.error(f"Error listing stats files: {e}")
             return []
 
     def create_backup(
-        self, backup_name: Optional[str] = None, accela_only: bool = True
+        self, backup_name: Optional[str] = None, bifrost_only: bool = True
     ) -> Optional[str]:
         """
         Cria um backup compactado dos arquivos de stats.
 
         Args:
             backup_name: Nome opcional para o backup (gerado automaticamente se None)
-            accela_only: Se True, inclui apenas stats de jogos ACCELA
+            bifrost_only: Se True, inclui apenas stats de jogos Bifrost
 
         Returns:
             Caminho completo do arquivo ZIP criado ou None em caso de erro
@@ -135,7 +135,7 @@ class BackupManager:
         # Gerar nome do backup se não fornecido
         if not backup_name:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            prefix = "accela_stats_backup" if accela_only else "steam_stats_backup"
+            prefix = "bifrost_stats_backup" if bifrost_only else "steam_stats_backup"
             backup_name = f"{prefix}_{timestamp}"
 
         # Garantir extensão .zip
@@ -152,10 +152,10 @@ class BackupManager:
 
             # Criar backup ZIP
             with zipfile.ZipFile(backup_path, "w", zipfile.ZIP_DEFLATED) as zipf:
-                stats_files = self.list_stats_files(accela_only=accela_only)
+                stats_files = self.list_stats_files(bifrost_only=bifrost_only)
 
                 if not stats_files:
-                    game_type = "ACCELA" if accela_only else "Steam"
+                    game_type = "Bifrost" if bifrost_only else "Steam"
                     logger.warning(
                         f"No {game_type.lower()} stats files found to backup"
                     )
@@ -167,7 +167,7 @@ class BackupManager:
                     zipf.write(file_path, arcname)
                     logger.debug(f"Added to backup: {arcname}")
 
-            game_type = "ACCELA" if accela_only else "Steam"
+            game_type = "Bifrost" if bifrost_only else "Steam"
             logger.info(f"{game_type} backup created successfully: {backup_path}")
             logger.info(f"Backed up {len(stats_files)} files")
             return backup_path
@@ -197,7 +197,7 @@ class BackupManager:
                     # Extrair timestamp do nome do arquivo
                     timestamp_str = (
                         file.replace("steam_stats_backup_", "")
-                        .replace("accela_stats_backup_", "")
+                        .replace("bifrost_stats_backup_", "")
                         .replace("pre_restore_", "")
                         .replace(".zip", "")
                     )
@@ -381,10 +381,10 @@ class BackupManager:
                 file_list = zipf.namelist()
                 bin_files = [f for f in file_list if f.endswith(".bin")]
 
-                # Get ACCELA games for reference
-                accela_games = GameManager.scan_accela_games()
-                accela_game_dict = {
-                    str(game.get("appid", "")): game for game in accela_games
+                # Get Bifrost games for reference
+                bifrost_games = GameManager.scan_bifrost_games()
+                bifrost_game_dict = {
+                    str(game.get("appid", "")): game for game in bifrost_games
                 }
 
                 # Extrair informações dos arquivos
@@ -417,8 +417,8 @@ class BackupManager:
                     file_type = "Schema" if "schema" in filename.lower() else "Stats"
                     game_name = "Unknown"
 
-                    if app_id in accela_game_dict:
-                        game_name = accela_game_dict[app_id].get("name", "Unknown")
+                    if app_id in bifrost_game_dict:
+                        game_name = bifrost_game_dict[app_id].get("name", "Unknown")
 
                     file_info.append(
                         {
@@ -428,19 +428,19 @@ class BackupManager:
                             "type": file_type,
                             "app_id": app_id,
                             "game_name": game_name,
-                            "is_accela": app_id in accela_game_dict,
+                            "is_bifrost": app_id in bifrost_game_dict,
                         }
                     )
 
                 # Get unique games in backup
                 games_in_backup = []
                 for app_id in game_app_ids:
-                    if app_id in accela_game_dict:
+                    if app_id in bifrost_game_dict:
                         games_in_backup.append(
                             {
                                 "app_id": app_id,
-                                "name": accela_game_dict[app_id].get("name", "Unknown"),
-                                "is_accela": True,
+                                "name": bifrost_game_dict[app_id].get("name", "Unknown"),
+                                "is_bifrost": True,
                             }
                         )
                     else:
@@ -448,7 +448,7 @@ class BackupManager:
                             {
                                 "app_id": app_id,
                                 "name": f"Game {app_id}",
-                                "is_accela": False,
+                                "is_bifrost": False,
                             }
                         )
 
@@ -458,9 +458,9 @@ class BackupManager:
                     "total_size": sum(f["size"] for f in file_info),
                     "compressed_size": sum(f["compressed_size"] for f in file_info),
                     "games": games_in_backup,
-                    "accela_games": [g for g in games_in_backup if g["is_accela"]],
-                    "non_accela_games": [
-                        g for g in games_in_backup if not g["is_accela"]
+                    "bifrost_games": [g for g in games_in_backup if g["is_bifrost"]],
+                    "non_bifrost_games": [
+                        g for g in games_in_backup if not g["is_bifrost"]
                     ],
                 }
 
