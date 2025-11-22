@@ -1,750 +1,321 @@
+import logging
 import os
-import re
-import shutil
 import subprocess
-from typing import List, Optional
-
-import psutil
+import shutil
+import re
+from pathlib import Path
+from typing import List, Optional, Dict
 from PyQt6.QtCore import QObject, pyqtSignal
-from utils.logger import get_internationalized_logger
-from utils.i18n import tr
 
-logger = get_internationalized_logger("Steamless")
-
+logger = logging.getLogger(__name__)
 
 class SteamlessIntegration(QObject):
     """
     Integration module for Steamless CLI to remove Steam DRM from downloaded games.
-    Handles Wine execution on Linux and file management.
+    Handles Wine execution on Linux and file management using a Temp/Output isolation workflow.
     """
 
     progress = pyqtSignal(str)
     error = pyqtSignal(str)
     finished = pyqtSignal(bool)
 
-    def __init__(
-        self, steamless_path: Optional[str] = None, performance_mode: bool = True
-    ):
+    def __init__(self, steamless_path: Optional[str] = None):
         super().__init__()
         self.steamless_path = steamless_path or os.path.join(os.getcwd(), "Steamless")
         self.wine_available = self._check_wine_availability()
-        self.winepath_available = self._check_winepath_availability()
-        self.original_process_priority = None
-        self.performance_mode = performance_mode
-        self._should_stop = False  # For cancellation support
-        self._steamless_process = None  # Track Steamless process for cancellation
 
     def _check_wine_availability(self) -> bool:
-        """Check if Wine is installed and available."""
         try:
-            result = subprocess.run(
-                ["wine", "--version"], capture_output=True, text=True, timeout=10
-            )
+            result = subprocess.run(['wine', '--version'],
+                                  capture_output=True, text=True, timeout=10)
             if result.returncode == 0:
-                logger.info(f"{tr('Steamless', 'Wine detected')}: {result.stdout.strip()}")
-                return True
+                logger.info(f"Wine detected: {result.stdout.strip()}")
+
+            # Check winepath availability
+            try:
+                winepath_result = subprocess.run(['winepath', '--version'],
+                                               capture_output=True, text=True, timeout=5)
+                if winepath_result.returncode == 0:
+                    logger.info(f"Winepath detected: {winepath_result.stdout.strip()}")
+            except (subprocess.TimeoutExpired, FileNotFoundError):
+                logger.warning("Winepath not found, will use fallback conversion")
+
+            return True
         except (subprocess.TimeoutExpired, FileNotFoundError) as e:
             logger.error(f"Wine not available: {e}")
 
-        self.error.emit(
-            "Wine is not installed or not available. Cannot run Steamless CLI."
-        )
+        self.error.emit("Wine is not installed or not available. Cannot run Steamless CLI.")
         return False
 
-    def _check_winepath_availability(self) -> bool:
-        """Check if winepath is installed and available."""
-        try:
-            result = subprocess.run(
-                ["winepath", "--version"],
-                capture_output=True,
-                text=True,
-                timeout=5
-            )
-            if result.returncode == 0:
-                logger.info(f"Winepath detected: available")
-                return True
-        except (subprocess.TimeoutExpired, FileNotFoundError) as e:
-            logger.error(f"Winepath not available: {e}")
-
-        logger.warning("Winepath is not available - path conversion may fail")
-        return False
-
-    def request_cancellation(self):
-        """Request cancellation of Steamless processing."""
-        self._should_stop = True
-        if self._steamless_process:
-            try:
-                self._steamless_process.terminate()
-                logger.info("Steamless process termination requested")
-            except Exception as e:
-                logger.error(f"Error requesting Steamless cancellation: {e}")
-
-    def _check_disk_performance(self, path: str) -> dict:
-        """Check disk performance metrics for optimization suggestions."""
-        try:
-            disk_usage = shutil.disk_usage(path)
-            disk_free_gb = disk_usage.free / (1024**3)
-
-            # Check if using SSD (simplified check)
-            try:
-                stat = os.statvfs(path)
-                # This is a simplified check - real SSD detection is more complex
-                is_likely_ssd = (
-                    stat.f_bsize > 4096
-                )  # Larger block size might indicate SSD
-            except (AttributeError, TypeError):
-                is_likely_ssd = False
-
-            return {
-                "free_space_gb": disk_free_gb,
-                "is_likely_ssd": is_likely_ssd,
-                "low_space_warning": disk_free_gb < 5,  # Less than 5GB
-                "performance_tips": [],
-            }
-        except Exception as e:
-            logger.warning(f"Could not check disk performance: {e}")
-            return {"performance_tips": ["Could not analyze disk performance"]}
-
-    def find_game_executables(self, game_directory: str) -> List[dict]:
-        """
-        Find all executable files in the game directory and subdirectories.
-        Returns a list of .exe files sorted by priority.
-        """
+    def find_game_executables(self, game_directory: str) -> List[str]:
         if not os.path.exists(game_directory):
             logger.error(f"Game directory not found: {game_directory}")
             return []
 
         exe_files = []
-        game_name = os.path.basename(game_directory.rstrip("/"))
+        game_name = os.path.basename(game_directory.rstrip('/'))
 
-        # Walk through all subdirectories
         logger.debug(f"Searching for executables in: {game_directory}")
-        all_files_found = []
 
         for root, dirs, files in os.walk(game_directory):
-            logger.debug(f"Scanning directory: {root} - Found {len(files)} files")
-            all_files_found.extend(files)
-
             for file in files:
-                if file.lower().endswith(".exe"):
+                if file.lower().endswith('.exe'):
                     file_path = os.path.join(root, file)
-                    logger.debug(f"Found executable: {file_path}")
 
-                    # Skip system/uninstaller files
+                    # Skip uninstaller/setup/config files
                     if self._should_skip_exe(file, file_path):
-                        logger.info(f"Skipping executable (system/utility): {file}")
                         continue
 
-                    # Get file size for priority calculation
+                    # Skip tiny files (<100KB)
                     try:
-                        file_size = os.path.getsize(file_path)
+                        if os.path.getsize(file_path) < 100 * 1024:
+                            continue
                     except OSError:
-                        file_size = 0
-
-                    # Skip very small files (likely utilities) - but allow main game executables
-                    if file_size < 100 * 1024:  # < 100KB
-                        logger.info(
-                            f"Skipping executable (too small, likely utility): {file} ({file_size} bytes)"
-                        )
                         continue
 
-                    # Get file size for priority calculation
-                    try:
-                        file_size = os.path.getsize(file_path)
-                    except OSError:
-                        file_size = 0
-
-                    exe_files.append(
-                        {
-                            "path": file_path,
-                            "name": file,
-                            "size": file_size,
-                            "priority": self._calculate_exe_priority(
-                                file, game_name, file_size
-                            ),
-                        }
-                    )
-                else:
-                    # Log non-exe files for debugging
-                    if file.lower().endswith((".dll", ".so", ".bin")):
-                        logger.debug(f"Found binary file: {file}")
-
-        # Log summary of what was found
-        exe_count = len([f for f in all_files_found if f.lower().endswith(".exe")])
-        logger.debug(
-            f"Directory scan complete. Total files: {len(all_files_found)}, EXE files: {exe_count}, After filtering: {len(exe_files)}"
-        )
-
-        if exe_count == 0:
-            logger.warning(f"No .exe files found in {game_directory}")
-            logger.debug(f"First 10 files found: {all_files_found[:10]}")
-        elif len(exe_files) == 0:
-            logger.warning(f"Found {exe_count} .exe files but all were filtered out")
-            for root, dirs, files in os.walk(game_directory):
-                for file in files:
-                    if file.lower().endswith(".exe"):
-                        logger.debug(f"Filtered EXE: {os.path.join(root, file)}")
+                    exe_files.append({
+                        'path': file_path,
+                        'name': file,
+                        'size': os.path.getsize(file_path),
+                        'priority': self._calculate_exe_priority(file, game_name, os.path.getsize(file_path))
+                    })
 
         # Sort by priority (higher first)
-        exe_files.sort(key=lambda x: x["priority"], reverse=True)
+        exe_files.sort(key=lambda x: x['priority'], reverse=True)
 
-        if len(exe_files) == 0:
-            logger.warning(f"No executables found in {game_directory}")
-        else:
-            logger.debug(f"Found {len(exe_files)} executable(s) in {game_directory}")
-            for exe in exe_files[:3]:  # Log top 3 candidates only in debug
-                logger.debug(
-                    f"  - {exe['name']} ({exe['size']} bytes, priority: {exe['priority']})"
-                )
+        logger.info(f"Found {len(exe_files)} executable(s) in {game_directory}")
 
-        return exe_files  # Return full dictionaries with path, name, size, priority
+        # Return just the paths
+        return [x['path'] for x in exe_files]
 
     def _should_skip_exe(self, filename: str, file_path: Optional[str] = None) -> bool:
-        """Check if an executable should be skipped based on name patterns."""
         skip_patterns = [
-            r"^unins.*\.exe$",  # uninstallers
-            r"^setup.*\.exe$",  # installers
-            r"^config.*\.exe$",  # configuration tools
-            r"^launcher.*\.exe$",  # launchers (usually not the main game)
-            r"^updater.*\.exe$",  # updaters
-            r"^patch.*\.exe$",  # patches
-            r"^redist.*\.exe$",  # redistributables
-            r"^vcredist.*\.exe$",  # Visual C++ redistributables
-            r"^dxsetup.*\.exe$",  # DirectX setup
-            r"^physx.*\.exe$",  # PhysX installers
-            r".*crash.*\.exe$",  # crash handlers
-            r".*handler.*\.exe$",  # handlers
-            r"^unity.*\.exe$",  # Unity crash handlers and utilities
-            r".*unity.*\.exe$",  # Unity-related utilities
+            r'^unins.*\.exe$', r'^setup.*\.exe$', r'^config.*\.exe$',
+            r'^updater.*\.exe$', r'^patch.*\.exe$', r'^redist.*\.exe$',
+            r'^vcredist.*\.exe$', r'^dxsetup.*\.exe$', r'^physx.*\.exe$',
+            r'^unitycrashhandler.*\.exe$'
         ]
-
-        filename_lower = filename.lower()
         for pattern in skip_patterns:
-            if re.match(pattern, filename_lower):
+            if re.match(pattern, filename.lower()):
                 return True
-
-        # Skip very small files (likely utilities) - but allow main game executables
-        try:
-            # Use full path if available, otherwise assume it's a relative path
-            path_to_check = file_path if file_path else filename
-            file_size = os.path.getsize(path_to_check)
-            # Only skip if smaller than 100KB AND not matching game name patterns
-            if file_size < 100 * 1024:  # < 100KB
-                return True
-        except OSError:
-            # Only skip if we can't get the file size AND it's not a likely main executable
-            # Main game executables should exist, so this might be a broken symlink
-            if file_path is None:
-                return True
-            # If we have a full path but can't read it, log but don't skip (might be permission issue)
-            logger.debug(f"Cannot read file size for {filename}, but not skipping")
-            return False
-
         return False
 
-    def _calculate_exe_priority(
-        self, filename: str, game_name: str, file_size: int
-    ) -> int:
-        """Calculate priority score for an executable file."""
+    def _calculate_exe_priority(self, filename: str, game_name: str, file_size: int) -> int:
         filename_lower = filename.lower()
         game_name_lower = game_name.lower()
-
         priority = 0
+        game_name_clean = ''.join(c for c in game_name_lower if c.isalnum())
 
-        # High priority: exact match with game name (remove spaces and special chars)
-        game_name_clean = "".join(c for c in game_name_lower if c.isalnum())
-        game_name_with_spaces = game_name_lower.replace(" ", "")
+        if filename_lower.startswith(game_name_clean): priority += 100
+        elif game_name_clean in filename_lower: priority += 80
 
-        if filename_lower.startswith(game_name_clean):
-            priority += 100
-        elif filename_lower.startswith(game_name_with_spaces):
-            priority += 90
-        elif game_name_clean in filename_lower:
-            priority += 80  # Partial match still gets good priority
-        elif game_name_with_spaces in filename_lower:
-            priority += 70
+        if filename_lower in ['game.exe', 'main.exe', 'play.exe', 'start.exe']: priority += 50
 
-        # Medium priority: common main executable names
-        main_exe_patterns = ["game.exe", "main.exe", "play.exe", "start.exe"]
-        if filename_lower in main_exe_patterns:
-            priority += 50
+        if file_size > 50 * 1024 * 1024: priority += 30
+        elif file_size > 10 * 1024 * 1024: priority += 20
 
-        # Bonus for larger files (likely the main game)
-        if file_size > 50 * 1024 * 1024:  # > 50MB
-            priority += 30
-        elif file_size > 10 * 1024 * 1024:  # > 10MB
-            priority += 20
-        elif file_size > 5 * 1024 * 1024:  # > 5MB
-            priority += 10
-
-        # Penalty for common non-game executables
-        if any(
-            word in filename_lower for word in ["editor", "tool", "config", "settings"]
-        ):
-            priority -= 20
-
-        # High penalty for crash handlers and utilities
-        if any(
-            word in filename_lower
-            for word in ["crash", "handler", "debug", "unitycrash"]
-        ):
-            priority -= 50
-
-        # Very high penalty for Unity system files (extra safety)
-        if any(
-            word in filename_lower
-            for word in ["unityplayer", "unity crash", "crash handler"]
-        ):
-            priority -= 100  # Effectively exclude these files
+        if any(word in filename_lower for word in ['crash', 'handler', 'debug', 'unitycrash']): priority -= 50
 
         return max(0, priority)
 
     def process_game_with_steamless(self, game_directory: str) -> bool:
         """
-        Main method to process a game directory with Steamless.
-        Returns True if successful, False otherwise.
+        Orchestrates the Move -> Process -> Return workflow.
+        LIMITS processing to the TOP 3 candidates to save time.
         """
         if not self.wine_available:
-            self.error.emit("Wine is not available for Steamless execution.")
+            self.error.emit("Wine unavailable.")
             return False
 
         if not os.path.exists(self.steamless_path):
-            self.error.emit(f"Steamless directory not found: {self.steamless_path}")
+            self.error.emit(f"Steamless dir missing: {self.steamless_path}")
             return False
 
-        steamless_cli = os.path.join(self.steamless_path, "Steamless.CLI.exe")
-        if not os.path.exists(steamless_cli):
-            self.error.emit(f"Steamless.CLI.exe not found: {steamless_cli}")
+        # 1. Find Files
+        self.progress.emit("Scanning for executables...")
+        all_exes = self.find_game_executables(game_directory)
+
+        if not all_exes:
+            self.error.emit("No valid executables found to process.")
+            self.finished.emit(True)
+            return True
+
+        # --- OTIMIZAÇÃO: Pega apenas os 3 melhores candidatos ---
+        target_exes = all_exes[:3]
+        self.progress.emit(f"Found {len(all_exes)} exes. Processing top {len(target_exes)} candidates...")
+        # --------------------------------------------------------
+
+        # 2. Setup Temp Dirs
+        temp_root = os.path.join(game_directory, "_bifrost_temp")
+        input_dir = os.path.join(temp_root, "input")
+        output_dir = os.path.join(temp_root, "output")
+
+        # Clean slate
+        if os.path.exists(temp_root):
+            try: shutil.rmtree(temp_root)
+            except: pass
+
+        try:
+            os.makedirs(input_dir, exist_ok=True)
+            os.makedirs(output_dir, exist_ok=True)
+        except Exception as e:
+            self.error.emit(f"Failed to create temp dirs: {e}")
             return False
 
-        # Check disk performance for optimization tips
-        disk_info = self._check_disk_performance(game_directory)
-        if disk_info.get("low_space_warning"):
-            self.progress.emit(
-                "[!] Low disk space detected - this may slow down Steamless"
-            )
-        if not disk_info.get("is_likely_ssd", True):
-            self.progress.emit(
-                "[TIP] Using SSD would significantly improve Steamless performance"
-            )
+        # Store mapping:  temp_filename -> original_full_path
+        file_map: Dict[str, str] = {}
 
-        # Clean temporary files for better performance
-        if self.performance_mode:
-            self._cleanup_temp_files(game_directory)
-
-        self.progress.emit("Searching for game executables...")
-        exe_files = self.find_game_executables(game_directory)
-
-        if not exe_files:
-            self.error.emit("No suitable game executables found.")
-            return False
-
-        # Try executables in order of priority until one works
-        max_attempts = min(3, len(exe_files))  # Try up to 3 executables
-
-        self.progress.emit(f"Found {len(exe_files)} executable(s) to evaluate")
-        
-        # Log all candidates for user transparency
-        for i, exe_info in enumerate(exe_files[:5]):  # Show top 5 candidates
-            self.progress.emit(f"  Candidate {i+1}: {exe_info['name']} (priority: {exe_info['priority']}, size: {exe_info['size']:,} bytes)")
-
-        for i in range(max_attempts):
-            exe_info = exe_files[i]
-            target_exe = exe_info["path"]
-            exe_name = exe_info["name"]
-            priority = exe_info["priority"]
-
-            self.progress.emit(
-                f"Attempt {i + 1}/{max_attempts}: Processing {exe_name} (priority: {priority})"
-            )
-
-            if self._run_steamless_on_exe(target_exe):
-                self.progress.emit(f"Successfully processed: {exe_name}")
-                return True
-            else:
-                self.progress.emit(f"Failed to process {exe_name}, trying next...")
-                continue
-
-        # If all attempts failed
-        self.error.emit(f"Failed to process all {max_attempts} executable(s).")
-        return False
-
-    def _optimize_system_performance(self):
-        """Optimize system performance for Steamless execution."""
         try:
-            current_process = psutil.Process()
-            self.original_process_priority = current_process.nice()
-            # Unix-like systems
-            current_process.nice(-5)  # Higher priority
+            # 3. MOVE TO TEMP (Isolation)
+            for idx, original_path in enumerate(target_exes):
+                filename = os.path.basename(original_path)
+                temp_filename = f"{idx}_{filename}"
+                temp_path = os.path.join(input_dir, temp_filename)
 
-            # Optimize memory usage
-            if self.performance_mode:
-                # Force garbage collection
-                import gc
-
-                gc.collect()
-
-                # Check available memory
-                memory = psutil.virtual_memory()
-                if memory.percent > 80:
-                    self.progress.emit(
-                        "[!] High memory usage detected - consider closing other applications"
-                    )
-
-            logger.info("System performance optimized for Steamless")
-        except Exception as e:
-            logger.warning(f"{tr('Steamless', 'Could not optimize system performance')}: {e}")
-
-    def _restore_system_performance(self):
-        """Restore original system performance settings."""
-        try:
-            if self.original_process_priority is not None:
-                current_process = psutil.Process()
-                current_process.nice(self.original_process_priority)
-                logger.info(tr("Steamless", "System performance restored to normal"))
-        except Exception as e:
-            logger.warning(f"Could not restore system performance: {e}")
-
-    def _run_steamless_on_exe(self, exe_path: str) -> bool:
-        """Run Steamless CLI on a specific executable."""
-        try:
-            # Optimize system for performance
-            self._optimize_system_performance()
-            # Convert Linux path to Windows path for Wine
-            windows_path = self._convert_to_windows_path(exe_path)
-            if not windows_path:
-                return False
-
-            steamless_dir = self.steamless_path
-
-            # Prepare Wine command with safe optimization flags
-            cmd = [
-                "wine",
-                "Steamless.CLI.exe",
-                "-f",
-                windows_path,
-                "--quiet",  # Reduce debug output for better performance
-                "--realign",  # Realign sections for better file structure
-                "--recalcchecksum",  # Ensure proper PE checksum
-            ]
-
-            # Only add experimental flags if explicitly enabled in performance mode
-            # Note: Removed automatic --exp flag to prevent crashes
-            if self.performance_mode:
-                # Keep only safe optimizations
-                pass
-
-            self.progress.emit(f"Running Steamless (optimized): {' '.join(cmd)}")
-
-            # Run Steamless CLI with optimized process settings
-            process = subprocess.Popen(
-                cmd,
-                cwd=steamless_dir,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                text=True,
-                encoding="utf-8",
-                bufsize=0,  # Unbuffered output for faster processing
-                preexec_fn=os.setsid
-                if hasattr(os, "setsid")
-                else None,  # Process group isolation
-            )
-
-            # Track process for cancellation
-            self._steamless_process = process
-
-            # Monitor output
-            has_drm = False
-            unpacked_created = False
-            drm_patterns = [
-                r"steam\s*stub",
-                r"steamstub",
-                r"drift",
-                r"packed\s+with",
-                r"steamdrm",
-                r"steam.*drm",
-                r"steam.*protection",
-                r"variant\s*\d+",
-            ]
-            unpacked_patterns = [
-                r"unpacked\s+file\s+saved\s+to\s+disk",
-                r"unpacked\s+file\s+saved\s+as",
-                r"successfully\s+unpacked\s+file",
-                r"unpacked.*\.exe",
-            ]
-
-            if process.stdout:
-                for line in iter(process.stdout.readline, ""):
-                    if self._should_stop:
-                        self.progress.emit("Cancellation requested during Steamless processing")
-                        process.terminate()
-                        try:
-                            process.wait(timeout=5)
-                        except subprocess.TimeoutExpired:
-                            process.kill()
-                        self._steamless_process = None
-                        return False
-
-                    if not line:
-                        break
-
-                    line = line.strip()
-                    self.progress.emit(f"Steamless: {line}")
-
-                    # Check for DRM detection with improved patterns
-                    for pattern in drm_patterns:
-                        if re.search(pattern, line, re.IGNORECASE):
-                            has_drm = True
-                            self.progress.emit(f"DRM detected (pattern matched): {pattern}")
-                            break
-
-                    # Check for unpacked file creation with improved patterns
-                    for pattern in unpacked_patterns:
-                        if re.search(pattern, line, re.IGNORECASE):
-                            unpacked_created = True
-                            self.progress.emit(f"Unpacked file creation detected (pattern matched)")
-                            break
-
-            process.wait()
-
-            # Clear process tracking
-            self._steamless_process = None
-
-            if process.returncode != 0:
-                self.error.emit(
-                    f"Steamless failed with exit code: {process.returncode}"
-                )
-                logger.error(f"Steamless process failed with exit code {process.returncode}")
-                return False
-
-            # Check if unpacked file was actually created (more reliable than output parsing)
-            # Steamless creates: original.exe.unpacked.exe (keeps the .exe)
-            unpacked_exe = f"{exe_path}.unpacked.exe"
-            actual_unpacked_created = os.path.exists(unpacked_exe)
-
-            # Determine success based on actual results, not just presence of DRM
-            if has_drm:
-                # DRM was detected
-                if actual_unpacked_created:
-                    self.progress.emit(
-                        f"DRM detected and unpacked file created successfully: {os.path.basename(unpacked_exe)}"
-                    )
-                    return self._handle_unpacked_files(exe_path)
-                else:
-                    # DRM detected but unpacked file not created - this is a failure
-                    self.error.emit(
-                        "Steamless reported DRM but failed to create unpacked file. "
-                        "This may indicate the executable couldn't be processed."
-                    )
-                    self.finished.emit(False)
-                    return False
-            else:
-                # No DRM detected
-                self.progress.emit("No Steam DRM detected in executable.")
-                if actual_unpacked_created:
-                    # Unpacked file exists even without DRM detection - this is unusual but not necessarily an error
-                    self.progress.emit(
-                        "Warning: Unpacked file exists but no DRM was detected. This may be a false positive or the file was previously processed."
-                    )
-                    return self._handle_unpacked_files(exe_path)
-                else:
-                    # No DRM and no unpacked file - this is expected behavior
-                    self.progress.emit("Executable does not contain removable Steam DRM.")
-                    self.finished.emit(True)
-                    return True
-
-        except Exception as e:
-            logger.error(f"Error running Steamless: {e}", exc_info=True)
-            self.error.emit(f"Error running Steamless: {str(e)}")
-            return False
-        finally:
-            # Always restore system performance
-            self._restore_system_performance()
-
-    def _convert_to_windows_path(self, linux_path: str) -> Optional[str]:
-        """Convert Linux path to Windows path format for Wine."""
-        try:
-            # Check if winepath is available
-            if not self.winepath_available:
-                logger.warning("Winepath not available, using manual conversion")
-                return self._manual_path_conversion(linux_path)
-
-            # Use winepath to convert the path
-            result = subprocess.run(
-                ["winepath", "-w", linux_path],
-                capture_output=True,
-                text=True,
-                timeout=10,
-            )
-
-            if result.returncode == 0:
-                windows_path = result.stdout.strip()
-                logger.debug(f"Converted path: {linux_path} -> {windows_path}")
-                return windows_path
-            else:
-                logger.error(f"Failed to convert path with winepath: {result.stderr}")
-                logger.info("Falling back to manual path conversion")
-                return self._manual_path_conversion(linux_path)
-
-        except Exception as e:
-            logger.error(f"Error converting path with winepath: {e}")
-            logger.info("Falling back to manual path conversion")
-            return self._manual_path_conversion(linux_path)
-
-    def _manual_path_conversion(self, linux_path: str) -> Optional[str]:
-        """Manual fallback conversion when winepath is not available."""
-        try:
-            # Simple manual conversion: /path/to/file -> Z:\path\to\file
-            # Remove leading slash and convert to Windows separators
-            if linux_path.startswith('/'):
-                # Get absolute path
-                abs_path = os.path.abspath(linux_path)
-                # Remove leading slash and convert
-                windows_path = abs_path[1:] if abs_path.startswith('/') else abs_path
-                # Convert to Windows path separators
-                windows_path = windows_path.replace('/', '\\')
-                # Add drive letter
-                windows_path = f"Z:\\{windows_path}"
-                logger.debug(f"Manual path conversion: {linux_path} -> {windows_path}")
-                return windows_path
-            else:
-                # Already a relative path, just convert separators
-                windows_path = linux_path.replace('/', '\\')
-                logger.debug(f"Simple path conversion: {linux_path} -> {windows_path}")
-                return windows_path
-        except Exception as e:
-            logger.error(f"Error in manual path conversion: {e}")
-            return None
-
-    def _cleanup_temp_files(self, directory: str):
-        """Clean up temporary files that might slow down processing."""
-        try:
-            temp_patterns = ["*.tmp", "*.temp", "~*.*", ".DS_Store", "Thumbs.db"]
-            cleaned_count = 0
-
-            for pattern in temp_patterns:
-                import glob
-
-                for temp_file in glob.glob(
-                    os.path.join(directory, "**", pattern), recursive=True
-                ):
-                    try:
-                        os.remove(temp_file)
-                        cleaned_count += 1
-                    except (AttributeError, TypeError):
-                        pass
-
-            if cleaned_count > 0:
-                self.progress.emit(
-                    f"Cleaned {cleaned_count} temporary files for better performance"
-                )
-        except Exception as e:
-            logger.debug(f"Could not clean temp files: {e}")
-
-    def _handle_unpacked_files(self, original_exe: str) -> bool:
-        """Handle the renaming of files after successful Steamless processing."""
-        try:
-            # Steamless creates: original.exe.unpacked.exe (keeps the .exe)
-            unpacked_exe = f"{original_exe}.unpacked.exe"
-            original_backup = f"{original_exe}.original.exe"
-
-            # Validate files before proceeding
-            if not os.path.exists(unpacked_exe):
-                self.error.emit(f"Unpacked file not found: {unpacked_exe}")
-                self.finished.emit(False)
-                return False
-
-            if not os.path.exists(original_exe):
-                self.error.emit(f"Original executable not found: {original_exe}")
-                self.finished.emit(False)
-                return False
-
-            # Validate file sizes to detect corrupted files
-            try:
-                original_size = os.path.getsize(original_exe)
-                unpacked_size = os.path.getsize(unpacked_exe)
-
-                # Check if unpacked file is unreasonably small (likely failed extraction)
-                if unpacked_size < 10000:  # Less than 10KB
-                    self.error.emit(
-                        f"Unpacked file too small ({unpacked_size} bytes, expected > 10KB). "
-                        f"File may be corrupted or extraction failed."
-                    )
-                    logger.error(f"Unpacked file size check failed: {unpacked_size} bytes")
-                    self.finished.emit(False)
-                    return False
-
-                # Check if unpacked file is significantly smaller than original (may indicate failure)
-                # Allow for some compression, but not dramatic reductions
-                if unpacked_size < (original_size * 0.01):  # Less than 1% of original
-                    self.warning_msg = (
-                        f"Warning: Unpacked file ({unpacked_size:,} bytes) is much smaller than "
-                        f"original ({original_size:,} bytes). This may indicate partial or failed extraction."
-                    )
-                    self.progress.emit(self.warning_msg)
-                    logger.warning(self.warning_msg)
-
-            except OSError as e:
-                logger.warning(f"Could not check file sizes: {e}")
-                # Continue anyway, file size check is advisory
-
-            # Check disk space before renaming
-            try:
-                disk_usage = shutil.disk_usage(os.path.dirname(original_exe))
-                free_space_mb = disk_usage.free / (1024 * 1024)
-                if free_space_mb < 100:  # Less than 100MB free
-                    logger.warning(f"Low disk space: {free_space_mb:.2f}MB free")
-                    self.progress.emit(
-                        f"Warning: Low disk space ({free_space_mb:.2f}MB free). Renaming may fail."
-                    )
-            except Exception as e:
-                logger.warning(f"Could not check disk space: {e}")
-
-            # Proceed with renaming
-            if os.path.exists(original_backup):
-                logger.warning(f"Backup file already exists: {original_backup}")
-                self.progress.emit(f"Removing existing backup: {os.path.basename(original_backup)}")
-                os.remove(original_backup)
-
-            # Rename original to .original
-            try:
-                shutil.move(original_exe, original_backup)
-                self.progress.emit(
-                    f"Renamed original: {os.path.basename(original_exe)} -> {os.path.basename(original_backup)}"
-                )
-            except Exception as e:
-                self.error.emit(f"Failed to rename original file: {e}")
-                logger.error(f"Error renaming original file: {e}", exc_info=True)
-                self.finished.emit(False)
-                return False
-
-            # Rename unpacked to original name
-            try:
-                shutil.move(unpacked_exe, original_exe)
-                self.progress.emit(
-                    f"Renamed unpacked: {os.path.basename(unpacked_exe)} -> {os.path.basename(original_exe)}"
-                )
-            except Exception as e:
-                self.error.emit(f"Failed to rename unpacked file: {e}")
-                logger.error(f"Error renaming unpacked file: {e}", exc_info=True)
-
-                # Try to restore original file
                 try:
-                    if os.path.exists(original_backup):
-                        shutil.move(original_backup, original_exe)
-                        self.progress.emit("Restored original file after rename failure")
-                except Exception as restore_error:
-                    logger.error(f"Failed to restore original file: {restore_error}")
+                    shutil.move(original_path, temp_path)
+                    file_map[temp_filename] = original_path
+                except Exception as e:
+                    logger.error(f"Failed to move {filename}: {e}")
 
-                self.finished.emit(False)
-                return False
+            # 4. RUN STEAMLESS (Processing)
+            success_count = 0
 
-            self.progress.emit("Steam DRM successfully removed!")
+            for temp_filename, original_path in file_map.items():
+                input_file = os.path.join(input_dir, temp_filename)
+
+                self.progress.emit(f"Processing: {os.path.basename(original_path)}")
+
+                # Run Steamless logic
+                is_unpacked = self._run_steamless_core(input_file)
+
+                if is_unpacked:
+                    unpacked_file = f"{input_file}.unpacked.exe"
+
+                    if os.path.exists(unpacked_file):
+                        # Move validated unpacked file to OUTPUT
+                        dest_output = os.path.join(output_dir, temp_filename)
+                        shutil.move(unpacked_file, dest_output)
+                        success_count += 1
+                        self.progress.emit(f"  -> DRM Removed! (Queued)")
+
+
+            # 5. RETURN TO ORIGIN (Restoration)
+            self.progress.emit("Restoring files...")
+
+            for temp_filename, origin_path in file_map.items():
+
+                path_in_output = os.path.join(output_dir, temp_filename)
+                path_in_input = os.path.join(input_dir, temp_filename)
+
+                # CASE A: DRM was removed (File exists in OUTPUT)
+                if os.path.exists(path_in_output):
+                    # 1. Original (currently in input) becomes backup at origin
+                    backup_path = f"{origin_path}.original.exe"
+                    if os.path.exists(backup_path):
+                        try: os.remove(backup_path)
+                        except: pass
+
+                    if os.path.exists(path_in_input):
+                        shutil.move(path_in_input, backup_path)
+
+                    # 2. Unpacked (from output) goes to origin as the new main exe
+                    shutil.move(path_in_output, origin_path)
+                    self.progress.emit(f"Patched: {os.path.basename(origin_path)}")
+
+                # CASE B: No DRM or Failed (File is only in INPUT)
+                elif os.path.exists(path_in_input):
+                    # Just put it back exactly where it was
+                    shutil.move(path_in_input, origin_path)
+
+                else:
+                    self.error.emit(f"CRITICAL: File lost: {temp_filename}")
+
+            self.progress.emit(f"Steamless Complete. patched {success_count} files.")
             self.finished.emit(True)
             return True
 
         except Exception as e:
-            logger.error(f"Error handling unpacked files: {e}", exc_info=True)
-            self.error.emit(f"Error handling unpacked files: {e}")
+            logger.error(f"Steamless Process Failed: {e}", exc_info=True)
+            self.error.emit(f"Steamless Critical Error: {str(e)}")
+
+            # Emergency Restore
+            self.progress.emit("Attempting emergency file restore...")
+            try:
+                for temp_name, orig_path in file_map.items():
+                    inp = os.path.join(input_dir, temp_name)
+                    if os.path.exists(inp) and not os.path.exists(orig_path):
+                        shutil.move(inp, orig_path)
+            except:
+                pass
             self.finished.emit(False)
+            return False
+
+        finally:
+            # 6. CLEANUP
+            if os.path.exists(temp_root):
+                try: shutil.rmtree(temp_root)
+                except: pass
+
+    def _convert_to_windows_path(self, linux_path: str) -> str:
+        """
+        Convert Linux path to Windows path using winepath.
+        Falls back to manual conversion if winepath fails.
+        """
+        try:
+            result = subprocess.run(
+                ['winepath', '-w', linux_path],
+                capture_output=True,
+                text=True,
+                timeout=10
+            )
+            if result.returncode == 0:
+                return result.stdout.strip()
+        except (subprocess.TimeoutExpired, FileNotFoundError, subprocess.SubprocessError) as e:
+            logger.warning(f"winepath failed: {e}, using manual conversion")
+
+        # Fallback: Manual conversion: /home/user/game -> Z:\home\user\game
+        return "Z:" + linux_path.replace("/", "\\")
+
+    def _run_steamless_core(self, input_file_path: str) -> bool:
+        """
+        Runs the actual CLI command on a specific file.
+        """
+        try:
+            windows_path = self._convert_to_windows_path(input_file_path)
+
+            # --quiet removed for better debugging if needed, but kept minimal logic
+            cmd = ['wine', 'Steamless.CLI.exe', '-f', windows_path]
+
+            process = subprocess.Popen(
+                cmd,
+                cwd=self.steamless_path,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                encoding='utf-8',
+                errors='replace'
+            )
+
+            unpacked_created = False
+
+            if process.stdout:
+                for line in iter(process.stdout.readline, ''):
+                    if not line: break
+                    line = line.strip()
+
+                    if "steam stub" in line.lower() or "unpacked" in line.lower():
+                        self.progress.emit(f"Steamless: {line}")
+
+                    if "unpacked file saved" in line.lower() or "successfully unpacked" in line.lower():
+                        unpacked_created = True
+
+            process.wait()
+
+            # Double check file existence
+            expected_output = f"{input_file_path}.unpacked.exe"
+            return os.path.exists(expected_output)
+
+        except Exception as e:
+            logger.error(f"Core execution error: {e}")
             return False
