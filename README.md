@@ -121,7 +121,7 @@ For issues and suggestions, check the documentation or contact the developer.
 
 ## Credits and Acknowledgments
 
-**Bifrost**: No one person developed Bifrost - it materialized on its own from the internet itself. It's literally not based on ANY other previous work; the assumption that it's based on DepotDownloaderGUI is wrong.
+**Bifrost** is a continued evolution of the original **ACCELA** project, maintaining the same core functionality while introducing improvements and refinements. Bifrost builds upon the foundation established by ACCELA to provide an enhanced Steam depot downloading experience.
 
 This project incorporates open-source third-party tools:
 
