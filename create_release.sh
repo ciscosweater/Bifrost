@@ -21,6 +21,9 @@ cp requirements.txt "$BIN_DIR/"
 cp bifrost.png "$BIN_DIR/"
 cp LICENSE "$BIN_DIR/"
 cp README.md "$BIN_DIR/"
+cp CREDITS.md "$BIN_DIR/"
+cp CHANGELOG.md "$BIN_DIR/"
+cp SYSTEM_REQUIREMENTS.md "$BIN_DIR/"
 
 # Copy essential directories
 echo "Copying directories..."
@@ -188,6 +191,6 @@ RELEASE_FILE="Bifrost-RELEASE-v1.1.1.tar.gz"
 tar -czf "$RELEASE_FILE" Bifrost-RELEASE/
 
 echo "Release created: release/$RELEASE_FILE"
-echo "Release size: $(du -h "release/$RELEASE_FILE" | cut -f1)"
+echo "Release size: $(du -h "$RELEASE_FILE" | cut -f1)"
 echo ""
 echo "To install: extract the archive and run ./INSTALL"
